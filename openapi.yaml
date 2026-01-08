@@ -1,0 +1,83 @@
+
+openapi: 3.0.3
+info:
+  title: Euro League Recruitment API
+  description: Public intake API for the European League Recruiting OS.
+  version: 1.0.0
+servers:
+  - url: https://api.euro-league.com
+paths:
+  /franchises:
+    get:
+      summary: List available franchises
+      operationId: getFranchises
+      responses:
+        '200':
+          description: A list of franchise names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /applications/player:
+    post:
+      summary: Submit a player application
+      operationId: submitPlayerApplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayerApplication'
+      responses:
+        '200':
+          description: Application received
+  /applications/coach:
+    post:
+      summary: Submit a coach application
+      operationId: submitCoachApplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachApplication'
+      responses:
+        '200':
+          description: Application received
+components:
+  schemas:
+    Preferences:
+      type: object
+      required: [rank1, rank2, rank3, rank4, rank5]
+      properties:
+        rank1: { type: string }
+        rank2: { type: string }
+        rank3: { type: string }
+        rank4: { type: string }
+        rank5: { type: string }
+    PlayerApplication:
+      type: object
+      required: [full_name, email, date_of_birth, preferences, positions]
+      properties:
+        full_name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        date_of_birth: { type: string, format: date, description: "YYYY-MM-DD" }
+        nationality: { type: string }
+        preferences: { $ref: '#/components/schemas/Preferences' }
+        positions: { type: array, items: { type: string } }
+        height_cm: { type: integer }
+        weight_kg: { type: integer }
+        applicant_source: { type: string, default: "GPT" }
+    CoachApplication:
+      type: object
+      required: [full_name, email, date_of_birth, preferences, coaching_roles]
+      properties:
+        full_name: { type: string }
+        email: { type: string, format: email }
+        date_of_birth: { type: string, format: date }
+        preferences: { $ref: '#/components/schemas/Preferences' }
+        coaching_roles: { type: array, items: { type: string } }
+        experience_summary: { type: string }
