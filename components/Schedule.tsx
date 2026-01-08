@@ -7,7 +7,7 @@ const MOCK_EVENTS: LeagueEvent[] = [
   {
     id: 'e1',
     title: 'Nottingham Combine - North',
-    date: '2024-03-15',
+    date: '2024-02-15',
     time: '09:00',
     location: 'Nottingham Performance Centre',
     franchise: Franchise.NOTTINGHAM,
@@ -17,7 +17,7 @@ const MOCK_EVENTS: LeagueEvent[] = [
   {
     id: 'e2',
     title: 'Season Opening Draft',
-    date: '2024-04-01',
+    date: '2024-03-01',
     time: '18:30',
     location: 'IAL Headquarters - London',
     franchise: 'League Wide',
@@ -27,7 +27,7 @@ const MOCK_EVENTS: LeagueEvent[] = [
   {
     id: 'e3',
     title: 'Zürich Open Tryouts',
-    date: '2024-03-20',
+    date: '2024-02-20',
     time: '10:00',
     location: 'Stadion Letzigrund',
     franchise: Franchise.ZURICH,
@@ -37,7 +37,7 @@ const MOCK_EVENTS: LeagueEvent[] = [
   {
     id: 'e4',
     title: 'Stuttgart Pre-Season Training',
-    date: '2024-04-10',
+    date: '2024-03-10',
     time: '14:00',
     location: 'MHP Arena Stuttgart',
     franchise: Franchise.STUTTGART,

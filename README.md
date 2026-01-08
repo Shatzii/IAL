@@ -1,20 +1,31 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# IAL Recruitment OS - Operations Manual
 
-This contains everything you need to run your app locally.
+## 1. Deployment Platforms
 
-View your app in AI Studio: https://ai.studio/apps/drive/1XHjVhen_uTYOBDamPsP0Fpsuv2ng0tYq
+### Option A: Railway.app (Recommended for Production)
+Railway handles the multi-service architecture (FastAPI + Postgres + Redis) most effectively.
+1. Connect your GitHub repository to **Railway.app**.
+2. Railway will automatically detect the `railway.json` and build via `infra/Dockerfile.api`.
+3. Add a **PostgreSQL** and **Redis** service via the Railway dashboard.
+4. Set the following Environment Variables:
+   - `IAL_API_KEY`: Your secret handshake (e.g., `IAL_ADMIN_2026`).
+   - `ALLOWED_ORIGINS`: Your Netlify/Frontend URL.
+   - `DATABASE_URL`: Automatically provided by Railway Postgres.
 
-## Run Locally
+### Option B: Replit.com (Recommended for Prototyping)
+1. Import this repository into a new **Replit**.
+2. Replit will detect the `index.html` for the frontend.
+3. For the backend, create a new "Python" Repl and copy the `intake-api` folder.
+4. Use Replit "Secrets" to store your `IAL_API_KEY`.
 
-**Prerequisites:**  Node.js
+## 2. API Endpoints
+- `GET /health`: System status.
+- `GET /franchises`: List of draftable franchises.
+- `POST /applications/player`: Secure draft induction.
+- `POST /applications/coach`: Secure coaching application.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 3. Security Notes
+- All registration data is validated for age (18+) and preference uniqueness.
+- GPT Actions must include `X-API-Key` in the request header to be authorized.
+- CSRF and CORS protections are enabled by default on the `/applications` endpoints.

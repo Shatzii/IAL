@@ -2,73 +2,77 @@
 version: '3.8'
 
 services:
-  # Database for WP and CiviCRM
-  mariadb:
-    image: mariadb:10.6
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: wordpress
-      MYSQL_USER: wp_user
-      MYSQL_PASSWORD: wp_password
-    volumes:
-      - mariadb_data:/var/lib/mysql
-
-  # WordPress + CiviCRM
-  wordpress:
-    image: wordpress:latest
-    depends_on:
-      - mariadb
-    environment:
-      WORDPRESS_DB_HOST: mariadb
-      WORDPRESS_DB_USER: wp_user
-      WORDPRESS_DB_PASSWORD: wp_password
-      WORDPRESS_DB_NAME: wordpress
+  # Edge Proxy & SSL
+  traefik:
+    image: traefik:v2.10
+    container_name: ial-traefik
+    restart: always
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=ops@ial-football.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
-      - wordpress_data:/var/www/html
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
 
   # Intake API (FastAPI)
   intake-api:
     build: 
       context: .
       dockerfile: ./infra/Dockerfile.api
+    container_name: ial-api
+    restart: always
     environment:
-      POSTGRES_URL: postgresql://postgres:pass@postgres:5432/intake
-      REDIS_URL: redis://redis:6379/0
-      CIVICRM_API_KEY: your_api_key
-      CIVICRM_SITE_KEY: your_site_key
+      - API_KEY=${IAL_API_KEY:-IAL_SECRET_HANDSHAKE_2024}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-pass}@postgres:5432/intake
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.ial-football.com`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
     depends_on:
-      - postgres
-      - redis
-    ports:
-      - "8000:8000"
+      postgres:
+        condition: service_healthy
 
-  # Auditing & Idempotency Store
+  # Object Storage for Documents
+  minio:
+    image: minio/minio
+    container_name: ial-storage
+    restart: always
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: ${MINIO_PASS:-ial_storage_pass}
+    command: server /data --console-address ":9001"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.storage.rule=Host(`s3.ial-football.com`)"
+      - "traefik.http.routers.storage.entrypoints=websecure"
+      - "traefik.http.routers.storage.tls.certresolver=myresolver"
+    volumes:
+      - minio_data:/data
+
   postgres:
     image: postgres:15-alpine
+    container_name: ial-postgres
+    restart: always
     environment:
-      POSTGRES_PASSWORD: pass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
       POSTGRES_DB: intake
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  # Rate limiting & Task Queue
-  redis:
-    image: redis:7-alpine
-
-  # Object Storage
-  minio:
-    image: minio/minio
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  mariadb_data:
-  wordpress_data:
   postgres_data:
+  minio_data:

@@ -1,15 +1,14 @@
-
 openapi: 3.0.3
 info:
-  title: Euro League Recruitment API
-  description: Public intake API for the European League Recruiting OS.
+  title: IAL Player Draft 2026 Recruitment API
+  description: Public intake API for the International Arena League (IAL) Player Draft 2026 Registry.
   version: 1.0.0
 servers:
-  - url: https://api.euro-league.com
+  - url: https://api.ial-football.com
 paths:
   /franchises:
     get:
-      summary: List available franchises
+      summary: List available IAL franchises
       operationId: getFranchises
       responses:
         '200':
@@ -22,7 +21,7 @@ paths:
                   type: string
   /applications/player:
     post:
-      summary: Submit a player application
+      summary: Submit an IAL player draft application
       operationId: submitPlayerApplication
       requestBody:
         required: true
@@ -32,10 +31,10 @@ paths:
               $ref: '#/components/schemas/PlayerApplication'
       responses:
         '200':
-          description: Application received
+          description: Application successfully committed to the IAL Registry.
   /applications/coach:
     post:
-      summary: Submit a coach application
+      summary: Submit an IAL coach application
       operationId: submitCoachApplication
       requestBody:
         required: true
@@ -45,14 +44,14 @@ paths:
               $ref: '#/components/schemas/CoachApplication'
       responses:
         '200':
-          description: Application received
+          description: Application successfully committed to the IAL Registry.
 components:
   schemas:
     Preferences:
       type: object
       required: [rank1, rank2, rank3, rank4, rank5]
       properties:
-        rank1: { type: string }
+        rank1: { type: string, description: "Nottingham, Glasgow, Düsseldorf, Stuttgart, or Zürich" }
         rank2: { type: string }
         rank3: { type: string }
         rank4: { type: string }

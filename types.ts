@@ -7,7 +7,8 @@ export enum Role {
 export enum SystemRole {
   LEAGUE_ADMIN = 'League Admin',
   FRANCHISE_GM = 'Franchise GM',
-  COACH_STAFF = 'Coach Staff'
+  COACH_STAFF = 'Coach Staff',
+  PLAYER = 'Player'
 }
 
 export enum TalentTier {
@@ -43,6 +44,14 @@ export enum Franchise {
   ZURICH = 'Zürich'
 }
 
+export const FRANCHISE_COLORS: Record<Franchise, string> = {
+  [Franchise.NOTTINGHAM]: '#e41d24',
+  [Franchise.GLASGOW]: '#40a9ff',
+  [Franchise.DUSSELDORF]: '#23d18b',
+  [Franchise.STUTTGART]: '#ffb84d',
+  [Franchise.ZURICH]: '#722ed1'
+};
+
 export const FRANCHISE_TEAMS: Record<Franchise, string[]> = {
   [Franchise.NOTTINGHAM]: ['Nottingham Hoods', 'Sherwood Sabres', 'Trent Titans'],
   [Franchise.GLASGOW]: ['Glasgow Gladiators', 'Clyde Crusaders', 'Highland Hammers'],
@@ -60,22 +69,44 @@ export interface Preferences {
 }
 
 export interface ScoutingMetrics {
-  speed: number;      // 1-10
-  strength: number;   // 1-10
-  agility: number;    // 1-10
-  iq: number;         // 1-10
-  versatility: number; // 1-10
+  speed: number;
+  strength: number;
+  agility: number;
+  iq: number;
+  versatility: number;
+}
+
+export interface Document {
+  id: string;
+  name: string;
+  type: 'CV' | 'Passport' | 'Medical' | 'Contract';
+  url: string;
+  scanStatus: 'CLEAN' | 'SCANNING' | 'INFECTED';
+  uploadedAt: string;
+}
+
+export interface OnboardingTask {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  category: 'Legal' | 'Travel' | 'Medical' | 'Logistics';
 }
 
 export interface CombineResult {
-  fortyYardDash?: string;
-  benchPressReps?: number;
-  verticalJump_cm?: number;
-  broadJump_cm?: number;
-  threeConeDrill?: string;
-  shuttleRun?: string;
+  fortyYardDash: string;
+  benchPressReps: number;
+  verticalJump_cm: number;
+  broadJump_cm: number;
   recordedAt: string;
   recordedBy: string;
+}
+
+export interface GradingConfig {
+  speedWeight: number;
+  strengthWeight: number;
+  agilityWeight: number;
+  iqWeight: number;
+  versatilityWeight: number;
 }
 
 export interface Profile {
@@ -90,53 +121,35 @@ export interface Profile {
   status: RecruitingStatus;
   preferences: Preferences;
   createdAt: string;
-  // Stats & Specialized Data
   height_cm?: number;
   weight_kg?: number;
   positions: string[];
-  personalBio?: string; // New field for player history and fit statement
+  personalBio?: string;
   experience_summary?: string;
   avatar_url?: string;
   highlightUrls?: string[];
-  // Scouting & Arena Specifics
   scoutGrade?: number; 
   metrics: ScoutingMetrics;
   isIronmanPotential: boolean; 
   benchPressReps?: number;
   fortyYardDash?: string;
   scoutingReport?: string;
-  fitScores?: Record<string, number>; 
-  combineResults?: CombineResult[];
-  // Franchise Management
-  contractStatus?: ContractStatus;
-  notes?: string;
-  salary?: number;
-  contractStart?: string;
-  contractEnd?: string;
-  totalValue?: number;
-  capHit?: number;
-  depthRanks?: Record<string, number>; 
   assignedFranchise?: Franchise;
   assignedTeam?: string;
-}
-
-export interface GradingConfig {
-  speedWeight: number;
-  strengthWeight: number;
-  agilityWeight: number;
-  iqWeight: number;
-  versatilityWeight: number;
-}
-
-export interface FranchiseAlertConfig {
-  minRosterSize: number;
-  requiredPositions: Record<string, number>;
+  location?: { lat: number; lng: number };
+  documents: Document[];
+  onboardingChecklist: OnboardingTask[];
+  salary?: number;
+  capHit?: number;
+  depthRanks?: Record<string, number>;
+  contractEnd?: string;
+  combineResults?: CombineResult[];
 }
 
 export interface ActivityLog {
   id: string;
   timestamp: string;
-  type: 'SIGNING' | 'STATUS_CHANGE' | 'REGISTRATION' | 'RELEASE' | 'PLACEMENT' | 'NOTE_ADDED' | 'CONTRACT_UPDATE' | 'COMBINE_RESULT' | 'USER_DELETE' | 'ALERT_CONFIG' | 'GRADING_CONFIG';
+  type: string;
   message: string;
   subjectId: string;
 }
@@ -148,20 +161,20 @@ export interface LeagueEvent {
   time: string;
   location: string;
   franchise: Franchise | 'League Wide';
-  type: 'Tryout' | 'Combine' | 'Match' | 'Draft' | 'Training';
-  status: 'Scheduled' | 'Completed' | 'Postponed';
-  attendees?: string[]; // IDs of profiles
+  type: string;
+  status: string;
 }
 
 export interface ChatMessage {
   id: string;
   senderId: string;
   senderName: string;
+  senderRole: SystemRole | string;
   senderAvatar?: string;
-  senderRole: SystemRole;
   text: string;
   timestamp: string;
   channelId: string;
+  recipientId?: string; // For DMs
 }
 
 export interface ChatChannel {
@@ -169,6 +182,46 @@ export interface ChatChannel {
   name: string;
   description: string;
   isPrivate: boolean;
+  isDirect?: boolean; // New flag for Inboxes
   allowedRoles?: SystemRole[];
   franchiseScope?: Franchise;
+  participants?: string[]; // IDs of users in DM
+}
+
+// Tactical & Educational Interfaces
+export interface Play {
+  id: string;
+  name: string;
+  formation: string;
+  category: 'Offense' | 'Defense' | 'Special Teams';
+  diagramUrl?: string;
+  videoUrl?: string;
+  description: string;
+  publishedAt: string;
+}
+
+export interface Playbook {
+  id: string;
+  franchise?: Franchise;
+  team?: string;
+  name: string;
+  plays: Play[];
+  lastUpdated: string;
+}
+
+export interface Lesson {
+  id: string;
+  title: string;
+  contentType: 'Video' | 'Text' | 'Quiz';
+  contentUrl?: string;
+  durationMins: number;
+}
+
+export interface LearningModule {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Tactics' | 'Health' | 'Rules' | 'Career';
+  lessons: Lesson[];
+  thumbnailUrl?: string;
 }
