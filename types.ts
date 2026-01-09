@@ -44,7 +44,6 @@ export const FRANCHISE_COLORS: Record<Franchise, string> = {
   [Franchise.ZURICH]: '#722ed1'
 };
 
-// Add FRANCHISE_TEAMS constant
 export const FRANCHISE_TEAMS: Record<Franchise, string[]> = {
   [Franchise.NOTTINGHAM]: ['Hoods', 'Outlaws'],
   [Franchise.GLASGOW]: ['Tigers', 'Rocks'],
@@ -83,6 +82,7 @@ export interface OnboardingTask {
   title: string;
   isCompleted: boolean;
   category: 'Legal' | 'Travel' | 'Medical' | 'Logistics';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'BLOCKED';
 }
 
 export interface VideoTag {
@@ -100,7 +100,6 @@ export interface GradingConfig {
   versatilityWeight: number;
 }
 
-// Add CombineResult interface
 export interface CombineResult {
   fortyYardDash?: string;
   benchPressReps?: number;
@@ -108,6 +107,11 @@ export interface CombineResult {
   broadJump_cm?: number;
   recordedAt: string;
   recordedBy: string;
+}
+
+export interface SearchGroundingSource {
+  title: string;
+  uri: string;
 }
 
 export interface Profile {
@@ -140,10 +144,12 @@ export interface Profile {
   onboardingChecklist: OnboardingTask[];
   draftReadiness?: number; 
   videoAnalysisTags?: VideoTag[];
-  // Add missing properties
   avatar_url?: string;
   capHit?: number;
   combineResults?: CombineResult[];
+  aiIntel?: string;
+  aiIntelSources?: SearchGroundingSource[];
+  hypeAssetUrl?: string;
 }
 
 export interface ActivityLog {
@@ -152,6 +158,14 @@ export interface ActivityLog {
   type: string;
   message: string;
   subjectId: string;
+}
+
+export interface BroadcastDirective {
+  id: string;
+  message: string;
+  priority: 'CRITICAL' | 'STANDARD';
+  active: boolean;
+  timestamp: string;
 }
 
 export interface ChatMessage {
@@ -164,7 +178,6 @@ export interface ChatMessage {
   channelId: string;
 }
 
-// Add ChatChannel interface
 export interface ChatChannel {
   id: string;
   name: string;
@@ -182,6 +195,7 @@ export interface Play {
   formation: string;
   category: string;
   description: string;
+  simVideoUrl?: string;
 }
 
 export interface Playbook {
