@@ -25,14 +25,17 @@ const INITIAL_PROFILES: Profile[] = [
   { id: 'n2', fullName: 'Dante Rossi', email: 'd.rossi@ial.it', phone: '+39 312 456 7890', dateOfBirth: '1999-11-04', nationality: 'Italy', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-12', scoutGrade: 9.8, positions: ['WR', 'MOTION'], personalBio: "Track star converted to wideout. Vertical leap is officially top 1% of the registry.", metrics: { speed: 10, strength: 6, agility: 10, iq: 8, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', draftReadiness: 100, avatar_url: 'https://i.pravatar.cc/150?u=n2', capHit: 920000 },
   { id: 'n3', fullName: 'Hans Muller', email: 'h.muller@ial.de', phone: '+49 151 2345678', dateOfBirth: '1997-03-15', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-15', scoutGrade: 9.5, positions: ['DL', 'OL'], personalBio: "Ironman specimen. Can anchor the offensive line and then generate elite pressure on the interior DL.", metrics: { speed: 6, strength: 10, agility: 7, iq: 9, versatility: 10 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', draftReadiness: 100, avatar_url: 'https://i.pravatar.cc/150?u=n3', capHit: 880000 },
   { id: 'n4', fullName: 'Jamal Williams', email: 'j.williams@ial.us', phone: '+1 404 555 0199', dateOfBirth: '2000-08-21', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER2, status: RecruitingStatus.SIGNED, preferences: { rank1: Franchise.GLASGOW, rank2: Franchise.NOTTINGHAM, rank3: Franchise.STUTTGART, rank4: Franchise.DUSSELDORF, rank5: Franchise.ZURICH }, createdAt: '2024-01-18', scoutGrade: 8.4, positions: ['DB', 'SAFETY'], personalBio: "Hard-hitting safety with elite zone coverage instincts.", metrics: { speed: 8, strength: 7, agility: 8, iq: 9, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.GLASGOW, draftReadiness: 90, avatar_url: 'https://i.pravatar.cc/150?u=n4', capHit: 550000 },
-  { id: 'n5', fullName: 'Erik Jorgensen', email: 'e.jorg@ial.se', phone: '+46 8 123 45 67', dateOfBirth: '1996-12-01', nationality: 'Sweden', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.SIGNED, preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-20', scoutGrade: 9.0, positions: ['QB'], personalBio: "Accurate pocket passer with mobility. Played top-tier European ball for 5 seasons.", metrics: { speed: 7, strength: 6, agility: 7, iq: 10, versatility: 5 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.ZURICH, draftReadiness: 95, avatar_url: 'https://i.pravatar.cc/150?u=n5', capHit: 1100000 }
-];
-
-const INITIAL_PLAYBOOKS: Playbook[] = [
-  { id: 'pb1', name: 'Universal Arena Base', plays: [
-    { id: 'p1', name: 'Z-Motion Slant', formation: 'Bunch Left', category: 'Pass', description: 'Quick strike pass play targeting the slot receiver on a slant route after motion.' },
-    { id: 'p2', name: 'Inside Zone Leak', formation: 'I-Form', category: 'Run', description: 'Interior run play with offensive line shifting to create a B-gap lane.' }
-  ], lastUpdated: '2024-02-01' }
+  { id: 'n5', fullName: 'Erik Jorgensen', email: 'e.jorg@ial.se', phone: '+46 8 123 45 67', dateOfBirth: '1996-12-01', nationality: 'Sweden', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.SIGNED, preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-20', scoutGrade: 9.0, positions: ['QB'], personalBio: "Accurate pocket passer with mobility. Played top-tier European ball for 5 seasons.", metrics: { speed: 7, strength: 6, agility: 7, iq: 10, versatility: 5 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.ZURICH, draftReadiness: 95, avatar_url: 'https://i.pravatar.cc/150?u=n5', capHit: 1100000 },
+  { id: 'n6', fullName: 'Carlos Mendez', email: 'c.mendez@ial.es', phone: '+34 91 123 4567', dateOfBirth: '1999-05-15', nationality: 'Spain', role: Role.PLAYER, tier: TalentTier.TIER2, status: RecruitingStatus.TRYOUT_INVITED, preferences: { rank1: Franchise.DUSSELDORF, rank2: Franchise.STUTTGART, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-25', scoutGrade: 8.1, positions: ['WR', 'KR'], personalBio: "Electric return specialist. High motor.", metrics: { speed: 9, strength: 5, agility: 9, iq: 7, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], draftReadiness: 75, avatar_url: 'https://i.pravatar.cc/150?u=n6' },
+  { id: 'n7', fullName: 'Liam O\'Shea', email: 'l.oshea@ial.ie', phone: '+353 85 123 4567', dateOfBirth: '1997-11-20', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER2, status: RecruitingStatus.PRE_SCREENED, preferences: { rank1: Franchise.GLASGOW, rank2: Franchise.NOTTINGHAM, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH }, createdAt: '2024-01-28', scoutGrade: 7.9, positions: ['K', 'P'], personalBio: "Soccer-style kicker with a 60+ yard range.", metrics: { speed: 6, strength: 7, agility: 6, iq: 8, versatility: 5 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], draftReadiness: 60, avatar_url: 'https://i.pravatar.cc/150?u=n7' },
+  { id: 'n8', fullName: 'Sven Lindholm', email: 's.lind@ial.se', phone: '+46 70 987 6543', dateOfBirth: '1995-03-02', nationality: 'Sweden', role: Role.PLAYER, tier: TalentTier.TIER3, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.NOTTINGHAM, rank4: Franchise.GLASGOW, rank5: Franchise.DUSSELDORF }, createdAt: '2024-02-01', scoutGrade: 6.5, positions: ['LB'], personalBio: "Former regional MVP. Developmental project with high upside.", metrics: { speed: 7, strength: 7, agility: 7, iq: 6, versatility: 5 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], draftReadiness: 40, avatar_url: 'https://i.pravatar.cc/150?u=n8' },
+  { id: 'n9', fullName: 'Pierre Dubois', email: 'p.dubois@ial.fr', phone: '+33 6 12 34 56 78', dateOfBirth: '1998-08-12', nationality: 'France', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.OFFER_EXTENDED, preferences: { rank1: Franchise.DUSSELDORF, rank2: Franchise.STUTTGART, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-02-05', scoutGrade: 9.1, positions: ['DL', 'OL'], personalBio: "The 'French Wall'. Massive reach and interior power.", metrics: { speed: 5, strength: 10, agility: 6, iq: 9, versatility: 9 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], draftReadiness: 90, avatar_url: 'https://i.pravatar.cc/150?u=n9' },
+  { id: 'n10', fullName: 'Anton Weber', email: 'a.weber@ial.de', phone: '+49 170 111 2233', dateOfBirth: '2001-01-30', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER2, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-02-10', scoutGrade: 8.3, positions: ['DB', 'MOTION'], personalBio: "Fast twitch athlete. Elite closing speed.", metrics: { speed: 10, strength: 6, agility: 9, iq: 7, versatility: 8 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], draftReadiness: 55, avatar_url: 'https://i.pravatar.cc/150?u=n10' },
+  { id: 'n11', fullName: 'Talib Wise', email: 't.wise@ial.com', phone: '+1 312 555 0101', dateOfBirth: '1985-05-15', nationality: 'USA', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.NOTTINGHAM, rank4: Franchise.GLASGOW, rank5: Franchise.DUSSELDORF }, createdAt: '2023-12-01', scoutGrade: 10.0, positions: ['HEAD COACH'], personalBio: "Arena legend. Strategic mastermind behind multiple championships.", metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 10 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.ZURICH, avatar_url: 'https://i.pravatar.cc/150?u=n11' },
+  { id: 'n12', fullName: 'Coach Sarah Miller', email: 's.miller@ial.uk', phone: '+44 7911 123456', dateOfBirth: '1988-10-10', nationality: 'United Kingdom', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.NOTTINGHAM, rank2: Franchise.GLASGOW, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH }, createdAt: '2024-01-05', scoutGrade: 9.5, positions: ['OFFENSIVE COORDINATOR'], personalBio: "Pioneer in vertical arena schemes. High tactical IQ.", metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, avatar_url: 'https://i.pravatar.cc/150?u=n12' },
+  { id: 'n13', fullName: 'Jack Thompson', email: 'j.thompson@ial.uk', phone: '+44 7700 900013', dateOfBirth: '2000-12-12', nationality: 'United Kingdom', role: Role.PLAYER, tier: TalentTier.TIER3, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.NOTTINGHAM, rank2: Franchise.GLASGOW, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH }, createdAt: '2024-02-15', scoutGrade: 7.2, positions: ['WR'], personalBio: "Raw speed. Track background.", metrics: { speed: 10, strength: 4, agility: 8, iq: 6, versatility: 5 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], draftReadiness: 30, avatar_url: 'https://i.pravatar.cc/150?u=n13' },
+  { id: 'n14', fullName: 'Lukas Meier', email: 'l.meier@ial.ch', phone: '+41 44 123 4567', dateOfBirth: '1996-06-25', nationality: 'Switzerland', role: Role.PLAYER, tier: TalentTier.TIER2, status: RecruitingStatus.SIGNED, preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-15', scoutGrade: 8.5, positions: ['LB', 'JACK'], personalBio: "The heart of Zurich's defensive project. Disciplined.", metrics: { speed: 7, strength: 8, agility: 8, iq: 9, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.ZURICH, draftReadiness: 95, avatar_url: 'https://i.pravatar.cc/150?u=n14' },
+  { id: 'n15', fullName: 'Arjun Gupta', email: 'a.gupta@ial.in', phone: '+91 98765 43210', dateOfBirth: '1999-09-09', nationality: 'India', role: Role.PLAYER, tier: TalentTier.TIER3, status: RecruitingStatus.TRYOUT_INVITED, preferences: { rank1: Franchise.GLASGOW, rank2: Franchise.NOTTINGHAM, rank3: Franchise.ZURICH, rank4: Franchise.DUSSELDORF, rank5: Franchise.STUTTGART }, createdAt: '2024-02-20', scoutGrade: 6.8, positions: ['DB'], personalBio: "International scholar athlete. High adaptability.", metrics: { speed: 8, strength: 5, agility: 8, iq: 9, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], draftReadiness: 50, avatar_url: 'https://i.pravatar.cc/150?u=n15' }
 ];
 
 export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room';
@@ -90,8 +93,27 @@ export const useApp = () => {
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('landing');
-  const [profiles, setProfiles] = useState<Profile[]>(INITIAL_PROFILES);
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  
+  // Persistence Initialization
+  const [profiles, setProfiles] = useState<Profile[]>(() => {
+    const saved = localStorage.getItem('IAL_PERSONNEL_REGISTRY');
+    return saved ? JSON.parse(saved) : INITIAL_PROFILES;
+  });
+  
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
+    const saved = localStorage.getItem('IAL_AUDIT_LOG');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Persist State Changes
+  useEffect(() => {
+    localStorage.setItem('IAL_PERSONNEL_REGISTRY', JSON.stringify(profiles));
+  }, [profiles]);
+
+  useEffect(() => {
+    localStorage.setItem('IAL_AUDIT_LOG', JSON.stringify(activityLogs));
+  }, [activityLogs]);
+
   const [currentSystemRole, setCurrentSystemRole] = useState<SystemRole>(SystemRole.PLAYER);
   const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -104,7 +126,7 @@ const App: React.FC = () => {
   const [activeEvaluationEvent, setActiveEvaluationEvent] = useState<LeagueEvent | null>(null);
   const [isPrivacyMode, setPrivacyMode] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
-  const [playbooks, setPlaybooks] = useState<Playbook[]>(INITIAL_PLAYBOOKS);
+  const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
   const [learningModules, setLearningModules] = useState<LearningModule[]>([]);
 
   useEffect(() => {
@@ -135,8 +157,13 @@ const App: React.FC = () => {
     setProfiles(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
-  const deleteProfile = (id: string) => setProfiles(prev => prev.filter(p => p.id !== id));
+  const deleteProfile = (id: string) => {
+    setProfiles(prev => prev.filter(p => p.id !== id));
+    logActivity('PURGE', `Personnel record ${id} removed from registry.`, 'admin');
+  };
+
   const addProfile = (p: Profile) => setProfiles(prev => [...prev, p]);
+  
   const addToast = (message: string, type: any = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
     setToasts(prev => [...prev, { id, message, type }]);
