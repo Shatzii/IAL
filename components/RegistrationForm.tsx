@@ -146,7 +146,6 @@ export const RegistrationForm: React.FC = () => {
 
       setAppId(result.application_id);
 
-      // Fix: Access height_cm and weight_kg from payload using type assertion since payload is a union
       const newProfile: Profile = {
         id: result.application_id || Math.random().toString(36).substr(2, 9),
         fullName: payload.full_name,
@@ -181,7 +180,7 @@ export const RegistrationForm: React.FC = () => {
       addToast("Application Successfully Committed", "success");
     } catch (err: any) {
       setError(err.message);
-      addToast("Induction Error: " + err.message, "error");
+      addToast("Transmission Error: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -414,7 +413,7 @@ export const RegistrationForm: React.FC = () => {
                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
                PROCESSING...
              </>
-          ) : "EXECUTE INDUCTION"}
+          ) : "SUBMIT PROFILE"}
         </button>
       </form>
     </div>

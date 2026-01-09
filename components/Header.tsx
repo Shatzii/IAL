@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../App';
 import { SystemRole, Franchise } from '../types';
+import { DraftClock } from './DraftClock';
 
 interface HeaderProps {
   currentView: any;
@@ -145,22 +146,26 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-3 md:gap-6">
-            {!isLoggedIn ? (
-              <button 
-                onClick={() => setView('login')}
-                className="bg-league-accent text-white px-4 md:px-8 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em] hover:brightness-125 transition-all shadow-[0_0_20px_#e41d2444]"
-              >
-                Access
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4 border-l border-league-border">
-                <div className="flex flex-col items-end">
-                  <span className="text-[7px] md:text-[8px] font-black text-league-accent uppercase tracking-widest">{currentSystemRole.split(' ')[0]}</span>
-                  <button onClick={logout} className="hidden md:block text-[10px] font-bold text-league-muted hover:text-white uppercase transition-colors">Logout</button>
+          <div className="flex items-center gap-3 md:gap-8">
+            <DraftClock />
+            
+            <div className="flex items-center gap-3 md:gap-6">
+              {!isLoggedIn ? (
+                <button 
+                  onClick={() => setView('login')}
+                  className="bg-league-accent text-white px-4 md:px-8 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em] hover:brightness-125 transition-all shadow-[0_0_20px_#e41d2444]"
+                >
+                  Access
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4 border-l border-league-border">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[7px] md:text-[8px] font-black text-league-accent uppercase tracking-widest">{currentSystemRole.split(' ')[0]}</span>
+                    <button onClick={logout} className="hidden md:block text-[10px] font-bold text-league-muted hover:text-white uppercase transition-colors">Logout</button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>
