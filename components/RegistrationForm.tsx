@@ -1,28 +1,47 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Role, Franchise, Preferences, RecruitingStatus, Profile, TalentTier } from '../types';
 import { useApp } from '../App';
 
 export const RegistrationForm: React.FC = () => {
-  const { addProfile, addToast } = useApp();
+  const { addProfile, addToast, logActivity } = useApp();
   const [role, setRole] = useState<Role>(Role.PLAYER);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', dob: '', nationality: '', positions: '',
-    currentClub: '', isUnderContract: false, height_cm: '', weight_kg: '', highlight1: '', consent: false,
+    height_cm: '', weight_kg: '', consent: false,
   });
-  const [preferences, setPreferences] = useState<Preferences>({
-    rank1: Franchise.NOTTINGHAM, rank2: Franchise.GLASGOW, rank3: Franchise.DUSSELDORF,
-    rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH,
-  });
+  const [preferences, setPreferences] = useState<Franchise[]>([
+    Franchise.NOTTINGHAM, Franchise.GLASGOW, Franchise.DUSSELDORF, Franchise.STUTTGART, Franchise.ZURICH
+  ]);
   const [success, setSuccess] = useState(false);
+
+  const handlePreferenceChange = (index: number, value: Franchise) => {
+    const newPrefs = [...preferences];
+    const oldIndex = newPrefs.indexOf(value);
+    // Swap positions to prevent duplicates
+    const temp = newPrefs[index];
+    newPrefs[index] = value;
+    newPrefs[oldIndex] = temp;
+    setPreferences(newPrefs);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Validate Age
+    const birthDate = new Date(formData.dob);
+    const age = new Date().getFullYear() - birthDate.getFullYear();
+    if (age < 18) {
+      addToast("IAL Recruitment restricted to 18+. Induction Rejected.", "error");
+      setLoading(false);
+      return;
+    }
+
     setTimeout(() => {
       const p: Profile = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: 'n' + Math.random().toString(36).substr(2, 5),
         fullName: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         phone: formData.phone,
@@ -31,46 +50,92 @@ export const RegistrationForm: React.FC = () => {
         role,
         tier: TalentTier.TIER3,
         status: RecruitingStatus.NEW_LEAD,
-        preferences,
-        createdAt: new Date().toISOString(),
-        positions: formData.positions.split(',').map(s => s.trim()),
+        preferences: {
+          rank1: preferences[0], rank2: preferences[1], rank3: preferences[2],
+          rank4: preferences[3], rank5: preferences[4]
+        },
+        createdAt: new Date().toISOString().split('T')[0],
+        positions: formData.positions.split(',').map(s => s.trim().toUpperCase()),
+        height_cm: parseInt(formData.height_cm) || 0,
+        weight_kg: parseInt(formData.weight_kg) || 0,
         metrics: { speed: 5, strength: 5, agility: 5, iq: 5, versatility: 5 },
         isIronmanPotential: false,
         documents: [],
         onboardingChecklist: [],
-        draftReadiness: 45
+        draftReadiness: 45,
+        avatar_url: `https://i.pravatar.cc/150?u=${formData.email}`
       };
+      
       addProfile(p);
+      logActivity('REGISTRATION', `New athlete induction: ${p.fullName} (${p.positions[0]})`, p.id);
       setSuccess(true);
       setLoading(false);
-      addToast("Profile Committed to Registry", "success");
+      addToast("Personnel Dossier Committed to Registry", "success");
     }, 1500);
   };
 
   if (success) return (
-    <div className="text-center p-12 bg-league-panel border border-league-border rounded-[3rem] animate-in zoom-in-95">
-      <h2 className="text-4xl font-black italic uppercase text-white mb-6">Induction Complete</h2>
-      <p className="text-league-muted uppercase tracking-widest text-xs mb-8">Your data packet is now live in the Personnel Pool.</p>
-      <button onClick={() => setSuccess(false)} className="bg-league-accent text-white px-12 py-4 rounded-2xl font-black italic uppercase">Return to Portal</button>
+    <div className="text-center p-12 bg-league-panel border-4 border-league-ok rounded-[3rem] animate-in zoom-in-95">
+      <div className="w-20 h-20 bg-league-ok/20 rounded-full flex items-center justify-center mx-auto mb-8 border-2 border-league-ok">
+         <svg className="w-10 h-10 text-league-ok" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+      </div>
+      <h2 className="text-4xl font-black italic uppercase text-white mb-4">Induction Verified</h2>
+      <p className="text-league-muted uppercase tracking-widest text-[10px] mb-10 font-bold opacity-70">Your data packet is live. Franchise GMs have been notified.</p>
+      <button onClick={() => window.location.reload()} className="bg-league-accent text-white px-12 py-5 rounded-2xl font-black italic uppercase tracking-widest text-sm shadow-xl hover:brightness-110">Return to Portal</button>
     </div>
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-league-bg/50 p-8 rounded-[2rem] border border-league-border">
-        <input required placeholder="First Name" className="bg-league-panel p-4 rounded-xl border border-league-border text-white" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
-        <input required placeholder="Last Name" className="bg-league-panel p-4 rounded-xl border border-league-border text-white" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
-        <input required type="email" placeholder="Email Uplink" className="bg-league-panel p-4 rounded-xl border border-league-border text-white" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-        <input required type="date" className="bg-league-panel p-4 rounded-xl border border-league-border text-white" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
-        <input required placeholder="Positions (e.g. QB, DB)" className="md:col-span-2 bg-league-panel p-4 rounded-xl border border-league-border text-white" value={formData.positions} onChange={e => setFormData({...formData, positions: e.target.value})} />
+    <form onSubmit={handleSubmit} className="space-y-12">
+      <div className="space-y-6">
+        <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Biometric & Identity Nodes</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Input label="First Name" value={formData.firstName} onChange={v => setFormData({...formData, firstName: v})} />
+          <Input label="Last Name" value={formData.lastName} onChange={v => setFormData({...formData, lastName: v})} />
+          <Input label="Email Address" type="email" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
+          <Input label="Date of Birth" type="date" value={formData.dob} onChange={v => setFormData({...formData, dob: v})} />
+          <Input label="Nationality" value={formData.nationality} onChange={v => setFormData({...formData, nationality: v})} />
+          <Input label="Tactical Positions (e.g. QB, WR)" value={formData.positions} onChange={v => setFormData({...formData, positions: v})} />
+          <Input label="Height (cm)" type="number" value={formData.height_cm} onChange={v => setFormData({...formData, height_cm: v})} />
+          <Input label="Weight (kg)" type="number" value={formData.weight_kg} onChange={v => setFormData({...formData, weight_kg: v})} />
+        </div>
       </div>
-      <div className="flex items-center gap-4 bg-league-panel p-6 rounded-2xl border border-league-border">
-        <input type="checkbox" checked={formData.consent} onChange={e => setFormData({...formData, consent: e.target.checked})} />
-        <label className="text-[10px] font-bold text-league-muted uppercase">I authorize IAL to process my biometric and personnel data for recruitment ops.</label>
+
+      <div className="space-y-6">
+        <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Tactical Franchise Routing (Rank 1-5)</h4>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {preferences.map((pref, i) => (
+            <div key={i} className="space-y-2">
+              <label className="text-[8px] font-black uppercase text-league-muted tracking-widest">Rank {i+1}</label>
+              <select 
+                className="w-full bg-league-bg border border-league-border p-3 rounded-xl text-white font-bold text-[10px] appearance-none focus:border-league-accent outline-none"
+                value={pref}
+                onChange={e => handlePreferenceChange(i, e.target.value as Franchise)}
+              >
+                {Object.values(Franchise).map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
       </div>
-      <button type="submit" disabled={!formData.consent || loading} className="w-full bg-league-accent text-white py-8 rounded-[2rem] font-black italic uppercase tracking-[0.5em] text-2xl shadow-2xl hover:brightness-110 disabled:opacity-30">
-        {loading ? "COMMITTING..." : "SUBMIT PROFILE"}
+
+      <div className="flex items-start gap-4 bg-league-bg/50 p-6 rounded-2xl border border-league-border">
+        <input type="checkbox" required className="mt-1 accent-league-accent" checked={formData.consent} onChange={e => setFormData({...formData, consent: e.target.checked})} />
+        <label className="text-[9px] font-bold text-league-muted uppercase leading-relaxed tracking-widest">
+          I authorize the International Arena League to process my personnel, biometric, and performance data for 2026 Draft recruitment operations.
+        </label>
+      </div>
+
+      <button type="submit" disabled={!formData.consent || loading} className="w-full bg-league-accent text-white py-8 rounded-[2.5rem] font-black italic uppercase tracking-[0.5em] text-2xl shadow-2xl hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-4">
+        {loading ? <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" /> : "INITIALIZE INDUCTION"}
       </button>
     </form>
   );
 };
+
+const Input = ({ label, value, onChange, type = "text" }: any) => (
+  <div className="space-y-2 group">
+    <label className="text-[9px] font-black uppercase text-league-muted tracking-widest group-focus-within:text-league-accent transition-colors">{label}</label>
+    <input required type={type} className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-xs focus:border-league-accent outline-none transition-all shadow-inner" value={value} onChange={e => onChange(e.target.value)} />
+  </div>
+);

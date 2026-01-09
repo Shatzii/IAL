@@ -3,6 +3,7 @@
   "description": "A comprehensive International Arena League recruitment system featuring a central registry, franchise management, and pipeline automation with a high-performance black/red aesthetic.",
   "requestFramePermissions": [
     "camera",
-    "microphone"
+    "microphone",
+    "geolocation"
   ]
 }

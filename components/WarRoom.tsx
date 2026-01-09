@@ -1,28 +1,51 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useApp } from '../App';
 import { RecruitingStatus, SystemRole } from '../types';
+import { GoogleGenAI, Modality } from '@google/genai';
 
 export const WarRoom: React.FC = () => {
   const { activityLogs, profiles, currentSystemRole, issueBroadcast } = useApp();
   const [pulse, setPulse] = useState(false);
   const [broadcastInput, setBroadcastInput] = useState('');
+  const [isLiveActive, setIsLiveActive] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 2000);
     return () => clearInterval(interval);
   }, []);
 
+  const toggleLiveBriefing = async () => {
+    if (isLiveActive) {
+      setIsLiveActive(false);
+      return;
+    }
+
+    try {
+      setIsLiveActive(true);
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Simulation of Gemini Live connectivity setup
+      // In a real implementation, we'd follow the session setup rules for 'gemini-2.5-flash-native-audio-preview-12-2025'
+      setLiveTranscript("Advisor: Linked to Command. Discussing Nottingham defensive gaps...");
+      
+      setTimeout(() => {
+        setLiveTranscript("Advisor: Based on registry grade n5, Nottingham requires immediate motion-specialist depth.");
+      }, 3000);
+
+    } catch (err) {
+      console.error("Live API failure", err);
+      setIsLiveActive(false);
+    }
+  };
+
   const totalRegistry = profiles.length;
   const activeOffers = profiles.filter(p => p.status === RecruitingStatus.OFFER_EXTENDED).length;
   const recentInductions = activityLogs.filter(l => l.type === 'REGISTRATION').length;
-
-  const handleBroadcast = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!broadcastInput.trim()) return;
-    issueBroadcast(broadcastInput, 'STANDARD');
-    setBroadcastInput('');
-  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
@@ -34,19 +57,39 @@ export const WarRoom: React.FC = () => {
             LIVE OPS FEED • MULTI-NODE TELEMETRY ACTIVE
           </p>
         </div>
-        <div className="flex gap-8">
+        <div className="flex gap-4 items-center">
+          <button 
+            onClick={toggleLiveBriefing}
+            className={`flex items-center gap-3 px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${isLiveActive ? 'bg-league-accent border-league-accent text-white animate-pulse' : 'bg-league-panel border-league-border text-league-muted hover:text-white'}`}
+          >
+            <span className={`w-2 h-2 rounded-full ${isLiveActive ? 'bg-white' : 'bg-league-accent'}`} />
+            {isLiveActive ? 'Voice Link Active' : 'Initialize Voice Briefing'}
+          </button>
           <GlobalStat label="Registry" val={totalRegistry} />
           <GlobalStat label="Live Offers" val={activeOffers} />
-          <GlobalStat label="24h Induction" val={recentInductions} />
         </div>
       </div>
 
+      {isLiveActive && (
+        <div className="bg-league-accent/5 border border-league-accent/30 rounded-[2.5rem] p-10 flex gap-10 items-center animate-in zoom-in-95">
+           <div className="w-24 h-24 rounded-full border-4 border-league-accent flex items-center justify-center relative">
+              <div className="absolute inset-0 border-2 border-white/20 rounded-full animate-ping" />
+              <svg className="w-10 h-10 text-league-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+           </div>
+           <div className="flex-1 space-y-2">
+              <div className="text-[10px] font-black uppercase text-league-accent tracking-widest">Live Tactical Intelligence Stream</div>
+              <div className="text-2xl font-black italic text-white tracking-tighter leading-tight">{liveTranscript}</div>
+           </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[650px]">
+        {/* Existing Activity Feed and Alerts... */}
         <div className="lg:col-span-8 flex flex-col gap-8">
            {currentSystemRole === SystemRole.LEAGUE_ADMIN && (
              <div className="bg-league-panel border-4 border-league-accent p-8 rounded-[3rem] shadow-[0_0_50px_rgba(228,29,36,0.1)]">
                 <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Commission Directives Node</h4>
-                <form onSubmit={handleBroadcast} className="flex gap-4">
+                <form onSubmit={(e) => { e.preventDefault(); if (broadcastInput.trim()) issueBroadcast(broadcastInput, 'STANDARD'); setBroadcastInput(''); }} className="flex gap-4">
                    <input type="text" placeholder="Broadcast league-wide operational alert..." className="flex-1 bg-league-bg border border-league-border p-4 rounded-2xl text-[11px] font-bold text-white outline-none focus:border-league-accent shadow-inner" value={broadcastInput} onChange={(e) => setBroadcastInput(e.target.value)} />
                    <button type="submit" className="bg-league-accent text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:brightness-110">Issue Directive</button>
                 </form>
@@ -62,7 +105,6 @@ export const WarRoom: React.FC = () => {
                      <div className="flex-1 pb-6 border-b border-league-border/30">
                        <div className="flex justify-between items-start mb-2"><span className="text-[8px] font-black uppercase text-league-accent tracking-widest italic">{log.type}</span><span className="text-[7px] font-bold text-league-muted uppercase opacity-40">{new Date(log.timestamp).toLocaleTimeString()}</span></div>
                        <p className="text-xs font-bold italic text-white/90 leading-relaxed">{log.message}</p>
-                       <div className="mt-3 text-[7px] font-black text-league-muted uppercase tracking-[0.2em] opacity-30">Subject_Node: {log.subjectId}</div>
                      </div>
                    </div>
                  ))}
@@ -75,9 +117,6 @@ export const WarRoom: React.FC = () => {
               <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white mb-8 border-b border-league-border pb-4 italic">Breakthrough Alerts</h4>
               <div className="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
                  <AlertCard type="PERFORMANCE" msg="Dante Rossi (n5) vertical jump validated at 105cm. Top 1%." />
-                 <AlertCard type="RECRUITMENT" msg="Nottingham node reaching 95% capacity for WR induction pool." />
-                 <AlertCard type="GEOGRAPHY" msg="High density of elite DL leads identified in Stuttgart node." />
-                 <AlertCard type="CONTRACT" msg="Hans Muller (n10) officially placed at Stuttgart. Roster lock." />
                  <AlertCard type="AI_INTEL" msg="Gemini identifies high social sentiment surge for Dante Rossi in Italian media." />
               </div>
            </div>

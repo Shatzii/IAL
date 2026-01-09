@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   ResponsiveContainer, Cell, PieChart, Pie, Tooltip, 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid 
 } from 'recharts';
 import { useApp } from '../App';
 import { Franchise, SystemRole, TalentTier, RecruitingStatus, Role } from '../types';
@@ -48,7 +48,6 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // --- Data Processing ---
   const pipelineData = useMemo(() => {
     return Object.values(RecruitingStatus).map(status => ({
       name: status.split(' ').map(w => w[0]).join(''), 
@@ -88,9 +87,7 @@ export const Dashboard: React.FC = () => {
 
   const exportToCsv = () => {
     const headers = ['ID', 'Name', 'Role', 'Tier', 'Status', 'Nationality', 'Franchise', 'Grade', 'Email'];
-    const rows = profiles.map(p => [
-      p.id, p.fullName, p.role, p.tier, p.status, p.nationality, p.assignedFranchise || 'None', p.scoutGrade || 'N/A', p.email
-    ]);
+    const rows = profiles.map(p => [p.id, p.fullName, p.role, p.tier, p.status, p.nationality, p.assignedFranchise || 'None', p.scoutGrade || 'N/A', p.email]);
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -103,7 +100,6 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Central Command OS</h2>
@@ -111,18 +107,11 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl">
           {(['Overview', 'Franchises', 'Management', 'Audit'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}
-            >
-              {tab}
-            </button>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
           ))}
         </div>
       </div>
 
-      {/* Global Actions Bar */}
       <div className="flex flex-wrap justify-between items-center bg-league-panel/50 p-6 rounded-[2rem] border border-league-border shadow-2xl gap-6">
         <div className="flex gap-6">
           <StatMini label="Registry Volume" value={profiles.length} />
@@ -130,100 +119,81 @@ export const Dashboard: React.FC = () => {
           <StatMini label="Active Pipeline" value={profiles.filter(p => p.status !== RecruitingStatus.INACTIVE).length} color="league-ok" />
         </div>
         <div className="flex gap-4">
-          <button 
-            onClick={() => setPrivacyMode(!isPrivacyMode)}
-            className={`px-6 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${isPrivacyMode ? 'bg-league-warn text-black border-league-warn' : 'text-league-muted border-league-border'}`}
-          >
-            {isPrivacyMode ? 'PII: MASKED' : 'PII: EXPOSED'}
-          </button>
-          <button onClick={exportToCsv} className="bg-league-accent text-white px-6 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-xl">
-            Export Master Archive
-          </button>
+          <button onClick={() => setPrivacyMode(!isPrivacyMode)} className={`px-6 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${isPrivacyMode ? 'bg-league-warn text-black border-league-warn' : 'text-league-muted border-league-border'}`}>{isPrivacyMode ? 'PII: MASKED' : 'PII: EXPOSED'}</button>
+          <button onClick={exportToCsv} className="bg-league-accent text-white px-6 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest hover:brightness-110 shadow-xl">Export Master Archive</button>
         </div>
       </div>
 
-      {/* Overview Tab: Tactical Map & Funnel */}
       {activeTab === 'Overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Tactical Map */}
-          <div className="lg:col-span-7">
-             <div className="mb-4 flex items-center gap-2">
-                <div className="h-0.5 w-6 bg-league-accent" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white italic leading-none">Global Node Distribution</h4>
-             </div>
-             <DeploymentMap />
-          </div>
-
+          <div className="lg:col-span-7"><div className="mb-4 flex items-center gap-2"><div className="h-0.5 w-6 bg-league-accent" /><h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white italic leading-none">Global Node Distribution</h4></div><DeploymentMap /></div>
           <div className="lg:col-span-5 flex flex-col gap-8">
-            <div className="flex-1 bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-10">Demand Distribution</h4>
-               <div className="h-60">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={prefDistribution} innerRadius={60} outerRadius={85} paddingAngle={8} dataKey="value">
-                        {prefDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={['#e41d24', '#40a9ff', '#23d18b', '#ffb84d', '#722ed1'][index % 5]} stroke="none" />)}
-                      </Pie>
-                      <Tooltip contentStyle={{ background: '#000', border: '1px solid #1a1a1a', fontSize: '10px', fontWeight: 'bold' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-               </div>
+            <div className="flex-1 bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-10">Demand Distribution</h4>
+               <div className="h-60"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={prefDistribution} innerRadius={60} outerRadius={85} paddingAngle={8} dataKey="value">{prefDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={['#e41d24', '#40a9ff', '#23d18b', '#ffb84d', '#722ed1'][index % 5]} stroke="none" />)}</Pie><Tooltip contentStyle={{ background: '#000', border: '1px solid #1a1a1a', fontSize: '10px', fontWeight: 'bold' }} /></PieChart></ResponsiveContainer></div>
             </div>
-
-            <div className="flex-1 bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-10">Funnel Velocity</h4>
-               <div className="h-44">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={pipelineData}>
-                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                        {pipelineData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.fullName] || '#444'} />
-                        ))}
-                      </Bar>
-                      <Tooltip contentStyle={{ background: '#000', border: '1px solid #1a1a1a', fontSize: '10px' }} cursor={{fill: 'transparent'}} />
-                    </BarChart>
-                  </ResponsiveContainer>
-               </div>
+            <div className="flex-1 bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-10">Funnel Velocity</h4>
+               <div className="h-44"><ResponsiveContainer width="100%" height="100%"><BarChart data={pipelineData}><Bar dataKey="count" radius={[4, 4, 0, 0]}>{pipelineData.map((entry, index) => <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.fullName] || '#444'} />)}</Bar><Tooltip contentStyle={{ background: '#000', border: '1px solid #1a1a1a', fontSize: '10px' }} cursor={{fill: 'transparent'}} /></BarChart></ResponsiveContainer></div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Franchises Tab */}
       {activeTab === 'Franchises' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 animate-in slide-in-from-bottom-4">
           {franchiseHealth.map(f => (
             <div key={f.name} className={`bg-league-panel border rounded-[2rem] p-8 transition-all hover:-translate-y-2 shadow-2xl relative overflow-hidden group ${f.isAlert ? 'border-league-accent/50' : 'border-league-border'}`}>
-              <div 
-                  className="absolute top-0 right-0 w-24 h-24 opacity-5 group-hover:opacity-10 transition-opacity translate-x-10 -translate-y-10 rounded-full" 
-                  style={{ backgroundColor: STATUS_COLORS[RecruitingStatus.PLACED] }}
-              />
-              <div className="flex justify-between items-start mb-6">
-                <h5 className="text-lg font-black italic uppercase text-white tracking-tighter leading-none">{f.name}</h5>
-                {f.isAlert && <span className="bg-league-accent text-[8px] font-black text-white px-3 py-1 rounded-full animate-pulse shadow-lg">ALERT</span>}
-              </div>
-              <div className="space-y-6">
-                <div className="flex justify-between items-end">
-                   <div className="text-4xl font-black italic text-white leading-none tracking-tighter">{f.rosterCount}</div>
-                   <div className="text-[10px] font-black text-league-muted uppercase tracking-widest">Linked</div>
-                </div>
-                <div className="w-full bg-league-bg h-2 rounded-full overflow-hidden shadow-inner">
-                   <div 
-                    className={`h-full transition-all duration-1000 ${f.capacity >= 100 ? 'bg-league-ok shadow-[0_0_10px_#23d18b]' : 'bg-league-accent shadow-[0_0_10px_#e41d24]'}`} 
-                    style={{ width: `${Math.min(100, f.capacity)}%` }} 
-                   />
-                </div>
-                <div className="flex justify-between text-[9px] font-black uppercase text-league-muted tracking-widest italic opacity-40">
-                  <span>Pool: {f.leadCount}</span>
-                  <span>{f.capacity}% Health</span>
-                </div>
-              </div>
+              <div className="absolute top-0 right-0 w-24 h-24 opacity-5 group-hover:opacity-10 transition-opacity translate-x-10 -translate-y-10 rounded-full" style={{ backgroundColor: STATUS_COLORS[RecruitingStatus.PLACED] }} />
+              <div className="flex justify-between items-start mb-6"><h5 className="text-lg font-black italic uppercase text-white tracking-tighter leading-none">{f.name}</h5>{f.isAlert && <span className="bg-league-accent text-[8px] font-black text-white px-3 py-1 rounded-full animate-pulse shadow-lg">ALERT</span>}</div>
+              <div className="space-y-6"><div className="flex justify-between items-end"><div className="text-4xl font-black italic text-white leading-none tracking-tighter">{f.rosterCount}</div><div className="text-[10px] font-black text-league-muted uppercase tracking-widest">Linked</div></div><div className="w-full bg-league-bg h-2 rounded-full overflow-hidden shadow-inner"><div className={`h-full transition-all duration-1000 ${f.capacity >= 100 ? 'bg-league-ok' : 'bg-league-accent'}`} style={{ width: `${Math.min(100, f.capacity)}%` }} /></div><div className="flex justify-between text-[9px] font-black uppercase text-league-muted tracking-widest italic opacity-40"><span>Pool: {f.leadCount}</span><span>{f.capacity}% Health</span></div></div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Management & Audit Tabs remain functional but with refined styling */}
-      {/* ... (Management/Audit logic remains same but inherits the new design tokens) */}
+      {activeTab === 'Management' && (
+        <div className="bg-league-panel border border-league-border rounded-[2.5rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4">
+          <div className="p-8 border-b border-league-border bg-league-tableHeader flex gap-4">
+            <select className="bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-black uppercase text-white outline-none" value={mgmtFilter.role} onChange={e => setMgmtFilter({...mgmtFilter, role: e.target.value})}>
+               <option value="ALL">All Roles</option><option value={Role.PLAYER}>Players</option><option value={Role.COACH}>Coaches</option>
+            </select>
+            <select className="bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-black uppercase text-white outline-none" value={mgmtFilter.status} onChange={e => setMgmtFilter({...mgmtFilter, status: e.target.value})}>
+               <option value="ALL">All Statuses</option>{Object.values(RecruitingStatus).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <input type="text" placeholder="Search registry..." className="flex-1 bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-bold text-white outline-none" value={mgmtFilter.search} onChange={e => setMgmtFilter({...mgmtFilter, search: e.target.value})} />
+          </div>
+          <div className="overflow-x-auto"><table className="w-full text-left">
+            <thead className="bg-league-tableHeader border-b border-league-border"><tr className="text-[8px] font-black uppercase text-league-muted"><th className="px-8 py-4">ID</th><th className="px-8 py-4">Personnel</th><th className="px-8 py-4">Role</th><th className="px-8 py-4">Status</th><th className="px-8 py-4">Grade</th><th className="px-8 py-4 text-right">Actions</th></tr></thead>
+            <tbody className="divide-y divide-league-border">
+              {filteredMgmtProfiles.map(p => (
+                <tr key={p.id} className="hover:bg-league-bg/30 transition-colors">
+                  <td className="px-8 py-4 text-[10px] font-mono text-league-muted">{p.id}</td>
+                  <td className="px-8 py-4"><div className="text-[11px] font-black italic text-white uppercase">{p.fullName}</div><div className="text-[8px] text-league-muted">{p.email}</div></td>
+                  <td className="px-8 py-4 text-[9px] font-black text-league-blue uppercase">{p.role}</td>
+                  <td className="px-8 py-4"><span className="text-[9px] font-black text-white bg-league-bg px-2 py-1 rounded border border-league-border">{p.status}</span></td>
+                  <td className="px-8 py-4 text-[10px] font-black italic text-league-accent">{p.scoutGrade || '--'}</td>
+                  <td className="px-8 py-4 text-right"><button onClick={() => deleteProfile(p.id)} className="text-league-accent hover:underline text-[9px] font-black uppercase">Purge</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table></div>
+        </div>
+      )}
+
+      {activeTab === 'Audit' && (
+        <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl h-[600px] flex flex-col overflow-hidden animate-in fade-in">
+           <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-8 italic">Immutable Registry Log</h4>
+           <div className="flex-1 overflow-y-auto space-y-4 pr-4 custom-scrollbar">
+              {activityLogs.map(log => (
+                <div key={log.id} className="p-4 bg-league-bg border border-league-border rounded-xl flex gap-6 items-start">
+                   <div className="text-[8px] font-black text-league-muted uppercase w-20">{new Date(log.timestamp).toLocaleTimeString()}</div>
+                   <div className="flex-1"><div className="text-[9px] font-black uppercase text-league-ok mb-1">{log.type}</div><div className="text-[11px] font-bold italic text-white/80">{log.message}</div></div>
+                   <div className="text-[7px] font-black uppercase text-league-muted opacity-30">Node_{log.subjectId}</div>
+                </div>
+              ))}
+              {activityLogs.length === 0 && <div className="h-full flex items-center justify-center opacity-20 italic font-black uppercase text-[10px]">No security events recorded</div>}
+           </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -57,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       items: [
         { view: 'landing', label: 'League Home' },
         { view: 'register', label: 'Draft Induction', roles: [SystemRole.PLAYER, SystemRole.LEAGUE_ADMIN] },
+        { view: 'schedule', label: 'Operations Timeline' },
         { view: 'athlete-portal', label: 'Athlete Portal', roles: [SystemRole.PLAYER, SystemRole.LEAGUE_ADMIN] },
       ]
     },
@@ -67,6 +68,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
         { view: 'compare', label: 'Scouting Lab', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'pipeline', label: 'Recruitment Funnel', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'war-room', label: 'War Room Feed', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
+        { view: 'draft', label: 'Draft Operations', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
       ]
     },
     {
@@ -116,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
 
                 {isMenuOpen && (
                   <div className="absolute top-full left-0 mt-3 w-[85vw] md:w-[500px] bg-league-panel/95 backdrop-blur-2xl border border-league-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-4 duration-300 z-[100]">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-4 max-h-[70vh] overflow-y-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
                       {menuSections.map((section, idx) => {
                         const visibleItems = section.items.filter(item => !item.roles || item.roles.includes(currentSystemRole));
                         if (visibleItems.length === 0) return null;
@@ -139,9 +141,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
                           </div>
                         );
                       })}
-                      <div className="md:hidden pt-4 border-t border-league-border mt-2">
-                         <button onClick={() => { logout(); setIsMenuOpen(false); }} className="w-full text-left px-3 py-3 rounded-lg text-[10px] font-black uppercase text-league-accent tracking-widest bg-league-accent/10">Terminate Session</button>
-                      </div>
                     </div>
                   </div>
                 )}
