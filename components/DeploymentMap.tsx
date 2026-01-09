@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Franchise, FRANCHISE_COLORS } from '../types';
 
@@ -8,6 +7,19 @@ const NODES = [
   { id: Franchise.DUSSELDORF, x: 52, y: 42, label: 'DUS' },
   { id: Franchise.STUTTGART, x: 55, y: 48, label: 'STU' },
   { id: Franchise.ZURICH, x: 54, y: 55, label: 'ZUR' },
+  { id: Franchise.BERLIN, x: 62, y: 38, label: 'BER' },
+  { id: Franchise.FEHERVAR, x: 65, y: 52, label: 'FEH' },
+  { id: Franchise.WROCLAW, x: 72, y: 35, label: 'WRO' },
+  { id: Franchise.HAMBURG, x: 55, y: 32, label: 'HAM' },
+  { id: Franchise.PRAGUE, x: 62, y: 45, label: 'PRG' },
+  { id: Franchise.NORDIC_STORM, x: 54, y: 18, label: 'NOR' },
+  { id: Franchise.VIENNA, x: 66, y: 48, label: 'VIE' },
+  { id: Franchise.COLOGNE, x: 52, y: 45, label: 'CGN' },
+  { id: Franchise.FRANKFURT, x: 54, y: 45, label: 'FRA' },
+  { id: Franchise.MADRID, x: 30, y: 70, label: 'MAD' },
+  { id: Franchise.MUNICH, x: 60, y: 52, label: 'MUN' },
+  { id: Franchise.PARIS, x: 48, y: 48, label: 'PAR' },
+  { id: Franchise.RAIDERS_TIROL, x: 58, y: 55, label: 'TIR' },
 ];
 
 export const DeploymentMap: React.FC<{ activeFranchise?: Franchise }> = ({ activeFranchise }) => {
