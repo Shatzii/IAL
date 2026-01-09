@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Role, Franchise, Preferences, RecruitingStatus, Profile, TalentTier } from '../types';
 import { useApp } from '../App';
 
@@ -7,15 +7,26 @@ export const RegistrationForm: React.FC = () => {
   const { addProfile, addToast } = useApp();
   const [role, setRole] = useState<Role>(Role.PLAYER);
   const [loading, setLoading] = useState(false);
+  const [useImperial, setUseImperial] = useState(false);
+  
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     dob: '',
     nationality: '',
     positions: '',
+    currentClub: '',
+    isUnderContract: false,
     height_cm: '',
     weight_kg: '',
+    height_ft: '',
+    height_in: '',
+    weight_lbs: '',
+    highlight1: '',
+    highlight2: '',
+    highlight3: '',
     personalBio: '',
     consent: false,
   });
@@ -32,6 +43,31 @@ export const RegistrationForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [appId, setAppId] = useState<string | null>(null);
 
+  // Conversion Logic
+  useEffect(() => {
+    if (useImperial) {
+      if (formData.height_cm) {
+        const totalInches = parseFloat(formData.height_cm) / 2.54;
+        const ft = Math.floor(totalInches / 12);
+        const inches = Math.round(totalInches % 12);
+        setFormData(prev => ({ ...prev, height_ft: ft.toString(), height_in: inches.toString() }));
+      }
+      if (formData.weight_kg) {
+        const lbs = Math.round(parseFloat(formData.weight_kg) * 2.20462);
+        setFormData(prev => ({ ...prev, weight_lbs: lbs.toString() }));
+      }
+    } else {
+      if (formData.height_ft || formData.height_in) {
+        const cm = Math.round((parseInt(formData.height_ft || '0') * 12 + parseInt(formData.height_in || '0')) * 2.54);
+        setFormData(prev => ({ ...prev, height_cm: cm.toString() }));
+      }
+      if (formData.weight_lbs) {
+        const kg = Math.round(parseFloat(formData.weight_lbs) / 2.20462);
+        setFormData(prev => ({ ...prev, weight_kg: kg.toString() }));
+      }
+    }
+  }, [useImperial]);
+
   const calculateAge = (dob: string) => {
     const today = new Date();
     const birthDate = new Date(dob);
@@ -39,10 +75,6 @@ export const RegistrationForm: React.FC = () => {
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     return age;
-  };
-
-  const handlePrefChange = (rank: keyof Preferences, value: Franchise) => {
-    setPreferences(prev => ({ ...prev, [rank]: value }));
   };
 
   const validatePreferences = () => {
@@ -74,17 +106,22 @@ export const RegistrationForm: React.FC = () => {
     }
 
     const payload = {
-      full_name: formData.fullName,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      full_name: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
       phone: formData.phone,
       date_of_birth: formData.dob,
       nationality: formData.nationality,
+      current_club: formData.currentClub,
+      is_under_contract: formData.isUnderContract,
       preferences: preferences,
       applicant_source: "WEB_FORM",
       ...(role === Role.PLAYER ? {
         positions: formData.positions.split(',').map(p => p.trim()),
-        height_cm: formData.height_cm ? parseInt(formData.height_cm) : null,
-        weight_kg: formData.weight_kg ? parseInt(formData.weight_kg) : null,
+        height_cm: useImperial ? Math.round((parseInt(formData.height_ft || '0') * 12 + parseInt(formData.height_in || '0')) * 2.54) : parseInt(formData.height_cm || '0'),
+        weight_kg: useImperial ? Math.round(parseFloat(formData.weight_lbs || '0') / 2.20462) : parseInt(formData.weight_kg || '0'),
+        highlight_urls: [formData.highlight1, formData.highlight2, formData.highlight3].filter(u => u.length > 0)
       } : {
         coaching_roles: formData.positions.split(',').map(p => p.trim()),
         experience_summary: formData.personalBio
@@ -92,10 +129,7 @@ export const RegistrationForm: React.FC = () => {
     };
 
     try {
-      const API_BASE = (import.meta as any).env?.VITE_API_BASE || 
-                      (process as any).env?.VITE_API_BASE || 
-                      'http://localhost:8000';
-
+      const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:8000';
       const endpoint = role === Role.PLAYER ? '/applications/player' : '/applications/coach';
       
       const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -112,9 +146,12 @@ export const RegistrationForm: React.FC = () => {
 
       setAppId(result.application_id);
 
+      // Fix: Access height_cm and weight_kg from payload using type assertion since payload is a union
       const newProfile: Profile = {
         id: result.application_id || Math.random().toString(36).substr(2, 9),
-        fullName: formData.fullName,
+        fullName: payload.full_name,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         dateOfBirth: formData.dob,
@@ -124,8 +161,8 @@ export const RegistrationForm: React.FC = () => {
         status: RecruitingStatus.NEW_LEAD,
         preferences: preferences,
         createdAt: new Date().toISOString(),
-        height_cm: formData.height_cm ? parseInt(formData.height_cm) : undefined,
-        weight_kg: formData.weight_kg ? parseInt(formData.weight_kg) : undefined,
+        height_cm: (payload as any).height_cm,
+        weight_kg: (payload as any).weight_kg,
         positions: formData.positions.split(',').map(p => p.trim()),
         personalBio: formData.personalBio,
         metrics: { speed: 5, strength: 5, agility: 5, iq: 5, versatility: 5 },
@@ -133,7 +170,10 @@ export const RegistrationForm: React.FC = () => {
         avatar_url: '',
         documents: [],
         onboardingChecklist: [],
-        combineResults: []
+        combineResults: [],
+        currentClub: formData.currentClub,
+        isUnderContract: formData.isUnderContract,
+        highlightUrls: [formData.highlight1, formData.highlight2, formData.highlight3].filter(u => u.length > 0)
       };
 
       addProfile(newProfile);
@@ -148,7 +188,7 @@ export const RegistrationForm: React.FC = () => {
   };
 
   if (success) {
-    const playerPass = formData.fullName.replace(/\s/g, '').toLowerCase() + '2024';
+    const playerPass = (formData.firstName + formData.lastName).toLowerCase() + '2024';
     return (
       <div className="max-w-2xl mx-auto p-8 md:p-12 bg-league-panel border border-league-border rounded-3xl md:rounded-[3rem] text-center space-y-6 md:space-y-8 animate-in zoom-in-95 shadow-2xl">
         <div className="w-20 h-20 md:w-24 md:h-24 bg-league-ok/10 text-league-ok rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4 border-2 border-league-ok/30">
@@ -184,6 +224,7 @@ export const RegistrationForm: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 md:space-y-10">
+        {/* Role Selection */}
         <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] shadow-2xl">
             <label className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-league-accent mb-4 md:mb-6 text-center">Operational Role Classification</label>
             <div className="flex flex-col sm:flex-row gap-3 md:gap-6">
@@ -200,62 +241,123 @@ export const RegistrationForm: React.FC = () => {
             </div>
         </div>
 
-        <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 shadow-2xl">
-          <div className="col-span-full mb-2 flex items-center gap-4">
+        {/* Personal Info Section */}
+        <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] shadow-2xl space-y-8">
+          <div className="flex items-center gap-4">
              <div className="h-0.5 w-8 md:w-10 bg-league-accent" />
-             <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">Personal Parameters</h3>
+             <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">Personal Info</h3>
           </div>
-          <div className="space-y-4 md:space-y-6">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             <div>
-              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Identification Name</label>
-              <input required type="text" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">First Name</label>
+              <input required type="text" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
             </div>
             <div>
-              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Comms Endpoint (Email)</label>
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Last Name</label>
+              <input required type="text" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Email Address</label>
               <input required type="email" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
             </div>
-          </div>
-          <div className="space-y-4 md:space-y-6">
             <div>
-              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Tactical Positions</label>
-              <input required type="text" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.positions} onChange={e => setFormData({...formData, positions: e.target.value})} placeholder="e.g. QB, WR" />
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Phone Number</label>
+              <input required type="tel" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
             </div>
             <div>
               <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Date of Birth</label>
               <input required type="date" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
             </div>
-          </div>
-          <div className="col-span-full">
-            <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Professional Dossier / Personal History</label>
-            <textarea 
-              required
-              rows={4}
-              placeholder="Detail your arena-relevant history, performance metrics, and strategic value..."
-              className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white focus:outline-none focus:border-league-accent font-bold text-xs md:text-sm resize-none shadow-inner"
-              value={formData.personalBio}
-              onChange={e => setFormData({...formData, personalBio: e.target.value})}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-10 col-span-full">
             <div>
-              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Origin Nationality</label>
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Nationality</label>
               <input required type="text" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-               <div>
-                  <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Height (cm)</label>
-                  <input type="number" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.height_cm} onChange={e => setFormData({...formData, height_cm: e.target.value})} />
-               </div>
-               <div>
-                  <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Weight (kg)</label>
-                  <input type="number" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.weight_kg} onChange={e => setFormData({...formData, weight_kg: e.target.value})} />
-               </div>
+            <div>
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Current Club</label>
+              <input type="text" className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white text-sm focus:outline-none focus:border-league-accent font-bold shadow-inner" value={formData.currentClub} onChange={e => setFormData({...formData, currentClub: e.target.value})} />
+            </div>
+            <div className="flex items-center gap-4 pt-6">
+              <label className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-league-muted">Currently under paid contract?</label>
+              <div className="flex bg-league-bg p-1 rounded-lg border border-league-border">
+                <button type="button" onClick={() => setFormData({...formData, isUnderContract: true})} className={`px-4 py-1.5 rounded-md text-[8px] font-black uppercase ${formData.isUnderContract ? 'bg-league-accent text-white' : 'text-league-muted'}`}>Yes</button>
+                <button type="button" onClick={() => setFormData({...formData, isUnderContract: false})} className={`px-4 py-1.5 rounded-md text-[8px] font-black uppercase ${!formData.isUnderContract ? 'bg-league-accent text-white' : 'text-league-muted'}`}>No</button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] shadow-2xl">
-          <div className="flex items-center gap-4 mb-6 md:mb-8">
+        {/* Physical Data Section */}
+        <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] shadow-2xl space-y-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+               <div className="h-0.5 w-8 md:w-10 bg-league-accent" />
+               <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">Physical Data</h3>
+            </div>
+            <button type="button" onClick={() => setUseImperial(!useImperial)} className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-league-accent border border-league-accent px-4 py-1.5 rounded-full hover:bg-league-accent hover:text-white transition-all">
+              Switch to {useImperial ? 'Metric' : 'Imperial'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+               <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-4">Height</label>
+               {useImperial ? (
+                 <div className="flex gap-4">
+                    <div className="flex-1">
+                       <input type="number" placeholder="ft" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-center" value={formData.height_ft} onChange={e => setFormData({...formData, height_ft: e.target.value})} />
+                    </div>
+                    <div className="flex-1">
+                       <input type="number" placeholder="in" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-center" value={formData.height_in} onChange={e => setFormData({...formData, height_in: e.target.value})} />
+                    </div>
+                 </div>
+               ) : (
+                 <input type="number" placeholder="cm" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-center" value={formData.height_cm} onChange={e => setFormData({...formData, height_cm: e.target.value})} />
+               )}
+            </div>
+            <div>
+               <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-4">Weight</label>
+               {useImperial ? (
+                 <input type="number" placeholder="lbs" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-center" value={formData.weight_lbs} onChange={e => setFormData({...formData, weight_lbs: e.target.value})} />
+               ) : (
+                 <input type="number" placeholder="kg" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-center" value={formData.weight_kg} onChange={e => setFormData({...formData, weight_kg: e.target.value})} />
+               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Tactical Info Section */}
+        <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] shadow-2xl space-y-8">
+           <div className="flex items-center gap-4">
+              <div className="h-0.5 w-8 md:w-10 bg-league-accent" />
+              <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">Tactical Info</h3>
+           </div>
+           <div>
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Positions Played (comma separated)</label>
+              <input required type="text" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold shadow-inner" value={formData.positions} onChange={e => setFormData({...formData, positions: e.target.value})} placeholder="e.g. QB, WR, DB" />
+           </div>
+           <div>
+              <label className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-league-muted mb-2">Professional Summary</label>
+              <textarea rows={4} className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-sm resize-none shadow-inner" value={formData.personalBio} onChange={e => setFormData({...formData, personalBio: e.target.value})} placeholder="Describe your experience, achievements, and goals..." />
+           </div>
+        </div>
+
+        {/* Highlight Film Section */}
+        <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] shadow-2xl space-y-8">
+           <div className="flex items-center gap-4">
+              <div className="h-0.5 w-8 md:w-10 bg-league-accent" />
+              <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">Highlight Film</h3>
+           </div>
+           <div className="space-y-4">
+              <input type="url" placeholder="Primary Link (e.g. Hudl, YouTube)" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white text-xs font-bold shadow-inner" value={formData.highlight1} onChange={e => setFormData({...formData, highlight1: e.target.value})} />
+              <input type="url" placeholder="Secondary Link" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white text-xs font-bold shadow-inner" value={formData.highlight2} onChange={e => setFormData({...formData, highlight2: e.target.value})} />
+              <input type="url" placeholder="Additional Footage" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white text-xs font-bold shadow-inner" value={formData.highlight3} onChange={e => setFormData({...formData, highlight3: e.target.value})} />
+           </div>
+        </div>
+
+        {/* Preferences Section */}
+        <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] shadow-2xl space-y-8">
+          <div className="flex items-center gap-4">
              <div className="h-0.5 w-8 md:w-10 bg-league-accent" />
              <h3 className="text-xl md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">Strategic Routing</h3>
           </div>
@@ -266,16 +368,17 @@ export const RegistrationForm: React.FC = () => {
                 <select 
                   className="w-full bg-league-bg border border-league-border p-3 md:p-4 rounded-xl text-white appearance-none focus:outline-none focus:border-league-accent font-black text-[9px] md:text-[11px] text-center shadow-inner cursor-pointer" 
                   value={preferences[rank]} 
-                  onChange={e => handlePrefChange(rank, e.target.value as Franchise)}
+                  onChange={e => setPreferences({...preferences, [rank]: e.target.value as Franchise})}
                 >
                   {Object.values(Franchise).map(f => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             ))}
           </div>
-          <p className="mt-6 md:mt-8 text-[8px] text-league-muted font-black uppercase tracking-[0.2em] text-center italic opacity-40">Draft eligibility requires a unique rank for all five operational nodes.</p>
+          <p className="text-[8px] text-league-muted font-black uppercase tracking-[0.2em] text-center italic opacity-40">Unique rank assignments required for all five nodes.</p>
         </div>
 
+        {/* Consent Section */}
         <div className="bg-league-panel p-6 md:p-10 border border-league-border rounded-2xl md:rounded-[2.5rem] flex items-start md:items-center gap-4 md:gap-6 shadow-2xl">
            <div className="relative inline-flex flex-shrink-0 pt-1 md:pt-0">
               <input 

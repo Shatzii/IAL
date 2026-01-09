@@ -112,6 +112,8 @@ export interface GradingConfig {
 export interface Profile {
   id: string;
   fullName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string;
   dateOfBirth: string;
@@ -144,6 +146,8 @@ export interface Profile {
   depthRanks?: Record<string, number>;
   contractEnd?: string;
   combineResults?: CombineResult[];
+  currentClub?: string;
+  isUnderContract?: boolean;
 }
 
 export interface ActivityLog {
