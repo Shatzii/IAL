@@ -19,11 +19,11 @@ export const Login: React.FC = () => {
     { email: 'stuttgart@gm.ial.com', pass: 'GMStuttgart!', role: SystemRole.FRANCHISE_GM, franchise: Franchise.STUTTGART },
     { email: 'zurich@gm.ial.com', pass: 'GMZurich!', role: SystemRole.FRANCHISE_GM, franchise: Franchise.ZURICH },
     // Coaches
+    { email: 'talib.wise@zurich.ial.com', pass: 'CoachZurich!', role: SystemRole.COACH_STAFF, franchise: Franchise.ZURICH },
     { email: 'nottingham@coach.ial.com', pass: 'CoachNottingham!', role: SystemRole.COACH_STAFF, franchise: Franchise.NOTTINGHAM },
     { email: 'glasgow@coach.ial.com', pass: 'CoachGlasgow!', role: SystemRole.COACH_STAFF, franchise: Franchise.GLASGOW },
     { email: 'dusseldorf@coach.ial.com', pass: 'CoachDusseldorf!', role: SystemRole.COACH_STAFF, franchise: Franchise.DUSSELDORF },
     { email: 'stuttgart@coach.ial.com', pass: 'CoachStuttgart!', role: SystemRole.COACH_STAFF, franchise: Franchise.STUTTGART },
-    { email: 'zurich@coach.ial.com', pass: 'CoachZurich!', role: SystemRole.COACH_STAFF, franchise: Franchise.ZURICH },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -124,12 +124,12 @@ export const Login: React.FC = () => {
                 <span>admin@ial-football.com | Admin2024!</span>
             </div>
             <div className="flex justify-between opacity-60">
-                <span className="uppercase">GM (e.g. Zurich):</span>
-                <span>zurich@gm.ial.com | GMZurich!</span>
+                <span className="uppercase">Zurich Head Coach:</span>
+                <span>talib.wise@zurich.ial.com | CoachZurich!</span>
             </div>
             <div className="flex justify-between opacity-60">
-                <span className="uppercase">Coach (e.g. Glasgow):</span>
-                <span>glasgow@coach.ial.com | CoachGlasgow!</span>
+                <span className="uppercase">GM (e.g. Zurich):</span>
+                <span>zurich@gm.ial.com | GMZurich!</span>
             </div>
             <p className="italic text-center pt-2 border-t border-league-border uppercase font-black text-[8px]">Players: login with registered email. <br/>Pwd: [firstname+lastname]2024 (all lowercase, no spaces)</p>
         </div>

@@ -28,14 +28,6 @@ export enum RecruitingStatus {
   INACTIVE = 'Inactive'
 }
 
-export enum ContractStatus {
-  UNOFFERED = 'Unoffered',
-  OFFERED = 'Offered',
-  NEGOTIATING = 'Negotiating',
-  SIGNED = 'Signed',
-  TERMINATED = 'Terminated'
-}
-
 export enum Franchise {
   NOTTINGHAM = 'Nottingham',
   GLASGOW = 'Glasgow',
@@ -52,12 +44,13 @@ export const FRANCHISE_COLORS: Record<Franchise, string> = {
   [Franchise.ZURICH]: '#722ed1'
 };
 
+// Add FRANCHISE_TEAMS constant
 export const FRANCHISE_TEAMS: Record<Franchise, string[]> = {
-  [Franchise.NOTTINGHAM]: ['Nottingham Hoods', 'Sherwood Sabres', 'Trent Titans'],
-  [Franchise.GLASGOW]: ['Glasgow Gladiators', 'Clyde Crusaders', 'Highland Hammers'],
-  [Franchise.DUSSELDORF]: ['Düsseldorf Dragons', 'Rhine Rangers', 'Neon Knights'],
-  [Franchise.STUTTGART]: ['Stuttgart Surge', 'Baden Blitz', 'MHP Mustangs'],
-  [Franchise.ZURICH]: ['Zürich Zephyrs', 'Alpine Aces', 'Lakeside Lancers'],
+  [Franchise.NOTTINGHAM]: ['Hoods', 'Outlaws'],
+  [Franchise.GLASGOW]: ['Tigers', 'Rocks'],
+  [Franchise.DUSSELDORF]: ['Panthers', 'Fire'],
+  [Franchise.STUTTGART]: ['Surge', 'Scorpions'],
+  [Franchise.ZURICH]: ['Helvetic Guards', 'Renegades']
 };
 
 export interface Preferences {
@@ -92,13 +85,11 @@ export interface OnboardingTask {
   category: 'Legal' | 'Travel' | 'Medical' | 'Logistics';
 }
 
-export interface CombineResult {
-  fortyYardDash: string;
-  benchPressReps: number;
-  verticalJump_cm: number;
-  broadJump_cm: number;
-  recordedAt: string;
-  recordedBy: string;
+export interface VideoTag {
+  timestamp: string;
+  note: string;
+  scoutId: string;
+  scoutName: string;
 }
 
 export interface GradingConfig {
@@ -107,6 +98,16 @@ export interface GradingConfig {
   agilityWeight: number;
   iqWeight: number;
   versatilityWeight: number;
+}
+
+// Add CombineResult interface
+export interface CombineResult {
+  fortyYardDash?: string;
+  benchPressReps?: number;
+  verticalJump_cm?: number;
+  broadJump_cm?: number;
+  recordedAt: string;
+  recordedBy: string;
 }
 
 export interface Profile {
@@ -127,27 +128,22 @@ export interface Profile {
   weight_kg?: number;
   positions: string[];
   personalBio?: string;
-  experience_summary?: string;
-  avatar_url?: string;
   highlightUrls?: string[];
   scoutGrade?: number; 
   metrics: ScoutingMetrics;
   isIronmanPotential: boolean; 
   benchPressReps?: number;
   fortyYardDash?: string;
-  scoutingReport?: string;
   assignedFranchise?: Franchise;
   assignedTeam?: string;
-  location?: { lat: number; lng: number };
   documents: Document[];
   onboardingChecklist: OnboardingTask[];
-  salary?: number;
+  draftReadiness?: number; 
+  videoAnalysisTags?: VideoTag[];
+  // Add missing properties
+  avatar_url?: string;
   capHit?: number;
-  depthRanks?: Record<string, number>;
-  contractEnd?: string;
   combineResults?: CombineResult[];
-  currentClub?: string;
-  isUnderContract?: boolean;
 }
 
 export interface ActivityLog {
@@ -156,6 +152,52 @@ export interface ActivityLog {
   type: string;
   message: string;
   subjectId: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: string;
+  text: string;
+  timestamp: string;
+  channelId: string;
+}
+
+// Add ChatChannel interface
+export interface ChatChannel {
+  id: string;
+  name: string;
+  description: string;
+  isPrivate: boolean;
+  allowedRoles?: SystemRole[];
+  franchiseScope?: Franchise;
+  isDirect?: boolean;
+  participants?: string[];
+}
+
+export interface Play {
+  id: string;
+  name: string;
+  formation: string;
+  category: string;
+  description: string;
+}
+
+export interface Playbook {
+  id: string;
+  franchise?: Franchise;
+  name: string;
+  plays: Play[];
+  lastUpdated: string;
+}
+
+export interface LearningModule {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  lessons: { id: string; title: string; durationMins: number }[];
 }
 
 export interface LeagueEvent {
@@ -167,65 +209,4 @@ export interface LeagueEvent {
   franchise: Franchise | 'League Wide';
   type: string;
   status: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderRole: SystemRole | string;
-  senderAvatar?: string;
-  text: string;
-  timestamp: string;
-  channelId: string;
-  recipientId?: string; // For DMs
-}
-
-export interface ChatChannel {
-  id: string;
-  name: string;
-  description: string;
-  isPrivate: boolean;
-  isDirect?: boolean; // New flag for Inboxes
-  allowedRoles?: SystemRole[];
-  franchiseScope?: Franchise;
-  participants?: string[]; // IDs of users in DM
-}
-
-// Tactical & Educational Interfaces
-export interface Play {
-  id: string;
-  name: string;
-  formation: string;
-  category: 'Offense' | 'Defense' | 'Special Teams';
-  diagramUrl?: string;
-  videoUrl?: string;
-  description: string;
-  publishedAt: string;
-}
-
-export interface Playbook {
-  id: string;
-  franchise?: Franchise;
-  team?: string;
-  name: string;
-  plays: Play[];
-  lastUpdated: string;
-}
-
-export interface Lesson {
-  id: string;
-  title: string;
-  contentType: 'Video' | 'Text' | 'Quiz';
-  contentUrl?: string;
-  durationMins: number;
-}
-
-export interface LearningModule {
-  id: string;
-  title: string;
-  description: string;
-  category: 'Tactics' | 'Health' | 'Rules' | 'Career';
-  lessons: Lesson[];
-  thumbnailUrl?: string;
 }

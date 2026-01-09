@@ -14,7 +14,7 @@ const getTierColor = (tier: TalentTier) => {
 };
 
 export const Profiles: React.FC = () => {
-  const { profiles, isPrivacyMode, currentUserProfileId, aiScoutSearch, addToast, setView, setActiveChannelId } = useApp();
+  const { profiles, isPrivacyMode, currentUserProfileId, currentSystemRole, aiScoutSearch, addToast, setView, setActiveChannelId, updateProfile } = useApp();
   const [activeTab, setActiveTab] = useState<Role>(Role.PLAYER);
   const [tierFilter, setTierFilter] = useState<TalentTier | 'ALL'>('ALL');
   const [statusFilter, setStatusFilter] = useState<RecruitingStatus | 'ALL'>('ALL');
@@ -22,6 +22,9 @@ export const Profiles: React.FC = () => {
   const [aiFiltering, setAiFiltering] = useState(false);
   const [aiResults, setAiResults] = useState<string[] | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+
+  // Video Tagging State
+  const [newTag, setNewTag] = useState({ timestamp: '', note: '' });
 
   const filteredProfiles = profiles.filter(p => {
     if (p.role !== activeTab) return false;
@@ -53,6 +56,26 @@ export const Profiles: React.FC = () => {
     setActiveChannelId(channelId);
     setView('comms');
     setSelectedProfile(null);
+  };
+
+  const handleAddVideoTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProfile || !newTag.timestamp || !newTag.note) return;
+
+    const tag = {
+      timestamp: newTag.timestamp,
+      note: newTag.note,
+      scoutId: currentUserProfileId || 'admin',
+      scoutName: currentSystemRole
+    };
+
+    const currentTags = selectedProfile.videoAnalysisTags || [];
+    updateProfile(selectedProfile.id, { videoAnalysisTags: [...currentTags, tag] });
+    
+    // Optimistic update for local UI
+    setSelectedProfile(prev => prev ? { ...prev, videoAnalysisTags: [...currentTags, tag] } : null);
+    setNewTag({ timestamp: '', note: '' });
+    addToast("Video intelligence committed", "success");
   };
 
   return (
@@ -231,6 +254,43 @@ export const Profiles: React.FC = () => {
                               <Radar name={selectedProfile.fullName} dataKey="v" stroke="#e41d24" fill="#e41d24" fillOpacity={0.6} strokeWidth={3} />
                             </RadarChart>
                          </ResponsiveContainer>
+                      </div>
+                   </div>
+                   
+                   {/* Suggestion #5: Video Analysis & Dossier Tagging */}
+                   <div className="space-y-6 pt-12 border-t border-league-border">
+                      <div className="flex items-center gap-4">
+                        <div className="h-0.5 w-10 bg-league-accent" />
+                        <h4 className="text-xs font-black uppercase text-white tracking-[0.4em]">Video Analysis Lab</h4>
+                      </div>
+                      <div className="bg-league-bg border border-league-border rounded-2xl p-6 space-y-4">
+                         {currentSystemRole !== SystemRole.PLAYER && (
+                           <form onSubmit={handleAddVideoTag} className="flex gap-2 mb-6">
+                              <input 
+                                type="text" placeholder="Timestamp (e.g. 0:45)"
+                                className="w-24 bg-league-panel border border-league-border p-2 rounded-lg text-[10px] text-white focus:border-league-accent outline-none"
+                                value={newTag.timestamp} onChange={e => setNewTag({...newTag, timestamp: e.target.value})}
+                              />
+                              <input 
+                                type="text" placeholder="Scouting observation..."
+                                className="flex-1 bg-league-panel border border-league-border p-2 rounded-lg text-[10px] text-white focus:border-league-accent outline-none"
+                                value={newTag.note} onChange={e => setNewTag({...newTag, note: e.target.value})}
+                              />
+                              <button type="submit" className="bg-league-accent text-white px-4 rounded-lg text-[9px] font-black uppercase tracking-widest">Commit Tag</button>
+                           </form>
+                         )}
+                         <div className="space-y-3">
+                            {selectedProfile.videoAnalysisTags?.map((tag, i) => (
+                              <div key={i} className="flex gap-4 p-3 bg-league-panel/50 border border-league-border rounded-xl group/tag">
+                                 <span className="text-league-accent font-mono text-[10px] font-black">{tag.timestamp}</span>
+                                 <p className="text-[10px] font-bold text-white flex-1 italic">{tag.note}</p>
+                                 <span className="text-[7px] font-black uppercase text-league-muted opacity-30 self-end">Scout_{tag.scoutName}</span>
+                              </div>
+                            ))}
+                            {(!selectedProfile.videoAnalysisTags || selectedProfile.videoAnalysisTags.length === 0) && (
+                              <p className="text-[9px] text-league-muted font-black uppercase italic text-center py-6 opacity-20 tracking-widest">No intelligence tags recorded</p>
+                            )}
+                         </div>
                       </div>
                    </div>
                 </div>

@@ -57,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       items: [
         { view: 'landing', label: 'League Home' },
         { view: 'register', label: 'Draft Induction', roles: [SystemRole.PLAYER, SystemRole.LEAGUE_ADMIN] },
+        { view: 'athlete-portal', label: 'Athlete Portal', roles: [SystemRole.PLAYER, SystemRole.LEAGUE_ADMIN] },
       ]
     },
     {
@@ -65,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
         { view: 'profiles', label: 'Personnel Pool' },
         { view: 'compare', label: 'Scouting Lab', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'pipeline', label: 'Recruitment Funnel', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
+        { view: 'war-room', label: 'War Room Feed', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
       ]
     },
     {
@@ -72,6 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       items: [
         { view: 'academy', label: 'Tactical Academy' },
         { view: 'comms', label: 'Secure Inbox' },
+        { view: 'roster-builder', label: 'Ironman Depth Chart', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM, SystemRole.COACH_STAFF] },
       ]
     },
     {
