@@ -78,7 +78,79 @@ const INITIAL_PROFILES: Profile[] = [
     location: { lat: 52.9548, lng: -1.1581 },
     documents: [],
     onboardingChecklist: [],
+    combineResults: [],
+    assignedFranchise: Franchise.NOTTINGHAM
+  },
+  {
+    id: 'n2',
+    fullName: 'Lukas Weber',
+    email: 'l.weber@ial.de',
+    phone: '+49 151 1234567',
+    dateOfBirth: '1999-11-04',
+    nationality: 'Germany',
+    role: Role.PLAYER,
+    tier: TalentTier.TIER2,
+    status: RecruitingStatus.SIGNED,
+    preferences: { rank1: Franchise.DUSSELDORF, rank2: Franchise.STUTTGART, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW },
+    createdAt: '2024-02-12',
+    scoutGrade: 8.5,
+    positions: ['QB'],
+    personalBio: "Precision passer with high football IQ. Prefers quick release offensive schemes.",
+    metrics: { speed: 6, strength: 7, agility: 7, iq: 10, versatility: 6 },
+    isIronmanPotential: false,
+    avatar_url: '',
+    location: { lat: 51.2277, lng: 6.7735 },
+    documents: [],
+    onboardingChecklist: [],
+    combineResults: [],
+    assignedFranchise: Franchise.DUSSELDORF
+  },
+  {
+    id: 'n3',
+    fullName: 'Callum McLoud',
+    email: 'c.mcloud@ial.scot',
+    phone: '+44 7800 123456',
+    dateOfBirth: '2001-03-15',
+    nationality: 'Scotland',
+    role: Role.PLAYER,
+    tier: TalentTier.TIER3,
+    status: RecruitingStatus.NEW_LEAD,
+    preferences: { rank1: Franchise.GLASGOW, rank2: Franchise.NOTTINGHAM, rank3: Franchise.STUTTGART, rank4: Franchise.DUSSELDORF, rank5: Franchise.ZURICH },
+    createdAt: '2024-03-01',
+    scoutGrade: 7.2,
+    positions: ['WR', 'DB'],
+    personalBio: "Young, fast, and aggressive. Developing route running but elite ball skills.",
+    metrics: { speed: 9, strength: 5, agility: 9, iq: 6, versatility: 8 },
+    isIronmanPotential: true,
+    avatar_url: '',
+    location: { lat: 55.8642, lng: -4.2518 },
+    documents: [],
+    onboardingChecklist: [],
     combineResults: []
+  },
+  {
+    id: 'n4',
+    fullName: 'Alistair Vane',
+    email: 'a.vane@ial.ch',
+    phone: '+41 44 123 45 67',
+    dateOfBirth: '1995-08-20',
+    nationality: 'Switzerland',
+    role: Role.COACH,
+    tier: TalentTier.TIER1,
+    status: RecruitingStatus.PLACED,
+    preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.DUSSELDORF, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM },
+    createdAt: '2023-12-05',
+    scoutGrade: 9.5,
+    positions: ['OC', 'Head Coach'],
+    personalBio: "Strategic mastermind with multiple European titles. Specialized in rebound net tactics.",
+    metrics: { speed: 3, strength: 3, agility: 3, iq: 10, versatility: 7 },
+    isIronmanPotential: false,
+    avatar_url: '',
+    location: { lat: 47.3769, lng: 8.5417 },
+    documents: [],
+    onboardingChecklist: [],
+    combineResults: [],
+    assignedFranchise: Franchise.ZURICH
   }
 ];
 
@@ -224,12 +296,13 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const context = profiles.map(p => ({ id: p.id, name: p.fullName, pos: p.positions, tier: p.tier, grade: p.scoutGrade, nationality: p.nationality }));
-      const prompt = `Filter these profiles: ${JSON.stringify(context)}. Query: "${query}". Return ONLY a JSON array of matching IDs. No text.`;
+      const prompt = `Filter these profiles: ${JSON.stringify(context)}. Query: "${query}". Return ONLY a JSON array of matching IDs. No text. Example: ["n1", "n2"]`;
       const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
       const match = response.text.match(/\[.*\]/s);
       return match ? JSON.parse(match[0]) : null;
     } catch (e) {
       console.error(e);
+      addToast("AI Scout Intelligence Offline", "error");
       return null;
     }
   };
@@ -238,7 +311,7 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const roster = profiles.filter(p => p.assignedFranchise === franchise);
-      const prompt = `Analyze this roster: ${JSON.stringify(roster)}. Provide a one-sentence strategic gap analysis.`;
+      const prompt = `Analyze this roster for the ${franchise} franchise: ${JSON.stringify(roster)}. Provide a one-sentence strategic gap analysis focusing on positions and talent tiers.`;
       const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
       return response.text || "No insights available.";
     } catch (e) {

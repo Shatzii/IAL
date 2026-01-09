@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useApp } from '../App';
 import { Playbook, LearningModule, SystemRole, Play, Franchise } from '../types';
@@ -169,14 +168,13 @@ export const Academy: React.FC = () => {
           {learningModules.map(module => (
             <div key={module.id} className="bg-league-panel border border-league-border rounded-[2.5rem] overflow-hidden group hover:border-league-accent transition-all flex flex-col shadow-2xl">
                <div className="relative h-56 flex items-center justify-center bg-league-bg">
-                 {/* Abstract Schematic Placeholder instead of thumbnail */}
                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '15px 15px' }} />
                  <div className="w-20 h-20 border-2 border-league-accent/30 rounded-full flex items-center justify-center text-league-accent font-black text-2xl group-hover:scale-125 transition-transform duration-700">
                     {module.title.charAt(0)}
                  </div>
                  <div className="absolute bottom-6 left-6 text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-league-accent text-white shadow-lg">
                     {module.category}
-                 </span>
+                 </div>
                </div>
                <div className="p-8 flex-1 flex flex-col">
                  <h4 className="text-xl font-black italic uppercase text-white mb-3 leading-none tracking-tighter">{module.title}</h4>
