@@ -135,14 +135,14 @@ export const Profiles: React.FC = () => {
           <div 
             key={p.id} 
             onClick={() => setSelectedProfile(p)} 
-            className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 group cursor-pointer hover:border-league-accent transition-all flex flex-col shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-4"
+            className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 group cursor-pointer hover:border-league-accent transition-all flex flex-col shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 min-h-[380px]"
             style={{ animationDelay: `${idx * 50}ms` }}
           >
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-all group-hover:scale-110 pointer-events-none">
                <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
             </div>
             
-            <div className="flex items-center gap-6 mb-8 relative z-10">
+            <div className="flex items-center gap-6 mb-6 relative z-10">
               <div className="w-16 h-16 rounded-2xl bg-league-bg border border-league-border flex items-center justify-center font-black italic text-2xl text-white shadow-inner group-hover:border-league-accent transition-colors">
                 {p.fullName.charAt(0)}
               </div>
@@ -150,38 +150,37 @@ export const Profiles: React.FC = () => {
                 <h4 className="text-xl font-black italic uppercase text-white leading-none mb-2 tracking-tighter group-hover:text-league-accent transition-colors">{p.fullName}</h4>
                 <div className="flex items-center gap-3">
                    <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${getTierColor(p.tier)}`}>{p.tier}</span>
-                   <span className="text-[8px] font-black text-league-muted uppercase tracking-widest">{p.positions[0]}</span>
+                   <span className="text-[8px] font-black text-league-muted uppercase tracking-widest">{p.positions.join('/')}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 space-y-4 mb-8">
-               <div className="h-[120px] w-full bg-league-bg rounded-2xl border border-league-border overflow-hidden relative shadow-inner">
-                  <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-80 transition-opacity">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="35%" data={[
-                        {s: 'SPD', v: p.metrics.speed}, {s: 'STR', v: p.metrics.strength}, {s: 'AGL', v: p.metrics.agility}, 
-                        {s: 'IQ', v: p.metrics.iq}, {s: 'VER', v: p.metrics.versatility}
-                      ]}>
-                        <PolarGrid stroke="#333" />
-                        <PolarAngleAxis dataKey="s" tick={{ fill: '#555', fontSize: 8, fontWeight: 'bold' }} />
-                        <Radar name={p.fullName} dataKey="v" stroke="#e41d24" fill="#e41d24" fillOpacity={0.6} />
-                      </RadarChart>
-                    </ResponsiveContainer>
+            <div className="flex-1 space-y-4 mb-6">
+               <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-league-bg/50 border border-league-border p-3 rounded-xl shadow-inner">
+                    <div className="text-[7px] font-black text-league-accent uppercase tracking-widest mb-1">Biometrics_Height</div>
+                    <div className="text-sm font-black italic text-white">{p.height_cm ? `${p.height_cm}cm` : 'N/A'}</div>
                   </div>
-                  <div className="absolute bottom-3 right-4 text-[7px] font-black uppercase text-league-muted tracking-widest opacity-30">Metric Projection Active</div>
+                  <div className="bg-league-bg/50 border border-league-border p-3 rounded-xl shadow-inner">
+                    <div className="text-[7px] font-black text-league-accent uppercase tracking-widest mb-1">Biometrics_Weight</div>
+                    <div className="text-sm font-black italic text-white">{p.weight_kg ? `${p.weight_kg}kg` : 'N/A'}</div>
+                  </div>
                </div>
-               <p className="text-[11px] text-league-muted font-bold italic line-clamp-2 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{p.personalBio}</p>
+               <div className="bg-league-bg/30 p-4 rounded-xl border border-league-border/50">
+                  <p className="text-[11px] text-league-muted font-bold italic line-clamp-3 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">
+                    {p.personalBio || "Personnel dossier pending synchronization with central registry. Physical and tactical performance metrics under validation."}
+                  </p>
+               </div>
             </div>
 
             <div className="flex justify-between items-center pt-6 border-t border-league-border/30">
                <div className="flex flex-col">
-                  <span className="text-[10px] font-black italic text-league-accent tracking-widest">GRADE: {p.scoutGrade || 'N/A'}</span>
+                  <span className="text-[10px] font-black italic text-league-accent tracking-widest uppercase">Grade: {p.scoutGrade || 'PENDING'}</span>
                   <span className="text-[7px] font-black uppercase text-league-muted tracking-[0.2em]">{p.status}</span>
                </div>
-               <div className="flex gap-1.5">
-                 {p.positions.slice(0, 2).map(pos => <span key={pos} className="text-[7px] font-black bg-league-bg px-2 py-0.5 rounded-full border border-league-border text-league-muted uppercase tracking-widest">{pos}</span>)}
-               </div>
+               <button className="text-[8px] font-black uppercase bg-league-bg px-3 py-1 rounded-full border border-league-border text-league-muted tracking-widest hover:border-league-accent hover:text-white transition-all">
+                 View Dossier
+               </button>
             </div>
           </div>
         ))}
@@ -257,7 +256,6 @@ export const Profiles: React.FC = () => {
                       </div>
                    </div>
                    
-                   {/* Suggestion #5: Video Analysis & Dossier Tagging */}
                    <div className="space-y-6 pt-12 border-t border-league-border">
                       <div className="flex items-center gap-4">
                         <div className="h-0.5 w-10 bg-league-accent" />
