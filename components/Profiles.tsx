@@ -24,6 +24,7 @@ export const Profiles: React.FC = () => {
 
   const handleTranslate = async (text: string) => {
     setIsTranslating(true);
+    addToast("Initializing Euro-Bridge Translation...", "info");
     const result = await translateIntel(text, 'German (DE)'); // Mocking target language
     if (selectedProfile) {
        setSelectedProfile({ ...selectedProfile, personalBio: result });
@@ -33,9 +34,10 @@ export const Profiles: React.FC = () => {
   };
 
   const handleSummarize = async (docId: string) => {
-    addToast("Scanning Vault Document...", "info");
+    addToast("Scanning Vault Document Metadata...", "info");
     const summary = await summarizeVoucher(docId);
     setSummaries(prev => ({ ...prev, [docId]: summary }));
+    addToast("Document Summarized", "success");
   };
 
   return (
@@ -44,6 +46,11 @@ export const Profiles: React.FC = () => {
         <div>
           <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-none">Personnel Pool</h2>
           <p className="text-league-muted uppercase tracking-[0.4em] text-[9px] font-black mt-2 italic opacity-60">Global IAL Talent Registry • AI Enabled</p>
+        </div>
+        <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border">
+          {[Role.PLAYER, Role.COACH].map(role => (
+            <button key={role} onClick={() => setActiveTab(role)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === role ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{role}S</button>
+          ))}
         </div>
       </div>
 
@@ -61,24 +68,33 @@ export const Profiles: React.FC = () => {
               </div>
             </div>
             <p className="text-[11px] text-league-muted font-bold italic line-clamp-3 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{p.personalBio}</p>
+            <div className="mt-auto pt-6 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="text-[9px] font-black uppercase text-league-accent">View Full Dossier →</span>
+               <span className="text-[10px] font-black italic text-white/50">{p.scoutGrade || '--'} Grade</span>
+            </div>
           </div>
         ))}
       </div>
 
       {selectedProfile && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-league-panel border border-league-border max-w-5xl w-full rounded-[3.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
+          <div className="bg-league-panel border border-league-border max-w-5xl w-full rounded-[3.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 my-8">
             <button onClick={() => setSelectedProfile(null)} className="absolute top-10 right-10 text-league-muted hover:text-white z-20 p-2 hover:scale-110">×</button>
-            <div className="p-12 md:p-16 space-y-12">
+            <div className="p-8 md:p-16 space-y-12">
               <div className="flex flex-col md:flex-row gap-12 items-center md:items-end border-b border-league-border pb-12">
-                <div className="w-48 h-48 rounded-[3rem] bg-league-bg border-4 border-league-accent flex items-center justify-center font-black italic text-7xl text-white shadow-2xl">{selectedProfile.fullName.charAt(0)}</div>
+                <div className="w-48 h-48 rounded-[3rem] bg-league-bg border-4 border-league-accent flex items-center justify-center font-black italic text-7xl text-white shadow-2xl overflow-hidden">
+                   {selectedProfile.avatar_url ? <img src={selectedProfile.avatar_url} className="w-full h-full object-cover" /> : selectedProfile.fullName.charAt(0)}
+                </div>
                 <div className="flex-1">
                    <h3 className="text-5xl md:text-7xl font-black italic uppercase text-white mb-4 tracking-tighter leading-none">{selectedProfile.fullName}</h3>
-                   <div className="flex gap-4">
-                     <button onClick={() => handleTranslate(selectedProfile.personalBio)} disabled={isTranslating} className="bg-league-blue/10 border border-league-blue/30 text-league-blue px-6 py-2 rounded-xl font-black uppercase italic text-[10px] tracking-widest flex items-center gap-2">
+                   <div className="flex flex-wrap gap-4">
+                     <button onClick={() => handleTranslate(selectedProfile.personalBio || '')} disabled={isTranslating} className="bg-league-blue/10 border border-league-blue/30 text-league-blue px-6 py-2 rounded-xl font-black uppercase italic text-[10px] tracking-widest flex items-center gap-2 hover:bg-league-blue hover:text-white transition-all">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
                         {isTranslating ? 'Processing Node...' : 'Euro-Bridge Translate'}
                      </button>
+                     <div className="bg-league-panel px-6 py-2 rounded-xl border border-league-border text-[10px] font-black uppercase tracking-widest text-league-muted">
+                        Nationality: {selectedProfile.nationality}
+                     </div>
                    </div>
                 </div>
               </div>
@@ -117,6 +133,7 @@ export const Profiles: React.FC = () => {
                             )}
                           </div>
                         ))}
+                        {selectedProfile.documents.length === 0 && <div className="p-8 border-2 border-dashed border-league-border rounded-2xl text-center opacity-30 text-[9px] font-black uppercase italic tracking-widest">No Documents In Vault</div>}
                       </div>
                    </div>
                 </div>

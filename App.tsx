@@ -67,6 +67,7 @@ interface AppState {
   issueBroadcast: (msg: string, priority: 'CRITICAL' | 'STANDARD') => void;
   runTacticalSim: (playId: string) => Promise<void>;
   runAiRosterStrategy: (franchise: Franchise) => Promise<string>;
+  runMockDraft: () => Promise<string>;
   translateIntel: (text: string, lang: string) => Promise<string>;
   summarizeVoucher: (id: string) => Promise<string>;
   startEvaluation: (event: LeagueEvent) => void;
@@ -107,7 +108,7 @@ const App: React.FC = () => {
   const [learningModules, setLearningModules] = useState<LearningModule[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsBooting(false), 2500);
+    const timer = setTimeout(() => setIsBooting(false), 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -202,6 +203,15 @@ const App: React.FC = () => {
     return response.text || "Strategy generation unavailable.";
   };
 
+  const runMockDraft = async () => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Simulate a mock draft for the International Arena League. Using these players: ${JSON.stringify(profiles.map(p => ({id: p.id, name: p.fullName, pos: p.positions, grade: p.scoutGrade})))}. Predict which of the 5 franchises (Nottingham, Glasgow, Düsseldorf, Stuttgart, Zürich) would take them and why. Keep it concise.`
+    });
+    return response.text || "Simulation offline.";
+  };
+
   const translateIntel = async (text: string, lang: string) => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
@@ -225,7 +235,7 @@ const App: React.FC = () => {
       profiles, activityLogs, currentSystemRole, currentUserProfileId, isLoggedIn, selectedFranchise, messages, broadcasts,
       login, logout, setView, updateProfile, deleteProfile, addProfile, logActivity, addToast, sendMessage, setSelectedFranchise,
       activeChannelId, setActiveChannelId, gradingConfig, comparisonIds, toggleComparison, aiScoutSearch, enrichDossier,
-      generateHypeAsset, issueBroadcast, runTacticalSim, runAiRosterStrategy, translateIntel, summarizeVoucher, 
+      generateHypeAsset, issueBroadcast, runTacticalSim, runAiRosterStrategy, runMockDraft, translateIntel, summarizeVoucher, 
       startEvaluation: (e) => { setActiveEvaluationEvent(e); setView('evaluation'); },
       closeEvaluation: () => { setActiveEvaluationEvent(null); setView('schedule'); },
       activeEvaluationEvent, isPrivacyMode, setPrivacyMode, alertConfigs: { Nottingham: { minRosterSize: 12 }, Glasgow: { minRosterSize: 12 }, Düsseldorf: { minRosterSize: 12 }, Stuttgart: { minRosterSize: 12 }, Zürich: { minRosterSize: 12 } },
@@ -245,7 +255,7 @@ const App: React.FC = () => {
                  <BootLine text="ACCESS GRANTED. COMMANDER." delay={1800} />
               </div>
               <div className="h-1 w-full bg-league-border rounded-full overflow-hidden mt-8">
-                 <div className="h-full bg-league-accent animate-[bootProgress_2.5s_ease-in-out_forwards]" />
+                 <div className="h-full bg-league-accent animate-[bootProgress_3s_ease-in-out_forwards]" />
               </div>
            </div>
         </div>
@@ -253,6 +263,18 @@ const App: React.FC = () => {
 
       <div className="min-h-screen bg-league-bg text-league-fg font-sans selection:bg-league-accent flex flex-col">
         <Header currentView={view} setView={setView} />
+        {broadcasts.some(b => b.active) && (
+          <div className="bg-league-accent text-white py-2 overflow-hidden border-b border-white/20 z-[100]">
+            <div className="flex animate-marquee whitespace-nowrap">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className="mx-12 text-[10px] font-black uppercase tracking-[0.4em]">
+                  <span className="mr-4">⚠️ LEAGUE DIRECTIVE:</span>
+                  {broadcasts.find(b => b.active)?.message}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         <main className={`flex-grow ${view === 'landing' ? '' : 'container mx-auto px-4 py-8 max-w-7xl'}`}>
           {view === 'landing' && <LandingPage />}
           {view === 'login' && <Login />}
@@ -271,10 +293,20 @@ const App: React.FC = () => {
           {view === 'roster-builder' && <RosterBuilder />}
           {view === 'war-room' && <WarRoom />}
         </main>
-        {/* Toasts and Broadcasts remain... */}
+        
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2 pointer-events-none">
+          {toasts.map(toast => (
+            <div key={toast.id} className="px-6 py-3 rounded-full border shadow-2xl animate-in slide-in-from-bottom-4 bg-black/80 border-white/10 flex items-center gap-3 pointer-events-auto">
+              <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-league-ok' : toast.type === 'error' ? 'bg-league-accent' : 'bg-league-blue'}`} />
+              <span className="text-[10px] font-black uppercase tracking-widest">{toast.message}</span>
+            </div>
+          ))}
+        </div>
       </div>
       <style>{`
         @keyframes bootProgress { 0% { width: 0%; } 100% { width: 100%; } }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-20%); } }
+        .animate-marquee { animation: marquee 30s linear infinite; }
       `}</style>
     </AppContext.Provider>
   );

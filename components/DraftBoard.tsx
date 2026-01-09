@@ -4,7 +4,7 @@ import { useApp } from '../App';
 import { Franchise, RecruitingStatus, Role, TalentTier, FRANCHISE_TEAMS } from '../types';
 
 export const DraftBoard: React.FC = () => {
-  const { profiles, updateProfile, runAiRosterStrategy, addToast } = useApp();
+  const { profiles, updateProfile, runAiRosterStrategy, runMockDraft, addToast } = useApp();
   const [selectedFranchise, setSelectedFranchise] = useState<Franchise>(Franchise.NOTTINGHAM);
   const [poolRole, setPoolRole] = useState<Role>(Role.PLAYER);
   const [poolTier, setPoolTier] = useState<TalentTier | 'ALL'>('ALL');
@@ -12,6 +12,8 @@ export const DraftBoard: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string>('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [mockDraftResult, setMockDraftResult] = useState<string | null>(null);
 
   const draftPool = profiles.filter(p => 
     !p.assignedFranchise && p.role === poolRole && (poolTier === 'ALL' || p.tier === poolTier)
@@ -25,6 +27,14 @@ export const DraftBoard: React.FC = () => {
     setAiInsight(insight);
     setIsAiLoading(false);
     addToast('Strategic Insight Received', 'success');
+  };
+
+  const handleRunMockDraft = async () => {
+    setIsSimulating(true);
+    addToast("Initializing Draft Mock Engine...", "info");
+    const result = await runMockDraft();
+    setMockDraftResult(result);
+    setIsSimulating(false);
   };
 
   const handleConfirmAssignment = (id: string) => {
@@ -46,6 +56,13 @@ export const DraftBoard: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-4 items-center">
           <button 
+            onClick={handleRunMockDraft}
+            disabled={isSimulating}
+            className="bg-league-panel border border-league-accent/30 text-league-accent px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-league-accent hover:text-white transition-all disabled:opacity-50"
+          >
+            {isSimulating ? 'Simulating Phase...' : 'Run AI Mock Simulator'}
+          </button>
+          <button 
             onClick={handleAiStrategy}
             disabled={isAiLoading}
             className="flex items-center gap-2 bg-league-accent/10 border border-league-accent/30 text-league-accent px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-league-accent hover:text-white transition-all disabled:opacity-50"
@@ -65,14 +82,18 @@ export const DraftBoard: React.FC = () => {
         </div>
       </div>
 
-      {aiInsight && (
+      {(aiInsight || mockDraftResult) && (
         <div className="bg-league-panel border-4 border-league-accent p-8 rounded-[3rem] animate-in fade-in zoom-in-95 relative group shadow-2xl">
-          <button onClick={() => setAiInsight(null)} className="absolute top-6 right-6 text-league-muted hover:text-white text-2xl font-black">×</button>
+          <button onClick={() => { setAiInsight(null); setMockDraftResult(null); }} className="absolute top-6 right-6 text-league-muted hover:text-white text-2xl font-black">×</button>
           <div className="flex items-center gap-3 mb-4">
              <div className="w-2 h-6 bg-league-accent rounded-full animate-pulse" />
-             <h4 className="text-[10px] font-black uppercase tracking-widest text-league-accent italic">AI Strategic Directive</h4>
+             <h4 className="text-[10px] font-black uppercase tracking-widest text-league-accent italic">
+               {mockDraftResult ? 'Draft Intelligence Report' : 'AI Strategic Directive'}
+             </h4>
           </div>
-          <p className="text-sm text-white/90 leading-relaxed font-bold italic pl-4 border-l-2 border-league-accent/30">{aiInsight}</p>
+          <div className="text-sm text-white/90 leading-relaxed font-bold italic pl-4 border-l-2 border-league-accent/30 whitespace-pre-wrap">
+            {mockDraftResult || aiInsight}
+          </div>
         </div>
       )}
 
@@ -100,6 +121,7 @@ export const DraftBoard: React.FC = () => {
                   <button onClick={() => setAssigningId(p.id)} className="bg-league-accent text-white px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:-translate-y-0.5 transition-all">Draft Node</button>
                 </div>
               ))}
+              {draftPool.length === 0 && <div className="h-full flex items-center justify-center opacity-20 italic font-black uppercase text-[11px] tracking-[0.3em]">Pool Depleted</div>}
            </div>
         </div>
 
