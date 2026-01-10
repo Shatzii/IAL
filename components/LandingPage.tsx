@@ -9,124 +9,133 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-1000 bg-league-bg min-h-screen">
+      {/* 0. Branding Header & Cinematic Entry */}
+      <section className="bg-black pt-12 pb-8 md:pb-20 border-b border-league-border/30 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full opacity-10 pointer-events-none">
+           <div className="w-full h-full bg-[radial-gradient(#e41d24_1px,transparent_1px)] [background-size:20px_20px]" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Full Logo Display */}
+          <div className="flex flex-col items-center mb-12 md:mb-20 animate-float">
+             <svg className="w-64 md:w-96 h-auto" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Red Helmet */}
+                <path d="M10 40C10 25 22 15 35 15C48 15 60 25 60 40V55H10V40Z" fill="#e41d24"/>
+                <path d="M25 15V35M35 15V35M45 15V35" stroke="white" strokeWidth="3"/>
+                <rect x="15" y="45" width="40" height="8" rx="2" fill="#1a1a1a" stroke="white" strokeWidth="1"/>
+                {/* IAL Stylized */}
+                <text x="70" y="60" fill="white" fontSize="56" fontWeight="900" fontStyle="italic" fontFamily="Inter, sans-serif">IAL</text>
+                <rect x="70" y="34" width="70" height="5" fill="#e41d24" />
+                <text x="70" y="78" fill="white" fontSize="9" fontWeight="900" letterSpacing="3" fontFamily="Inter, sans-serif">INTERNATIONAL ARENA LEAGUE</text>
+             </svg>
+             
+             {/* Flags Bar (Replicated from provided image) */}
+             <div className="flex gap-4 mt-8 opacity-60">
+                {['🇺🇸', '🇨🇦', '🇩🇪', '🇨🇭', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'].map((flag, i) => (
+                  <span key={i} className="text-2xl grayscale hover:grayscale-0 transition-all cursor-default">{flag}</span>
+                ))}
+             </div>
+          </div>
+
+          <div className="max-w-5xl mx-auto">
+            <div className="relative aspect-video rounded-[2.5rem] md:rounded-[4rem] overflow-hidden border-2 border-league-accent/50 shadow-[0_0_80px_rgba(228,29,36,0.4)] bg-league-panel group">
+              <iframe 
+                className="absolute inset-0 w-full h-full scale-[1.01]"
+                src="https://www.youtube.com/embed/tkcuP16oo54?si=4j03-GxCAg-HVIh5&autoplay=1&mute=1&loop=1&playlist=tkcuP16oo54&controls=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3" 
+                title="IAL League Cinematic" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerPolicy="strict-origin-when-cross-origin" 
+                allowFullScreen
+              ></iframe>
+              <div className="absolute inset-0 pointer-events-none border-[16px] border-black/20 rounded-[2.5rem] md:rounded-[4rem]"></div>
+            </div>
+            <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4 px-6">
+               <div className="flex items-center gap-4">
+                  <div className="w-3 h-3 bg-league-accent rounded-full animate-ping" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.5em] text-white italic">Live Cinematic Stream // Operational Telemetry</span>
+               </div>
+               <div className="flex gap-6 text-[10px] font-bold text-league-muted uppercase tracking-widest">
+                  <span>Resolving: 4K Ultra-Low Latency</span>
+                  <span className="text-league-ok">Status: Stable</span>
+               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 1. Registry Entry - Hero Position */}
-      <section className="py-12 md:py-24 bg-league-bg relative border-b border-league-border overflow-hidden">
+      <section className="py-20 md:py-32 bg-league-bg relative border-b border-league-border overflow-hidden">
         <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#e41d24 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-league-accent/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-league-accent/10 blur-[150px] rounded-full pointer-events-none" />
         
         <div className="container mx-auto px-4 max-w-5xl relative z-10">
-          <div className="text-center mb-10 md:mb-20 space-y-4 md:space-y-8 animate-in slide-in-from-top-10 duration-1000">
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black italic uppercase text-white tracking-tighter leading-[0.85] md:leading-none">IAL PLAYER DRAFT 2026</h1>
-            <div className="inline-block px-6 md:px-8 py-3 rounded-full border-2 border-league-accent bg-league-accent/10 text-league-accent text-[10px] md:text-[12px] font-black uppercase tracking-[0.4em] md:tracking-[0.6em] animate-pulse">
-              Node Hub • Authorized Recruitment Portal
+          <div className="text-center mb-12 md:mb-24 space-y-6 md:space-y-10 animate-in slide-in-from-top-10 duration-1000">
+            <h1 className="text-6xl sm:text-8xl md:text-9xl font-black italic uppercase text-white tracking-tighter leading-[0.8] md:leading-none">PLAYER DRAFT 2026</h1>
+            <div className="inline-block px-10 py-4 rounded-full border-2 border-league-accent bg-league-accent/20 text-league-accent text-[12px] md:text-[14px] font-black uppercase tracking-[0.8em] animate-pulse">
+              Node Hub • Secure Induction
             </div>
-            <p className="text-league-muted font-bold italic uppercase text-sm md:text-lg max-w-2xl mx-auto opacity-70 tracking-widest">
-              Secure your spot in the future of arena football. Central Registry now accepting applications for Zurich, Dusseldorf, Nottingham, Stuttgart, and Glasgow.
-            </p>
           </div>
           
-          <div className="bg-league-panel border-2 md:border-4 border-league-accent p-6 md:p-20 rounded-[3rem] md:rounded-[5rem] shadow-[0_0_150px_rgba(228,29,36,0.2)] relative backdrop-blur-3xl overflow-hidden">
-             <div className="absolute top-10 left-10 hidden md:block">
-                <svg className="w-16 h-16 text-league-accent opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 4v16m8-8H4"></path></svg>
+          <div className="bg-league-panel border-4 border-league-accent p-8 md:p-24 rounded-[4rem] md:rounded-[6rem] shadow-[0_0_200px_rgba(228,29,36,0.25)] relative backdrop-blur-3xl overflow-hidden">
+             <div className="absolute top-12 left-12 opacity-10">
+                <svg className="w-20 h-20 text-league-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 4v16m8-8H4"></path></svg>
              </div>
-             <div className="absolute bottom-[-100px] right-[-100px] w-64 h-64 bg-league-accent/10 blur-[80px] rounded-full" />
              <RegistrationForm />
           </div>
         </div>
       </section>
 
       {/* Deployment Hub - Map Section */}
-      <section className="py-24 md:py-32 bg-league-bg border-b border-league-border relative">
+      <section className="py-24 md:py-40 bg-league-bg border-b border-league-border relative">
          <div className="container mx-auto px-4 max-w-6xl">
-           <div className="flex flex-col lg:flex-row gap-16 items-center">
-             <div className="lg:w-1/2 space-y-8 text-center lg:text-left">
-                <div className="flex items-center gap-4 justify-center lg:justify-start">
-                  <div className="h-0.5 w-12 bg-league-accent" />
-                  <h2 className="text-[12px] font-black uppercase tracking-[0.6em] text-league-accent italic leading-none">Tactical Geography</h2>
+           <div className="flex flex-col lg:flex-row gap-20 items-center">
+             <div className="lg:w-1/2 space-y-10 text-center lg:text-left">
+                <div className="flex items-center gap-6 justify-center lg:justify-start">
+                  <div className="h-1 w-16 bg-league-accent" />
+                  <h2 className="text-[14px] font-black uppercase tracking-[0.8em] text-league-accent italic leading-none">Global Nodes</h2>
                 </div>
-                <h3 className="text-4xl md:text-6xl font-black italic uppercase text-white tracking-tighter leading-none">5 OPERATIONAL NODES. ONE LEAGUE.</h3>
-                <p className="text-league-muted font-bold italic uppercase text-sm md:text-base leading-relaxed max-w-xl opacity-70">
-                  The International Arena League operates across a high-speed network of franchise nodes. Your induction preference determines your primary strategic routing.
+                <h3 className="text-5xl md:text-7xl font-black italic uppercase text-white tracking-tighter leading-none">HIGH-SPEED TACTICAL DEPLOYMENT</h3>
+                <p className="text-league-muted font-bold italic uppercase text-base md:text-lg leading-relaxed max-w-xl opacity-80">
+                  IAL operates on a decentralized franchise architecture. Your registry entry routes you through the primary node of your choice.
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-8">
                    {Object.values(Franchise).map(f => (
-                     <div key={f} className="bg-league-panel border border-league-border px-4 py-3 rounded-xl flex items-center gap-3 group hover:border-league-accent transition-colors">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: FRANCHISE_COLORS[f] }} />
-                        <span className="text-[10px] font-black uppercase text-white tracking-widest">{f}</span>
+                     <div key={f} className="bg-league-panel border-2 border-league-border p-5 rounded-2xl flex items-center gap-4 group hover:border-league-accent transition-all cursor-default shadow-xl">
+                        <div className="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: FRANCHISE_COLORS[f], color: FRANCHISE_COLORS[f] }} />
+                        <span className="text-[12px] font-black uppercase text-white tracking-widest">{f}</span>
                      </div>
                    ))}
                 </div>
              </div>
-             <div className="lg:w-1/2 w-full">
+             <div className="lg:w-1/2 w-full scale-110">
                 <DeploymentMap />
              </div>
            </div>
          </div>
       </section>
 
-      {/* Message from COO */}
-      <section className="py-24 md:py-40 bg-league-panel border-b border-league-border">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="bg-league-bg border border-league-border p-8 md:p-20 rounded-[3rem] md:rounded-[4rem] shadow-2xl relative overflow-hidden backdrop-blur-xl">
-            <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-              <svg className="w-32 md:w-48 h-32 md:h-48" fill="white" viewBox="0 0 24 24"><path d="M14 17h7v2h-7v-2zm0-4h7v2h-7v-2zm0-4h7v2h-7V9zm-9 7V5h2v11h3l-4 4-4-4h3z"/></svg>
-            </div>
-            
-            <div className="space-y-12 md:space-y-16 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="h-0.5 w-12 md:w-16 bg-league-accent" />
-                <h2 className="text-[10px] md:text-[12px] font-black uppercase tracking-[0.6em] text-league-accent italic leading-none">Command Directive</h2>
-              </div>
-
-              <div className="space-y-12">
-                <div className="space-y-6">
-                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-widest text-white border-b border-league-accent pb-2 inline-block">THE VISION</h3>
-                    <p className="text-league-muted font-bold italic uppercase text-sm md:text-base leading-relaxed opacity-80">
-                        In 2005, the energy of arena football changed my trajectory. Since then, I've seen the fragility of traditional leagues. IAL is the stable future fans deserve—a high-scoring, high-tech, and high-impact theater of competition.
-                    </p>
-                </div>
-
-                <div className="space-y-8">
-                    <p className="text-white font-black italic uppercase text-xl md:text-3xl leading-tight tracking-tighter">
-                        "This is higher scoring, faster action, and a league designed for the fans of tomorrow."
-                    </p>
-                    <p className="text-league-muted font-bold italic uppercase text-sm md:text-base leading-relaxed opacity-80">
-                        Our recruitment process is rigorous because our standard is excellence. If you have the data to prove you belong, the pool is waiting.
-                    </p>
-                </div>
-              </div>
-
-              <div className="pt-12 flex items-center gap-6 md:gap-8 border-t border-league-border">
-                <div className="w-16 md:w-20 h-16 md:h-20 rounded-[1.5rem] md:rounded-[2rem] bg-league-accent flex items-center justify-center font-black italic text-2xl md:text-3xl text-white shadow-2xl flex-shrink-0">
-                  TM
-                </div>
-                <div>
-                  <div className="text-2xl md:text-3xl font-black italic uppercase text-white tracking-tighter leading-none">Tom Mitchell</div>
-                  <div className="text-[9px] md:text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mt-2 italic">Chief Operating Officer • Central Command</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="py-24 md:py-40 border-t border-league-border bg-league-panel relative overflow-hidden">
-        <div className="container mx-auto px-4 flex flex-col items-center text-center space-y-16 md:space-y-20">
-          <svg className="h-12 md:h-20 w-auto grayscale opacity-40 hover:grayscale-0 transition-all duration-700 cursor-pointer" viewBox="0 0 150 60" fill="none" xmlns="http://www.w3.org/2000/svg" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-            <path d="M10 10H25V50H10V10Z" fill="white"/>
-            <path d="M30 50L55 10H75L100 50H80L75 40H55L50 50H30ZM58 32H72L65 18L58 32Z" fill="white"/>
-            <path d="M105 10H120V40H140V50H105V10Z" fill="white"/>
-            <rect x="0" y="28" width="150" height="4" fill="#e41d24" />
-          </svg>
-          <div className="flex flex-wrap justify-center gap-8 md:gap-20 text-[10px] md:text-[12px] font-black uppercase tracking-[0.5em] text-league-muted">
-            <a href="#" className="hover:text-league-accent transition-colors">Executive HQ</a>
-            <a href="#" className="hover:text-league-accent transition-colors">Tactical Nodes</a>
-            <a href="#" className="hover:text-league-accent transition-colors">Privacy Ops</a>
-            <a href="#" className="hover:text-league-accent transition-colors">Dossier Terms</a>
+      <footer className="py-24 md:py-48 border-t-4 border-league-accent bg-league-panel relative overflow-hidden">
+        <div className="container mx-auto px-4 flex flex-col items-center text-center space-y-20 md:space-y-32">
+          <div className="flex flex-col items-center gap-6 opacity-80 hover:opacity-100 transition-opacity">
+            <svg className="h-16 md:h-24 w-auto cursor-pointer" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+                <path d="M10 40C10 25 22 15 35 15C48 15 60 25 60 40V55H10V40Z" fill="#e41d24"/>
+                <text x="70" y="60" fill="white" fontSize="56" fontWeight="900" fontStyle="italic" fontFamily="Inter, sans-serif">IAL</text>
+                <rect x="70" y="34" width="70" height="5" fill="#e41d24" />
+            </svg>
+            <div className="flex gap-4">
+              {['🇺🇸', '🇨🇦', '🇩🇪', '🇨🇭', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'].map((flag, i) => <span key={i} className="text-xl">{flag}</span>)}
+            </div>
           </div>
-          <p className="text-[9px] font-black text-league-muted/20 uppercase tracking-[0.6em] italic">
-            © 2026 International Arena League Central Command • Node Connection v2.6.5-PROD
+          <div className="flex flex-wrap justify-center gap-10 md:gap-24 text-[12px] md:text-[14px] font-black uppercase tracking-[0.6em] text-league-muted">
+            <a href="#" className="hover:text-league-accent transition-colors">Command HQ</a>
+            <a href="#" className="hover:text-league-accent transition-colors">Tactical Grid</a>
+            <a href="#" className="hover:text-league-accent transition-colors">Privacy Node</a>
+            <a href="#" className="hover:text-league-accent transition-colors">Legal Protocol</a>
+          </div>
+          <p className="text-[10px] font-black text-league-muted/30 uppercase tracking-[0.8em] italic">
+            © 2026 International Arena League Central Command • Node Authorization v2.7.0-STABLE
           </p>
         </div>
       </footer>

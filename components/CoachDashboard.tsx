@@ -1,38 +1,67 @@
-import React, { useMemo } from 'react';
+
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../App';
-import { Franchise, SystemRole, FRANCHISE_COLORS, FRANCHISE_TEAMS, RecruitingStatus, TalentTier, Role } from '../types';
+import { Franchise, SystemRole, FRANCHISE_COLORS, FRANCHISE_TEAMS, RecruitingStatus, TalentTier, Role, Profile } from '../types';
+
+interface Slot {
+  id: string;
+  name: string;
+  pos: string;
+  group: 'Offense' | 'Defense' | 'Ironman';
+  x: number;
+  y: number;
+}
+
+const FIELD_SLOTS: Slot[] = [
+  { id: 'qb', name: 'Quarterback', pos: 'QB', group: 'Offense', x: 50, y: 85 },
+  { id: 'wr1', name: 'WR / Motion', pos: 'WR', group: 'Ironman', x: 20, y: 70 },
+  { id: 'wr2', name: 'WR / End', pos: 'WR', group: 'Ironman', x: 80, y: 70 },
+  { id: 'ol1', name: 'Center / Guard', pos: 'OL', group: 'Offense', x: 50, y: 75 },
+  { id: 'ol2', name: 'Guard / DL', pos: 'OL', group: 'Ironman', x: 65, y: 75 },
+  { id: 'dl1', name: 'Nose Tackle', pos: 'DL', group: 'Defense', x: 50, y: 65 },
+  { id: 'lb1', name: 'Jack Linebacker', pos: 'LB', group: 'Defense', x: 30, y: 55 },
+  { id: 'lb2', name: 'Mac Linebacker', pos: 'LB', group: 'Defense', x: 70, y: 55 },
+  { id: 'db1', name: 'Safety / DB', pos: 'DB', group: 'Ironman', x: 50, y: 40 },
+];
 
 export const CoachDashboard: React.FC = () => {
   const { profiles, selectedFranchise, currentSystemRole, activityLogs } = useApp();
+  const [activeTab, setActiveTab] = useState<'Roster' | 'Depth Chart'>('Roster');
+  const [selectedTeam, setSelectedTeam] = useState<string>(FRANCHISE_TEAMS[selectedFranchise][0]);
+  const [assignments, setAssignments] = useState<Record<string, Profile | null>>({});
 
-  // If role is LEAGUE_ADMIN, allow browsing, otherwise scope to the coach's franchise
-  const isCoach = currentSystemRole === SystemRole.COACH_STAFF;
-  
   const teamRoster = useMemo(() => {
     return profiles.filter(p => p.assignedFranchise === selectedFranchise && p.role === Role.PLAYER);
   }, [profiles, selectedFranchise]);
 
-  const teamName = useMemo(() => {
-    const teams = FRANCHISE_TEAMS[selectedFranchise];
-    return teams ? teams[0] : 'Unknown Team';
-  }, [selectedFranchise]);
+  const filteredTeamRoster = useMemo(() => {
+    return teamRoster.filter(p => p.assignedTeam === selectedTeam);
+  }, [teamRoster, selectedTeam]);
 
   const stats = useMemo(() => {
-    const total = teamRoster.length;
+    const total = filteredTeamRoster.length;
     const avgGrade = total > 0 
-      ? (teamRoster.reduce((sum, p) => sum + (p.scoutGrade || 0), 0) / total).toFixed(1)
+      ? (filteredTeamRoster.reduce((sum, p) => sum + (p.scoutGrade || 0), 0) / total).toFixed(1)
       : '0.0';
-    const signedCount = teamRoster.filter(p => p.status === RecruitingStatus.SIGNED || p.status === RecruitingStatus.PLACED).length;
+    const signedCount = filteredTeamRoster.filter(p => p.status === RecruitingStatus.SIGNED || p.status === RecruitingStatus.PLACED).length;
     
     return { total, avgGrade, signedCount };
-  }, [teamRoster]);
+  }, [filteredTeamRoster]);
 
   const teamActivity = useMemo(() => {
     return activityLogs.filter(log => {
       const p = profiles.find(prof => prof.id === log.subjectId);
-      return p && p.assignedFranchise === selectedFranchise;
+      return p && p.assignedFranchise === selectedFranchise && p.assignedTeam === selectedTeam;
     }).slice(0, 5);
-  }, [activityLogs, profiles, selectedFranchise]);
+  }, [activityLogs, profiles, selectedFranchise, selectedTeam]);
+
+  const handleAssign = (slotId: string, player: Profile) => {
+    setAssignments(prev => ({ ...prev, [slotId]: player }));
+  };
+
+  const handleClear = (slotId: string) => {
+    setAssignments(prev => ({ ...prev, [slotId]: null }));
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
@@ -44,124 +73,180 @@ export const CoachDashboard: React.FC = () => {
           </div>
           <div>
             <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-none">
-              {selectedFranchise} {teamName}
+              {selectedFranchise} Node
             </h2>
-            <p className="text-league-muted uppercase tracking-[0.4em] text-[10px] font-black mt-2 italic opacity-60">Official Tactical Command Desk • Operational Node Active</p>
-          </div>
-        </div>
-        <div className="flex gap-4">
-           <div className="text-right">
-              <div className="text-[10px] font-black text-league-accent uppercase tracking-widest leading-none mb-1">Session: 2026 Cycle</div>
-              <div className="text-[8px] font-bold text-league-muted uppercase tracking-widest opacity-40">Command Clearance: {currentSystemRole}</div>
-           </div>
-        </div>
-      </div>
-
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <CoachStatCard label="Roster Volume" val={stats.total} sub="Personnel Assigned" />
-        <CoachStatCard label="Avg Scout Grade" val={stats.avgGrade} sub="Athletic Mean" color="text-league-blue" />
-        <CoachStatCard label="Operational Readiness" val={`${Math.round((stats.signedCount / (stats.total || 1)) * 100)}%`} sub="Personnel Committed" color="text-league-ok" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Roster Overview */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="flex justify-between items-end mb-4">
-             <h3 className="text-[12px] font-black uppercase text-white tracking-[0.4em] italic border-l-4 border-league-accent pl-4">Tactical Roster List</h3>
-             <span className="text-[9px] font-bold text-league-muted uppercase tracking-widest">{stats.total} Nodes Online</span>
-          </div>
-          <div className="bg-league-panel border border-league-border rounded-[3rem] overflow-hidden shadow-2xl">
-            <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-              <table className="w-full text-left">
-                <thead className="bg-league-tableHeader border-b border-league-border sticky top-0 z-10">
-                  <tr className="text-[8px] font-black uppercase text-league-muted tracking-[0.3em]">
-                    <th className="px-8 py-5">Athlete</th>
-                    <th className="px-8 py-5">Classification</th>
-                    <th className="px-8 py-5">Biometrics</th>
-                    <th className="px-8 py-5 text-right">Draft Grade</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-league-border">
-                  {teamRoster.map(p => (
-                    <tr key={p.id} className="hover:bg-league-bg/30 transition-colors group">
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-league-bg border border-league-border flex items-center justify-center font-black italic text-white overflow-hidden shadow-inner">
-                             {p.avatar_url ? <img src={p.avatar_url} className="w-full h-full object-cover" /> : p.fullName.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="text-[12px] font-black italic uppercase text-white tracking-tighter group-hover:text-league-accent transition-colors">{p.fullName}</div>
-                            <div className="text-[8px] font-bold text-league-muted uppercase tracking-widest">{p.positions.join(' / ')}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                         <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${
-                           p.tier === TalentTier.TIER1 ? 'bg-league-accent text-white border-league-accent' : 
-                           p.tier === TalentTier.TIER2 ? 'bg-league-blue text-white border-league-blue' : 
-                           'bg-league-pill text-league-muted border-league-border'
-                         }`}>
-                           {p.tier.split(' ')[0]}
-                         </span>
-                      </td>
-                      <td className="px-8 py-5 text-[10px] font-black text-league-muted uppercase tracking-tighter italic">
-                        {p.height_cm}cm / {p.weight_kg}kg
-                      </td>
-                      <td className="px-8 py-5 text-right font-mono text-xs font-black italic text-league-accent">
-                        {p.scoutGrade || '--'}
-                      </td>
-                    </tr>
-                  ))}
-                  {teamRoster.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="px-8 py-20 text-center text-[10px] font-black uppercase tracking-[0.4em] text-league-muted opacity-20 italic">No Personnel Assigned to Roster Hub</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="flex items-center gap-4 mt-3">
+               <select 
+                 className="bg-league-panel border border-league-border px-4 py-2 rounded-xl text-[10px] font-black uppercase text-white outline-none focus:border-league-accent appearance-none pr-10 cursor-pointer"
+                 value={selectedTeam}
+                 onChange={(e) => setSelectedTeam(e.target.value)}
+               >
+                 {FRANCHISE_TEAMS[selectedFranchise].map(t => <option key={t} value={t}>{t} Unit</option>)}
+               </select>
+               <p className="text-league-muted uppercase tracking-[0.2em] text-[10px] font-black italic opacity-60">Official Tactical Command Desk • Operational Node Active</p>
             </div>
           </div>
         </div>
+        <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl">
+          {(['Roster', 'Depth Chart'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
+          ))}
+        </div>
+      </div>
 
-        {/* Tactical Feed & Resources */}
-        <div className="lg:col-span-4 space-y-8">
-           <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl space-y-8">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-league-accent border-b border-league-border pb-4 italic">Recent Unit Activity</h4>
-              <div className="space-y-4">
-                 {teamActivity.map(log => (
-                   <div key={log.id} className="flex gap-4 border-l-2 border-league-border pl-4 py-2 hover:border-league-accent transition-all group">
-                      <div className="flex-1">
-                         <div className="text-[8px] font-black uppercase text-league-muted mb-1 opacity-50">{new Date(log.timestamp).toLocaleTimeString()}</div>
-                         <div className="text-[10px] font-bold italic text-white/80 leading-relaxed group-hover:text-white transition-colors">{log.message}</div>
+      {activeTab === 'Roster' ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CoachStatCard label="Unit Strength" val={stats.total} sub="Personnel Online" />
+            <CoachStatCard label="Avg Scout Grade" val={stats.avgGrade} sub="Athletic Mean" color="text-league-blue" />
+            <CoachStatCard label="Operational Readiness" val={`${Math.round((stats.signedCount / (stats.total || 1)) * 100)}%`} sub="Personnel Committed" color="text-league-ok" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="lg:col-span-8 space-y-6">
+              <div className="flex justify-between items-end mb-4">
+                 <h3 className="text-[12px] font-black uppercase text-white tracking-[0.4em] italic border-l-4 border-league-accent pl-4">Tactical Roster: {selectedTeam}</h3>
+                 <span className="text-[9px] font-bold text-league-muted uppercase tracking-widest">{stats.total} Nodes Online</span>
+              </div>
+              <div className="bg-league-panel border border-league-border rounded-[3rem] overflow-hidden shadow-2xl">
+                <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                  <table className="w-full text-left">
+                    <thead className="bg-league-tableHeader border-b border-league-border sticky top-0 z-10">
+                      <tr className="text-[8px] font-black uppercase text-league-muted tracking-[0.3em]">
+                        <th className="px-8 py-5">Athlete</th>
+                        <th className="px-8 py-5">Classification</th>
+                        <th className="px-8 py-5">Biometrics</th>
+                        <th className="px-8 py-5 text-right">Draft Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-league-border">
+                      {filteredTeamRoster.map(p => (
+                        <tr key={p.id} className="hover:bg-league-bg/30 transition-colors group">
+                          <td className="px-8 py-5">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-league-bg border border-league-border flex items-center justify-center font-black italic text-white overflow-hidden shadow-inner">
+                                 {p.avatar_url ? <img src={p.avatar_url} className="w-full h-full object-cover" /> : p.fullName.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="text-[12px] font-black italic uppercase text-white tracking-tighter group-hover:text-league-accent transition-colors">{p.fullName}</div>
+                                <div className="text-[8px] font-bold text-league-muted uppercase tracking-widest">{p.positions.join(' / ')}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                             <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${
+                               p.tier === TalentTier.TIER1 ? 'bg-league-accent text-white border-league-accent' : 
+                               p.tier === TalentTier.TIER2 ? 'bg-league-blue text-white border-league-blue' : 
+                               'bg-league-pill text-league-muted border-league-border'
+                             }`}>
+                               {p.tier.split(' ')[0]}
+                             </span>
+                          </td>
+                          <td className="px-8 py-5 text-[10px] font-black text-league-muted uppercase tracking-tighter italic">
+                            {p.height_cm}cm / {p.weight_kg}kg
+                          </td>
+                          <td className="px-8 py-5 text-right font-mono text-xs font-black italic text-league-accent">
+                            {p.scoutGrade || '--'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-8">
+               <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl space-y-8">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-league-accent border-b border-league-border pb-4 italic">Recent Unit Activity</h4>
+                  <div className="space-y-4">
+                     {teamActivity.map(log => (
+                       <div key={log.id} className="flex gap-4 border-l-2 border-league-border pl-4 py-2 hover:border-league-accent transition-all group">
+                          <div className="flex-1">
+                             <div className="text-[8px] font-black uppercase text-league-muted mb-1 opacity-50">{new Date(log.timestamp).toLocaleTimeString()}</div>
+                             <div className="text-[10px] font-bold italic text-white/80 leading-relaxed group-hover:text-white transition-colors">{log.message}</div>
+                          </div>
+                       </div>
+                     ))}
+                     {teamActivity.length === 0 && (
+                       <p className="text-[9px] font-black uppercase text-league-muted opacity-20 text-center py-6 italic tracking-widest">No Node Activity Recorded</p>
+                     )}
+                  </div>
+               </div>
+               <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white border-b border-league-border pb-4 italic mb-6">Tactical Shortcuts</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                     <button className="w-full bg-league-bg border border-league-border p-4 rounded-2xl flex items-center justify-between hover:border-league-accent transition-all group">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-league-muted group-hover:text-white">Review Playbook</span>
+                        <svg className="w-4 h-4 text-league-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                     </button>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in slide-in-from-bottom-10 duration-700">
+           {/* Depth Chart Field */}
+           <div className="lg:col-span-8 bg-league-panel border border-league-border rounded-[3rem] p-10 shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+              <div className="relative z-10 aspect-[4/3] bg-league-bg rounded-[2rem] border-2 border-league-border p-8 relative">
+                 <div className="absolute inset-0 flex flex-col pointer-events-none">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex-1 border-b border-white/5 last:border-0 relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-white/5 italic">{(5-i)*10}</span>
                       </div>
-                   </div>
-                 ))}
-                 {teamActivity.length === 0 && (
-                   <p className="text-[9px] font-black uppercase text-league-muted opacity-20 text-center py-6 italic tracking-widest">No Node Activity Recorded</p>
-                 )}
+                    ))}
+                 </div>
+                 <div className="absolute inset-0 z-20">
+                    {FIELD_SLOTS.map(slot => (
+                      <div key={slot.id} className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center" style={{ left: `${slot.x}%`, top: `${slot.y}%` }}>
+                         <div className="text-[7px] font-black text-league-muted uppercase tracking-widest mb-1 italic opacity-40">{slot.name}</div>
+                         <div className={`w-24 h-16 rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all p-2 relative group overflow-hidden ${assignments[slot.id] ? 'bg-league-accent/10 border-league-accent shadow-[0_0_20px_rgba(228,29,36,0.2)]' : 'border-league-border bg-black/40 hover:border-league-muted'}`}>
+                           {assignments[slot.id] ? (
+                             <div className="text-center group-hover:scale-95 transition-transform">
+                               <button onClick={() => handleClear(slot.id)} className="absolute top-1 right-1 text-league-accent opacity-0 group-hover:opacity-100 transition-opacity"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                               <div className="text-[10px] font-black italic uppercase text-white truncate w-20">{assignments[slot.id]?.fullName}</div>
+                               <div className="text-[7px] font-bold text-league-accent uppercase mt-0.5">{assignments[slot.id]?.positions[0]}</div>
+                             </div>
+                           ) : (
+                             <span className="text-[9px] font-black uppercase text-league-muted tracking-widest opacity-20 italic">{slot.pos}</span>
+                           )}
+                         </div>
+                      </div>
+                    ))}
+                 </div>
               </div>
            </div>
 
-           <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white border-b border-league-border pb-4 italic mb-6">Tactical Shortcuts</h4>
-              <div className="grid grid-cols-1 gap-3">
-                 <button className="w-full bg-league-bg border border-league-border p-4 rounded-2xl flex items-center justify-between hover:border-league-accent transition-all group">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-league-muted group-hover:text-white">Review Playbook</span>
-                    <svg className="w-4 h-4 text-league-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                 </button>
-                 <button className="w-full bg-league-bg border border-league-border p-4 rounded-2xl flex items-center justify-between hover:border-league-accent transition-all group">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-league-muted group-hover:text-white">Broadcast to Unit</span>
-                    <svg className="w-4 h-4 text-league-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
-                 </button>
-                 <button className="w-full bg-league-bg border border-league-border p-4 rounded-2xl flex items-center justify-between hover:border-league-accent transition-all group">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-league-muted group-hover:text-white">Performance Lab</span>
-                    <svg className="w-4 h-4 text-league-ok" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                 </button>
+           {/* Personnel Selection */}
+           <div className="lg:col-span-4 bg-league-panel border border-league-border rounded-[3rem] p-8 flex flex-col shadow-2xl h-[600px]">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white mb-6 border-b border-league-border pb-4 italic">Assigned Personnel</h4>
+              <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                 {filteredTeamRoster.map(p => (
+                   <div key={p.id} className="bg-league-bg border border-league-border p-4 rounded-2xl flex items-center justify-between group hover:border-league-accent transition-all">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-xl bg-league-panel flex items-center justify-center font-black italic text-white text-xs">{p.fullName.charAt(0)}</div>
+                         <div>
+                            <div className="text-[11px] font-black italic uppercase text-white">{p.fullName}</div>
+                            <div className="text-[8px] font-bold text-league-muted uppercase tracking-widest">{p.positions.join('/')}</div>
+                         </div>
+                      </div>
+                      <button 
+                        onClick={() => { 
+                          const firstOpenSlot = FIELD_SLOTS.find(s => !assignments[s.id] && p.positions.includes(s.pos)); 
+                          if (firstOpenSlot) handleAssign(firstOpenSlot.id, p); 
+                        }} 
+                        className="text-[8px] font-black uppercase text-league-accent hover:underline px-2"
+                      >
+                        Slot
+                      </button>
+                   </div>
+                 ))}
               </div>
            </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

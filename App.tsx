@@ -1,3 +1,4 @@
+
 import React, { useState, createContext, useContext, useEffect, useMemo } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { RegistrationForm } from './components/RegistrationForm';
@@ -16,24 +17,16 @@ import { Login } from './components/Login';
 import { AthletePortal } from './components/AthletePortal';
 import { RosterBuilder } from './components/RosterBuilder';
 import { WarRoom } from './components/WarRoom';
-import { ElfRegistry } from './components/ElfRegistry';
 import { CoachDashboard } from './components/CoachDashboard';
 import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, OnboardingTask, Document, BroadcastDirective } from './types';
 import { GoogleGenAI } from "@google/genai";
 
-export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'elf-registry' | 'coach-dashboard';
+export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard';
 
 const INITIAL_PROFILES: Profile[] = [
-  // STUTTGART SURGE - ACTIVE & PROSPECTS
   { id: 'str-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '0', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-4' },
   { id: 'str-0', fullName: 'Tomiwa Oyewo', email: 't.oyewo@stuttgart-surge.de', phone: '0', dateOfBirth: '1998-01-01', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['RB'], height_cm: 180, weight_kg: 95, metrics: { speed: 9, strength: 8, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-0' },
   { id: 'str-7', fullName: 'Louis Geyer', email: 'l.geyer@stuttgart-surge.de', phone: '0', dateOfBirth: '2000-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['WR'], height_cm: 188, weight_kg: 90, metrics: { speed: 9, strength: 7, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-7' },
-  
-  // DRAFT POOL CANDIDATES (ELF PROS NOT YET ASSIGNED FOR 2026)
-  { id: 'str-3', fullName: 'Michael Harley Jr', email: 'm.harley@prospect.ial.com', phone: '0', dateOfBirth: '1996-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-05-01', positions: ['WR'], height_cm: 178, weight_kg: 82, metrics: { speed: 10, strength: 6, agility: 9, iq: 9, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-3' },
-  { id: 'str-1', fullName: 'Sasan Jelvani', email: 's.jelvani@prospect.ial.com', phone: '0', dateOfBirth: '1994-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-05-01', positions: ['LB'], height_cm: 183, weight_kg: 95, metrics: { speed: 8, strength: 9, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-1' },
-  { id: 'str-13', fullName: 'Chris Mulumba', email: 'c.mulumba@prospect.ial.com', phone: '0', dateOfBirth: '1991-01-01', nationality: 'Finland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-05-01', positions: ['DE'], height_cm: 190, weight_kg: 127, metrics: { speed: 7, strength: 10, agility: 7, iq: 9, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-13' },
-  { id: 'str-17', fullName: 'Daniel Pedro', email: 'd.pedro@prospect.ial.com', phone: '0', dateOfBirth: '2003-01-01', nationality: 'UK', role: Role.PLAYER, tier: TalentTier.TIER3, status: RecruitingStatus.INACTIVE, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.NOTTINGHAM, rank3: Franchise.DUSSELDORF, rank4: Franchise.GLASGOW, rank5: Franchise.ZURICH }, createdAt: '2024-05-01', positions: ['WR'], height_cm: 189, weight_kg: 92, metrics: { speed: 8, strength: 6, agility: 8, iq: 7, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-17' },
 ];
 
 interface AppState {
@@ -79,6 +72,7 @@ interface AppState {
   playbooks: Playbook[];
   learningModules: LearningModule[];
   isBooting: boolean;
+  isLoading: boolean;
 }
 
 export const AppContext = createContext<AppState | undefined>(undefined);
@@ -90,18 +84,27 @@ export const useApp = () => {
 
 const App: React.FC = () => {
   const [viewHistory, setViewHistory] = useState<ViewState[]>(['landing']);
+  const [isLoading, setIsLoading] = useState(false);
   const view = viewHistory[viewHistory.length - 1];
 
   const setView = (v: ViewState) => {
-    setViewHistory(prev => {
-      // Don't duplicate the current view if it's already at the top
-      if (prev[prev.length - 1] === v) return prev;
-      return [...prev, v];
-    });
+    setIsLoading(true);
+    setTimeout(() => {
+      setViewHistory(prev => {
+        if (prev[prev.length - 1] === v) return prev;
+        return [...prev, v];
+      });
+      setIsLoading(false);
+      window.scrollTo(0, 0);
+    }, 600);
   };
 
   const goBack = () => {
-    setViewHistory(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    setIsLoading(true);
+    setTimeout(() => {
+      setViewHistory(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
+      setIsLoading(false);
+    }, 400);
   };
   
   const [profiles, setProfiles] = useState<Profile[]>(() => {
@@ -150,19 +153,33 @@ const App: React.FC = () => {
     setIsLoggedIn(true);
     setCurrentSystemRole(role);
     if (franchise) setSelectedFranchise(franchise);
-    if (profileId) setCurrentUserProfileId(profileId);
-    logActivity('AUTH', `Session initialized for ${email}`, 'auth-node');
     
     if (role === SystemRole.PLAYER) {
-      setView('athlete-portal');
+      const foundProfile = profiles.find(p => p.email.toLowerCase() === email.toLowerCase());
+      if (foundProfile) {
+        setCurrentUserProfileId(foundProfile.id);
+        setView('athlete-portal');
+      } else {
+        addToast("No personnel dossier found. Registration required.", "info");
+        setView('register');
+      }
     } else if (role === SystemRole.COACH_STAFF) {
       setView('coach-dashboard');
+    } else if (role === SystemRole.LEAGUE_ADMIN || role === SystemRole.FRANCHISE_GM) {
+      setView('admin');
     } else {
       setView('landing');
     }
+    
+    logActivity('AUTH', `Session initialized for ${email}`, 'auth-node');
   };
 
-  const logout = () => { setIsLoggedIn(false); setCurrentUserProfileId(null); setViewHistory(['landing']); };
+  const logout = () => { 
+    setIsLoggedIn(false); 
+    setCurrentUserProfileId(null); 
+    setViewHistory(['landing']); 
+    addToast("Session Terminated.", "info");
+  };
 
   const logActivity = (type: string, message: string, subjectId: string) => {
     setActivityLogs(prev => [{ id: Math.random().toString(36), timestamp: new Date().toISOString(), type, message, subjectId }, ...prev].slice(0, 50));
@@ -249,7 +266,7 @@ const App: React.FC = () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Simulate a mock draft for the International Arena League. Using these players: ${JSON.stringify(profiles.map(p => ({id: p.id, name: p.fullName, pos: p.positions, grade: p.scoutGrade})))}. Predict which of the 18 franchises would take them and why. Keep it concise.`
+      contents: `Simulate a mock draft for the International Arena League. Predict which of the 5 franchises would take them and why. Keep it concise.`
     });
     return response.text || "Simulation offline.";
   };
@@ -287,7 +304,7 @@ const App: React.FC = () => {
         [Franchise.STUTTGART]: { minRosterSize: 12 }, 
         [Franchise.ZURICH]: { minRosterSize: 12 } 
       },
-      playbooks, learningModules, isBooting
+      playbooks, learningModules, isBooting, isLoading
     }}>
       <style>{`:root { --franchise-accent: ${FRANCHISE_COLORS[selectedFranchise]}; }`}</style>
       
@@ -309,6 +326,18 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {isLoading && (
+        <div className="fixed inset-0 z-[900] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center transition-all duration-300">
+           <div className="relative">
+              <div className="w-16 h-16 border-4 border-league-accent/20 border-t-league-accent rounded-full animate-spin shadow-[0_0_20px_rgba(228,29,36,0.3)]" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-2 h-2 bg-league-accent rounded-full animate-ping" />
+              </div>
+           </div>
+           <p className="mt-6 text-[10px] font-black uppercase tracking-[0.6em] text-league-accent animate-pulse italic">Syncing Node Cluster...</p>
+        </div>
+      )}
+
       <div className="min-h-screen bg-league-bg text-league-fg font-sans selection:bg-league-accent flex flex-col">
         <Header currentView={view} setView={setView} />
         {broadcasts.some(b => b.active) && (
@@ -324,7 +353,7 @@ const App: React.FC = () => {
           </div>
         )}
         <main className={`flex-grow ${view === 'landing' ? '' : 'container mx-auto px-4 py-8 max-w-7xl'}`}>
-          {view !== 'landing' && (
+          {!isLoading && view !== 'landing' && (
             <div className="mb-6 flex items-center gap-4">
               <button 
                 onClick={goBack}
@@ -338,24 +367,25 @@ const App: React.FC = () => {
             </div>
           )}
           
-          {view === 'landing' && <LandingPage />}
-          {view === 'login' && <Login />}
-          {view === 'register' && <RegistrationForm />}
-          {view === 'admin' && <Dashboard />}
-          {view === 'profiles' && <Profiles />}
-          {view === 'schedule' && <Schedule />}
-          {view === 'draft' && <DraftBoard />}
-          {view === 'franchise-admin' && <FranchiseAdmin />}
-          {view === 'compare' && <ComparisonView />}
-          {view === 'pipeline' && <Pipeline />}
-          {view === 'evaluation' && <CombineEvaluation />}
-          {view === 'comms' && <CommsCenter />}
-          {view === 'academy' && <Academy />}
-          {view === 'athlete-portal' && <AthletePortal />}
-          {view === 'roster-builder' && <RosterBuilder />}
-          {view === 'war-room' && <WarRoom />}
-          {view === 'elf-registry' && <ElfRegistry />}
-          {view === 'coach-dashboard' && <CoachDashboard />}
+          <div className={`${isLoading ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'} transition-all duration-500`}>
+            {view === 'landing' && <LandingPage />}
+            {view === 'login' && <Login />}
+            {view === 'register' && <RegistrationForm />}
+            {view === 'admin' && <Dashboard />}
+            {view === 'profiles' && <Profiles />}
+            {view === 'schedule' && <Schedule />}
+            {view === 'draft' && <DraftBoard />}
+            {view === 'franchise-admin' && <FranchiseAdmin />}
+            {view === 'compare' && <ComparisonView />}
+            {view === 'pipeline' && <Pipeline />}
+            {view === 'evaluation' && <CombineEvaluation />}
+            {view === 'comms' && <CommsCenter />}
+            {view === 'academy' && <Academy />}
+            {view === 'athlete-portal' && <AthletePortal />}
+            {view === 'roster-builder' && <RosterBuilder />}
+            {view === 'war-room' && <WarRoom />}
+            {view === 'coach-dashboard' && <CoachDashboard />}
+          </div>
         </main>
         
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2 pointer-events-none">
@@ -367,11 +397,6 @@ const App: React.FC = () => {
           ))}
         </div>
       </div>
-      <style>{`
-        @keyframes bootProgress { 0% { width: 0%; } 100% { width: 100%; } }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-20%); } }
-        .animate-marquee { animation: marquee 30s linear infinite; }
-      `}</style>
     </AppContext.Provider>
   );
 };

@@ -65,7 +65,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       title: "Talent Hub",
       items: [
         { view: 'profiles', label: 'Personnel Pool' },
-        { view: 'elf-registry', label: 'ELF Pro Registry' },
         { view: 'compare', label: 'Scouting Lab', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'pipeline', label: 'Recruitment Funnel', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'war-room', label: 'War Room Feed', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
@@ -95,12 +94,23 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       <header className="bg-league-bg/90 backdrop-blur-xl border-b-2 border-league-accent shadow-2xl">
         <div className="container mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-4 md:gap-8">
-            <div className="flex-shrink-0 cursor-pointer group" onClick={() => setView('landing')}>
-              <svg className="h-6 md:h-8 w-auto group-hover:scale-105 transition-transform" viewBox="0 0 150 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 10H25V50H10V10Z" fill="white"/>
-                <path d="M30 50L55 10H75L100 50H80L75 40H55L50 50H30ZM58 32H72L65 18L58 32Z" fill="white"/>
-                <path d="M105 10H120V40H140V50H105V10Z" fill="white"/>
-                <rect x="0" y="28" width="150" height="4" fill="#e41d24" />
+            <div className="flex-shrink-0 cursor-pointer group flex items-center gap-3" onClick={() => setView('landing')}>
+              {/* Refined IAL Logo SVG based on provided image */}
+              <svg className="h-8 md:h-10 w-auto" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Red Helmet */}
+                <path d="M10 40C10 25 22 15 35 15C48 15 60 25 60 40V55H10V40Z" fill="#e41d24"/>
+                <path d="M25 15V35M35 15V35M45 15V35" stroke="white" strokeWidth="3"/>
+                <path d="M10 45H60M10 50H60" stroke="black" strokeWidth="1" opacity="0.3"/>
+                <rect x="15" y="45" width="40" height="8" rx="2" fill="#1a1a1a" stroke="white" strokeWidth="1"/>
+                
+                {/* IAL Text */}
+                <text x="70" y="55" fill="white" fontSize="48" fontWeight="900" fontStyle="italic" fontFamily="Inter, sans-serif">IAL</text>
+                
+                {/* Signature Red Strike Bar */}
+                <rect x="70" y="32" width="60" height="4" fill="#e41d24" />
+                
+                {/* Secondary Text */}
+                <text x="70" y="70" fill="white" fontSize="7" fontWeight="900" letterSpacing="2" fontFamily="Inter, sans-serif" opacity="0.8">INTERNATIONAL ARENA LEAGUE</text>
               </svg>
             </div>
 
