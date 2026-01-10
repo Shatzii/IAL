@@ -21,7 +21,6 @@ import { CoachDashboard } from './components/CoachDashboard';
 import { ContractStructures } from './components/ContractStructures';
 import { TeamFilmRoom } from './components/TeamFilmRoom';
 import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, OnboardingTask, Document, BroadcastDirective, Team, Video, VideoTag, VideoStatus, VideoSourceType } from './types';
-// Fixed: Import Type from @google/genai to support responseSchema definitions
 import { GoogleGenAI, Type } from "@google/genai";
 
 export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard' | 'contract-structure' | 'film-room';
@@ -46,25 +45,11 @@ const INITIAL_VIDEOS: Video[] = [
     durationSeconds: 596,
     createdAt: '2024-03-01',
     thumbnailUrl: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?q=80&w=300&h=200&fit=crop'
-  },
-  {
-    id: 'vid-scout-1',
-    teamId: 'team-zuri-1',
-    uploadedByUserId: 'admin',
-    title: 'Zurich Defensive Tendencies (Scouting Report)',
-    description: 'Deep dive into Zurich goal-line packages.',
-    sourceType: VideoSourceType.SCOUTING,
-    status: VideoStatus.READY,
-    url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    durationSeconds: 653,
-    createdAt: '2024-03-05',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1540747913346-19e3adbc6675?q=80&w=300&h=200&fit=crop'
   }
 ];
 
 const INITIAL_TAGS: VideoTag[] = [
-  { id: 'tag-1', videoId: 'vid-1', source: 'coach', tStartMs: 12000, tEndMs: 15000, label: 'pocket_movement', note: 'Great step up to avoid pressure.', approved: true, createdAt: '2024-03-01' },
-  { id: 'tag-2', videoId: 'vid-1', source: 'ai', tStartMs: 45000, tEndMs: 48000, label: 'wall_leverage', note: 'Elite use of wall to shield defender.', approved: false, createdAt: '2024-03-01', confidence: 0.92 }
+  { id: 'tag-1', videoId: 'vid-1', source: 'coach', tStartMs: 12000, tEndMs: 15000, label: 'pocket_movement', note: 'Great step up to avoid pressure.', approved: true, createdAt: '2024-03-01' }
 ];
 
 const INITIAL_PLAYBOOKS: Playbook[] = [
@@ -74,24 +59,18 @@ const INITIAL_PLAYBOOKS: Playbook[] = [
     lastUpdated: '2024-03-10',
     plays: [
       { id: 'play-1', name: 'Wall Stutter', formation: 'Trips Wall', category: 'Pass', description: 'Primary WR uses wall stutter to clear the corner.' },
-      { id: 'play-2', name: 'High Motion Mesh', formation: 'Spread 2x2', category: 'Pass', description: 'Vertical high motion to pull LB out of the box.' },
-      { id: 'play-3', name: 'Net Dive', formation: 'Heavy', category: 'Run', description: 'Direct dive off the rebound net post.' }
+      { id: 'play-2', name: 'High Motion Mesh', formation: 'Spread 2x2', category: 'Pass', description: 'Vertical high motion to pull LB out of the box.' }
     ]
   }
 ];
 
 const INITIAL_LEARNING_MODULES: LearningModule[] = [
-  { id: 'lm1', title: 'Ironman Substitution Logic', description: 'Mastering the dual-role transition in high-speed arena environments.', category: 'Tactics', lessons: [{id: 'l1', title: 'The 20-Second Personnel Switch', durationMins: 12}, {id: 'l2', title: 'Managing Motion Fatigue', durationMins: 15}] },
-  { id: 'lm2', title: 'Professionalism & Media 1.0', description: 'IAL standard briefing for global personnel engagement.', category: 'Compliance', lessons: [{id: 'l3', title: 'Node Press Protocol', durationMins: 10}] }
+  { id: 'lm1', title: 'Ironman Substitution Logic', description: 'Mastering the dual-role transition in high-speed arena environments.', category: 'Tactics', lessons: [{id: 'l1', title: 'The 20-Second Personnel Switch', durationMins: 12}] }
 ];
 
 const INITIAL_PROFILES: Profile[] = [
-  { id: 'str-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '0', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods', avatar_url: 'https://i.pravatar.cc/150?u=str-4', videoAnalysisTags: [] },
-  { id: 'str-0', fullName: 'Tomiwa Oyewo', email: 't.oyewo@stuttgart-surge.de', phone: '0', dateOfBirth: '1998-01-01', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['RB'], height_cm: 180, weight_kg: 95, metrics: { speed: 9, strength: 8, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods', avatar_url: 'https://i.pravatar.cc/150?u=str-0' },
-  // New Tactical Leadership
-  { id: 'c-glas-1', fullName: 'Phillip Garcia', email: 'phil.garcia@glasgow.ial.com', phone: '+44 141 000 000', dateOfBirth: '1978-05-20', nationality: 'USA', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.GLASGOW, rank2: Franchise.NOTTINGHAM, rank3: Franchise.ZURICH, rank4: Franchise.DUSSELDORF, rank5: Franchise.STUTTGART }, createdAt: '2024-03-12', positions: ['Head Coach', 'OC'], metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 9 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.GLASGOW, assignedTeam: 'Tigers' },
-  { id: 'c-nott-1', fullName: 'Jeff Hunt', email: 'jeff.hunt@nottingham.ial.com', phone: '+44 115 000 000', dateOfBirth: '1982-11-14', nationality: 'USA', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.NOTTINGHAM, rank2: Franchise.GLASGOW, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH }, createdAt: '2024-03-12', positions: ['Head Coach', 'DC'], metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods' },
-  { id: 'c-duss-1', fullName: 'Keith Hill', email: 'keith.hill@dusseldorf.ial.com', phone: '+49 211 000 000', dateOfBirth: '1975-09-03', nationality: 'USA', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.DUSSELDORF, rank2: Franchise.STUTTGART, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-03-12', positions: ['Head Coach', 'ST'], metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.DUSSELDORF, assignedTeam: 'Panthers' }
+  { id: 'str-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '0', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods', avatar_url: 'https://i.pravatar.cc/150?u=str-4' },
+  { id: 'str-0', fullName: 'Tomiwa Oyewo', email: 't.oyewo@stuttgart-surge.de', phone: '0', dateOfBirth: '1998-01-01', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['RB'], height_cm: 180, weight_kg: 95, metrics: { speed: 9, strength: 8, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods', avatar_url: 'https://i.pravatar.cc/150?u=str-0' }
 ];
 
 interface AppState {
@@ -194,17 +173,26 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : INITIAL_PROFILES;
   });
 
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
+    const saved = localStorage.getItem('IAL_AUDIT_LOG');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Database Persistence Synchronization
+  useEffect(() => {
+    localStorage.setItem('IAL_PERSONNEL_REGISTRY', JSON.stringify(profiles));
+  }, [profiles]);
+
+  useEffect(() => {
+    localStorage.setItem('IAL_AUDIT_LOG', JSON.stringify(activityLogs));
+  }, [activityLogs]);
+
   const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
   const [videos, setVideos] = useState<Video[]>(INITIAL_VIDEOS);
   const [videoTags, setVideoTags] = useState<VideoTag[]>(INITIAL_TAGS);
   const [playbooks] = useState<Playbook[]>(INITIAL_PLAYBOOKS);
   const [learningModules] = useState<LearningModule[]>(INITIAL_LEARNING_MODULES);
   
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
-    const saved = localStorage.getItem('IAL_AUDIT_LOG');
-    return saved ? JSON.parse(saved) : [];
-  });
-
   const [currentSystemRole, setCurrentSystemRole] = useState<SystemRole>(SystemRole.PLAYER);
   const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
@@ -404,7 +392,6 @@ const App: React.FC = () => {
     const profile = profiles.find(p => p.id === profileId);
     if (!profile) return;
 
-    // Mandatory API Key Selection for gemini-3-pro-image-preview
     if (!(await (window as any).aistudio.hasSelectedApiKey())) {
       await (window as any).aistudio.openSelectKey();
     }

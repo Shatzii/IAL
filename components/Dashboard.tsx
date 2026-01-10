@@ -31,7 +31,7 @@ export const Dashboard: React.FC = () => {
     alertConfigs, isPrivacyMode, setPrivacyMode, addToast, activityLogs 
   } = useApp();
   
-  const [activeTab, setActiveTab] = useState<'Overview' | 'Franchises' | 'Management' | 'Audit'>('Overview');
+  const [activeTab, setActiveTab] = useState<'Overview' | 'Franchises' | 'Management' | 'Audit' | 'System'>('Overview');
   const [mgmtFilter, setMgmtFilter] = useState({ role: 'ALL', status: 'ALL', search: '' });
 
   if (currentSystemRole !== SystemRole.LEAGUE_ADMIN) {
@@ -85,17 +85,15 @@ export const Dashboard: React.FC = () => {
     return matchesRole && matchesStatus && matchesSearch;
   });
 
-  const exportToCsv = () => {
-    const headers = ['ID', 'Name', 'Role', 'Tier', 'Status', 'Nationality', 'Franchise', 'Grade', 'Email'];
-    const rows = profiles.map(p => [p.id, p.fullName, p.role, p.tier, p.status, p.nationality, p.assignedFranchise || 'None', p.scoutGrade || 'N/A', p.email]);
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+  const handleSnapshot = () => {
+    const data = JSON.stringify({ profiles, activityLogs, timestamp: new Date().toISOString() });
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `IAL_Registry_Master_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `IAL_Registry_Snapshot_${new Date().getTime()}.json`;
     link.click();
-    addToast('Master CSV Exported', 'success');
+    addToast('Neural Registry Snapshot Finalized', 'success');
   };
 
   return (
@@ -105,22 +103,10 @@ export const Dashboard: React.FC = () => {
           <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Central Command OS</h2>
           <p className="text-league-muted uppercase tracking-widest text-[10px] font-black mt-1">Operational Analytics & Registry Deployment</p>
         </div>
-        <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl">
-          {(['Overview', 'Franchises', 'Management', 'Audit'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
+        <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl overflow-x-auto no-scrollbar">
+          {(['Overview', 'Franchises', 'Management', 'Audit', 'System'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
           ))}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap justify-between items-center bg-league-panel/50 p-6 rounded-[2rem] border border-league-border shadow-2xl gap-6">
-        <div className="flex gap-6">
-          <StatMini label="Registry Volume" value={profiles.length} />
-          <StatMini label="Unlinked" value={profiles.filter(p => !p.assignedFranchise).length} color="league-warn" />
-          <StatMini label="Active Pipeline" value={profiles.filter(p => p.status !== RecruitingStatus.INACTIVE).length} color="league-ok" />
-        </div>
-        <div className="flex gap-4">
-          <button onClick={() => setPrivacyMode(!isPrivacyMode)} className={`px-6 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${isPrivacyMode ? 'bg-league-warn text-black border-league-warn' : 'text-league-muted border-league-border'}`}>{isPrivacyMode ? 'PII: MASKED' : 'PII: EXPOSED'}</button>
-          <button onClick={exportToCsv} className="bg-league-accent text-white px-6 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest hover:brightness-110 shadow-xl">Export Master Archive</button>
         </div>
       </div>
 
@@ -131,7 +117,9 @@ export const Dashboard: React.FC = () => {
             <div className="flex-1 bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-10">Demand Distribution</h4>
                <div className="h-60"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={prefDistribution} innerRadius={60} outerRadius={85} paddingAngle={8} dataKey="value">{prefDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={['#e41d24', '#40a9ff', '#23d18b', '#ffb84d', '#722ed1'][index % 5]} stroke="none" />)}</Pie><Tooltip contentStyle={{ background: '#000', border: '1px solid #1a1a1a', fontSize: '10px', fontWeight: 'bold' }} /></PieChart></ResponsiveContainer></div>
             </div>
-            <div className="flex-1 bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-10">Funnel Velocity</h4>
+            <div className="flex-1 bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-6 opacity-5"><svg className="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-10">Funnel Velocity</h4>
                <div className="h-44"><ResponsiveContainer width="100%" height="100%"><BarChart data={pipelineData}><Bar dataKey="count" radius={[4, 4, 0, 0]}>{pipelineData.map((entry, index) => <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.fullName] || '#444'} />)}</Bar><Tooltip contentStyle={{ background: '#000', border: '1px solid #1a1a1a', fontSize: '10px' }} cursor={{fill: 'transparent'}} /></BarChart></ResponsiveContainer></div>
             </div>
           </div>
@@ -152,14 +140,14 @@ export const Dashboard: React.FC = () => {
 
       {activeTab === 'Management' && (
         <div className="bg-league-panel border border-league-border rounded-[2.5rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4">
-          <div className="p-8 border-b border-league-border bg-league-tableHeader flex gap-4">
-            <select className="bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-black uppercase text-white outline-none" value={mgmtFilter.role} onChange={e => setMgmtFilter({...mgmtFilter, role: e.target.value})}>
+          <div className="p-8 border-b border-league-border bg-league-tableHeader flex gap-4 overflow-x-auto no-scrollbar">
+            <select className="bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-black uppercase text-white outline-none min-w-[140px]" value={mgmtFilter.role} onChange={e => setMgmtFilter({...mgmtFilter, role: e.target.value})}>
                <option value="ALL">All Roles</option><option value={Role.PLAYER}>Players</option><option value={Role.COACH}>Coaches</option>
             </select>
-            <select className="bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-black uppercase text-white outline-none" value={mgmtFilter.status} onChange={e => setMgmtFilter({...mgmtFilter, status: e.target.value})}>
+            <select className="bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-black uppercase text-white outline-none min-w-[140px]" value={mgmtFilter.status} onChange={e => setMgmtFilter({...mgmtFilter, status: e.target.value})}>
                <option value="ALL">All Statuses</option>{Object.values(RecruitingStatus).map(s => <option key={s} value={s}>{s}</option>)}
             </select>
-            <input type="text" placeholder="Search registry..." className="flex-1 bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-bold text-white outline-none" value={mgmtFilter.search} onChange={e => setMgmtFilter({...mgmtFilter, search: e.target.value})} />
+            <input type="text" placeholder="Search registry..." className="flex-1 bg-league-bg border border-league-border p-3 rounded-xl text-[10px] font-bold text-white outline-none min-w-[200px]" value={mgmtFilter.search} onChange={e => setMgmtFilter({...mgmtFilter, search: e.target.value})} />
           </div>
           <div className="overflow-x-auto"><table className="w-full text-left">
             <thead className="bg-league-tableHeader border-b border-league-border"><tr className="text-[8px] font-black uppercase text-league-muted"><th className="px-8 py-4">ID</th><th className="px-8 py-4">Personnel</th><th className="px-8 py-4">Role</th><th className="px-8 py-4">Status</th><th className="px-8 py-4">Grade</th><th className="px-8 py-4 text-right">Actions</th></tr></thead>
@@ -194,9 +182,57 @@ export const Dashboard: React.FC = () => {
            </div>
         </div>
       )}
+
+      {activeTab === 'System' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in zoom-in-95">
+           <div className="bg-league-panel border-2 border-league-accent p-10 rounded-[3rem] shadow-2xl relative overflow-hidden">
+              <h3 className="text-2xl font-black italic uppercase text-white mb-8 tracking-tighter">Deployment Readiness</h3>
+              <div className="space-y-6">
+                 <CheckItem label="Registry Persistence Sync" status="READY" />
+                 <CheckItem label="SSL Handshake Simulation" status="READY" />
+                 <CheckItem label="Neural Key Rotation Logic" status="READY" />
+                 <CheckItem label="Document Audit Node" status="PENDING" isWarn />
+              </div>
+              <div className="mt-12 pt-8 border-t border-white/5 flex gap-4">
+                 <button onClick={handleSnapshot} className="flex-1 bg-league-bg border border-league-border text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-league-accent transition-all">Download Registry Snapshot</button>
+                 <button className="flex-1 bg-league-accent text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">Initialize Prod Migration</button>
+              </div>
+           </div>
+
+           <div className="bg-league-panel border border-league-border p-10 rounded-[3rem] shadow-2xl space-y-10">
+              <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter border-b border-white/5 pb-6">Global Node Latency</h3>
+              <div className="space-y-8">
+                 <LatencyBar city="London HQ" ping="12ms" pct={98} color="bg-league-ok" />
+                 <LatencyBar city="Nottingham Node" ping="24ms" pct={92} color="bg-league-ok" />
+                 <LatencyBar city="Dusseldorf Node" ping="45ms" pct={85} color="bg-league-blue" />
+                 <LatencyBar city="Zurich Node" ping="112ms" pct={62} color="bg-league-warn" />
+              </div>
+              <p className="text-[8px] font-black text-league-muted uppercase tracking-[0.4em] italic opacity-30 text-center">Neural Stream Telemetry v2.7.0-PROD</p>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
+
+const LatencyBar = ({ city, ping, pct, color }: any) => (
+  <div className="space-y-2">
+     <div className="flex justify-between items-end">
+        <span className="text-[10px] font-black uppercase text-white tracking-widest">{city}</span>
+        <span className="text-[8px] font-mono text-league-muted uppercase">{ping}</span>
+     </div>
+     <div className="h-1.5 w-full bg-league-bg rounded-full overflow-hidden border border-white/5">
+        <div className={`h-full ${color} transition-all duration-1000`} style={{ width: `${pct}%` }} />
+     </div>
+  </div>
+);
+
+const CheckItem = ({ label, status, isWarn }: any) => (
+  <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-white/5">
+     <span className="text-[11px] font-black uppercase text-league-muted tracking-widest">{label}</span>
+     <span className={`text-[8px] font-black px-3 py-1 rounded-full border ${isWarn ? 'bg-league-warn/10 border-league-warn text-league-warn' : 'bg-league-ok/10 border-league-ok text-league-ok'}`}>{status}</span>
+  </div>
+);
 
 const StatMini = ({ label, value, color = 'white' }: any) => {
   const colorMap: any = { 'league-accent': 'text-league-accent', 'league-ok': 'text-league-ok', 'league-warn': 'text-league-warn', 'white': 'text-white' };

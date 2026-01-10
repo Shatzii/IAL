@@ -25,14 +25,18 @@ const FIELD_SLOTS: Slot[] = [
 ];
 
 export const CoachDashboard: React.FC = () => {
-  const { profiles, selectedFranchise, currentSystemRole, activityLogs, setView, addToast } = useApp();
+  const { profiles, addProfile, selectedFranchise, currentSystemRole, activityLogs, addToast, logActivity } = useApp();
   const [activeTab, setActiveTab] = useState<'Roster' | 'Depth Chart' | 'Security Node'>('Roster');
   const [selectedTeam, setSelectedTeam] = useState<string>(FRANCHISE_TEAMS[selectedFranchise][0]);
   const [assignments, setAssignments] = useState<Record<string, Profile | null>>({});
+  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
   
   // Password Change State
   const [passData, setPassData] = useState({ current: '', new: '', confirm: '' });
   const [isUpdatingPass, setIsUpdatingPass] = useState(false);
+
+  // New Player Form State
+  const [newPlayerData, setNewPlayerData] = useState({ fullName: '', email: '', positions: '', tier: TalentTier.TIER2 });
 
   const teamRoster = useMemo(() => {
     return profiles.filter(p => p.assignedFranchise === selectedFranchise && p.role === Role.PLAYER);
@@ -65,6 +69,36 @@ export const CoachDashboard: React.FC = () => {
 
   const handleClear = (slotId: string) => {
     setAssignments(prev => ({ ...prev, [slotId]: null }));
+  };
+
+  const handleAddPlayer = (e: React.FormEvent) => {
+    e.preventDefault();
+    const p: Profile = {
+      id: 'p' + Math.random().toString(36).substr(2, 5),
+      fullName: newPlayerData.fullName,
+      email: newPlayerData.email,
+      phone: 'Not Provided',
+      dateOfBirth: '2000-01-01',
+      nationality: 'International',
+      role: Role.PLAYER,
+      tier: newPlayerData.tier,
+      status: RecruitingStatus.PLACED,
+      assignedFranchise: selectedFranchise,
+      assignedTeam: selectedTeam,
+      preferences: { rank1: selectedFranchise, rank2: selectedFranchise, rank3: selectedFranchise, rank4: selectedFranchise, rank5: selectedFranchise },
+      createdAt: new Date().toISOString().split('T')[0],
+      positions: newPlayerData.positions.split(',').map(s => s.trim().toUpperCase()),
+      metrics: { speed: 5, strength: 5, agility: 5, iq: 5, versatility: 5 },
+      isIronmanPotential: false,
+      documents: [],
+      onboardingChecklist: [],
+      avatar_url: `https://i.pravatar.cc/150?u=${newPlayerData.email}`
+    };
+    addProfile(p);
+    logActivity('RECRUITMENT', `Manual Personnel Injection: ${p.fullName} linked to ${selectedTeam}`, p.id);
+    addToast(`${p.fullName} Successfully Synchronized to Unit.`, 'success');
+    setIsAddingPlayer(false);
+    setNewPlayerData({ fullName: '', email: '', positions: '', tier: TalentTier.TIER2 });
   };
 
   const handlePassUpdate = (e: React.FormEvent) => {
@@ -105,10 +139,13 @@ export const CoachDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl">
-          {(['Roster', 'Depth Chart', 'Security Node'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
-          ))}
+        <div className="flex gap-4">
+          <button onClick={() => setIsAddingPlayer(true)} className="bg-league-accent text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:brightness-125 transition-all">+ Inject Personnel</button>
+          <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl">
+            {(['Roster', 'Depth Chart', 'Security Node'] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -299,6 +336,74 @@ export const CoachDashboard: React.FC = () => {
                      <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Strengthing Encryption...</>
                    ) : "Rotate Access Key"}
                  </button>
+              </form>
+           </div>
+        </div>
+      )}
+
+      {/* Manual Induction Modal */}
+      {isAddingPlayer && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="bg-league-panel border-4 border-league-accent max-w-lg w-full rounded-[3.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200">
+              <form onSubmit={handleAddPlayer} className="p-10 md:p-12 space-y-8">
+                 <div className="flex justify-between items-center border-b border-league-border pb-6">
+                    <div>
+                       <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Induct Node</h3>
+                       <p className="text-[8px] font-black uppercase text-league-accent tracking-[0.4em] mt-2 italic">Manual Personnel Registration</p>
+                    </div>
+                    <button type="button" onClick={() => setIsAddingPlayer(false)} className="text-league-muted hover:text-white text-3xl font-black transition-all">×</button>
+                 </div>
+                 
+                 <div className="space-y-6">
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Personnel Full Name</label>
+                       <input 
+                         required
+                         className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent font-bold"
+                         placeholder="e.g. Marcus Thorne"
+                         value={newPlayerData.fullName}
+                         onChange={e => setNewPlayerData({...newPlayerData, fullName: e.target.value})}
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Operational Email</label>
+                       <input 
+                         required
+                         type="email"
+                         className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent font-bold"
+                         placeholder="m.thorne@node.net"
+                         value={newPlayerData.email}
+                         onChange={e => setNewPlayerData({...newPlayerData, email: e.target.value})}
+                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Positions</label>
+                          <input 
+                            required
+                            className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent font-bold"
+                            placeholder="QB, WR"
+                            value={newPlayerData.positions}
+                            onChange={e => setNewPlayerData({...newPlayerData, positions: e.target.value})}
+                          />
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Talent Tier</label>
+                          <select 
+                            className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent appearance-none font-bold"
+                            value={newPlayerData.tier}
+                            onChange={e => setNewPlayerData({...newPlayerData, tier: e.target.value as TalentTier})}
+                          >
+                             {Object.values(TalentTier).map(t => <option key={t} value={t}>{t.split('(')[0]}</option>)}
+                          </select>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="pt-4 flex gap-4">
+                    <button type="button" onClick={() => setIsAddingPlayer(false)} className="flex-1 bg-league-bg border border-league-border text-league-muted py-4 rounded-xl font-black uppercase tracking-widest hover:text-white transition-all">Abort</button>
+                    <button type="submit" className="flex-1 bg-league-accent text-white py-4 rounded-xl font-black uppercase italic tracking-widest shadow-[0_0_30px_rgba(228,29,36,0.3)] hover:scale-[1.02] transition-transform">Authorize Induction</button>
+                 </div>
               </form>
            </div>
         </div>

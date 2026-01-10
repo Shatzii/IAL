@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from 'recharts';
 import { useApp } from '../App';
-import { Franchise, Profile, TalentTier, SystemRole, FRANCHISE_COLORS, Role } from '../types';
+import { Franchise, Profile, TalentTier, SystemRole, FRANCHISE_COLORS, Role, RecruitingStatus } from '../types';
 
 const getTierColor = (tier: TalentTier) => {
   switch (tier) {
@@ -14,9 +14,13 @@ const getTierColor = (tier: TalentTier) => {
 };
 
 export const FranchiseAdmin: React.FC = () => {
-  const { profiles, updateProfile, selectedFranchise, setSelectedFranchise, addToast } = useApp();
+  const { profiles, updateProfile, addProfile, selectedFranchise, setSelectedFranchise, addToast, logActivity } = useApp();
   const [activeSubView, setActiveSubView] = useState<'Roster' | 'Coaches' | 'Finance' | 'Onboarding' | 'Security'>('Roster');
   const [simExtraSpending, setSimExtraSpending] = useState(0);
+  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
+
+  // New Player Form State
+  const [newPlayerData, setNewPlayerData] = useState({ fullName: '', email: '', positions: '', tier: TalentTier.TIER2 });
 
   // Password Rotation State
   const [passData, setPassData] = useState({ current: '', new: '', confirm: '' });
@@ -34,6 +38,35 @@ export const FranchiseAdmin: React.FC = () => {
     if (!profile) return;
     const newList = profile.onboardingChecklist.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted, status: !t.isCompleted ? 'COMPLETED' : 'PENDING' as any } : t);
     updateProfile(profileId, { onboardingChecklist: newList });
+  };
+
+  const handleAddPlayer = (e: React.FormEvent) => {
+    e.preventDefault();
+    const p: Profile = {
+      id: 'p' + Math.random().toString(36).substr(2, 5),
+      fullName: newPlayerData.fullName,
+      email: newPlayerData.email,
+      phone: 'Registry Provided',
+      dateOfBirth: '1998-01-01',
+      nationality: 'International',
+      role: Role.PLAYER,
+      tier: newPlayerData.tier,
+      status: RecruitingStatus.SIGNED,
+      assignedFranchise: selectedFranchise,
+      preferences: { rank1: selectedFranchise, rank2: selectedFranchise, rank3: selectedFranchise, rank4: selectedFranchise, rank5: selectedFranchise },
+      createdAt: new Date().toISOString().split('T')[0],
+      positions: newPlayerData.positions.split(',').map(s => s.trim().toUpperCase()),
+      metrics: { speed: 6, strength: 6, agility: 6, iq: 7, versatility: 6 },
+      isIronmanPotential: false,
+      documents: [],
+      onboardingChecklist: [],
+      avatar_url: `https://i.pravatar.cc/150?u=${newPlayerData.email}`
+    };
+    addProfile(p);
+    logActivity('FRANCHISE_OP', `GM Manual Induction: ${p.fullName} registered to ${selectedFranchise}`, p.id);
+    addToast(`${p.fullName} Successfully Registered to Franchise.`, 'success');
+    setIsAddingPlayer(false);
+    setNewPlayerData({ fullName: '', email: '', positions: '', tier: TalentTier.TIER2 });
   };
 
   const handlePassUpdate = (e: React.FormEvent) => {
@@ -63,10 +96,13 @@ export const FranchiseAdmin: React.FC = () => {
           <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Franchise Desk</h2>
           <p className="text-[11px] font-black uppercase text-league-muted tracking-[0.3em] mt-1">{selectedFranchise} Node Central Administration</p>
         </div>
-        <div className="flex flex-wrap gap-2 bg-league-panel p-1.5 rounded-2xl border border-league-border shadow-inner">
-          {Object.values(Franchise).map(f => (
-            <button key={f} onClick={() => setSelectedFranchise(f)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedFranchise === f ? 'bg-white text-black shadow-xl' : 'text-league-muted hover:text-white'}`}>{f}</button>
-          ))}
+        <div className="flex gap-4">
+           <button onClick={() => setIsAddingPlayer(true)} className="bg-league-accent text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(228,29,36,0.3)] hover:brightness-110 transition-all">+ Register New Node</button>
+           <div className="flex flex-wrap gap-2 bg-league-panel p-1.5 rounded-2xl border border-league-border shadow-inner">
+             {Object.values(Franchise).map(f => (
+               <button key={f} onClick={() => setSelectedFranchise(f)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedFranchise === f ? 'bg-white text-black shadow-xl' : 'text-league-muted hover:text-white'}`}>{f}</button>
+             ))}
+           </div>
         </div>
       </div>
 
@@ -264,6 +300,74 @@ export const FranchiseAdmin: React.FC = () => {
                    Note: Rotating your key will terminate all other active admin sessions for this franchise node immediately.
                  </p>
               </div>
+           </div>
+        </div>
+      )}
+
+      {/* GM Manual Induction Modal */}
+      {isAddingPlayer && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="bg-league-panel border-4 border-league-blue max-w-lg w-full rounded-[3.5rem] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200">
+              <form onSubmit={handleAddPlayer} className="p-12 space-y-8">
+                 <div className="flex justify-between items-center border-b border-league-border pb-6">
+                    <div>
+                       <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Register Node</h3>
+                       <p className="text-[8px] font-black uppercase text-league-blue tracking-[0.4em] mt-2 italic">Franchise Registry Injection</p>
+                    </div>
+                    <button type="button" onClick={() => setIsAddingPlayer(false)} className="text-league-muted hover:text-white text-3xl font-black transition-all">×</button>
+                 </div>
+                 
+                 <div className="space-y-6">
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Athlete Full Name</label>
+                       <input 
+                         required
+                         className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent font-bold"
+                         placeholder="e.g. Erik Vanderhoff"
+                         value={newPlayerData.fullName}
+                         onChange={e => setNewPlayerData({...newPlayerData, fullName: e.target.value})}
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Operational Email</label>
+                       <input 
+                         required
+                         type="email"
+                         className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent font-bold"
+                         placeholder="e.vanderhoff@ial-node.net"
+                         value={newPlayerData.email}
+                         onChange={e => setNewPlayerData({...newPlayerData, email: e.target.value})}
+                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Positions</label>
+                          <input 
+                            required
+                            className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent font-bold"
+                            placeholder="WR, DB"
+                            value={newPlayerData.positions}
+                            onChange={e => setNewPlayerData({...newPlayerData, positions: e.target.value})}
+                          />
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase text-league-muted tracking-widest px-2">Classification</label>
+                          <select 
+                            className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent appearance-none font-bold"
+                            value={newPlayerData.tier}
+                            onChange={e => setNewPlayerData({...newPlayerData, tier: e.target.value as TalentTier})}
+                          >
+                             {Object.values(TalentTier).map(t => <option key={t} value={t}>{t.split('(')[0]}</option>)}
+                          </select>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="pt-4 flex gap-4">
+                    <button type="button" onClick={() => setIsAddingPlayer(false)} className="flex-1 bg-league-bg border border-league-border text-league-muted py-4 rounded-xl font-black uppercase tracking-widest hover:text-white transition-all">Abort</button>
+                    <button type="submit" className="flex-1 bg-league-blue text-white py-4 rounded-xl font-black uppercase italic tracking-widest shadow-[0_0_30px_rgba(64,169,255,0.3)] hover:scale-[1.02] transition-transform">Authorize Registry</button>
+                 </div>
+              </form>
            </div>
         </div>
       )}

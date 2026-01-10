@@ -159,6 +159,17 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
 
           <div className="flex items-center gap-3 md:gap-8">
             <div className="hidden lg:block">
+               <div className="flex flex-col items-end mr-6 opacity-30 hover:opacity-100 transition-opacity">
+                  <div className="text-[7px] font-black uppercase text-league-muted tracking-[0.2em] mb-1 italic">Network Health</div>
+                  <div className="flex gap-1">
+                     <div className="w-1.5 h-1.5 bg-league-ok rounded-full shadow-[0_0_5px_#23d18b]" />
+                     <div className="w-1.5 h-1.5 bg-league-ok rounded-full shadow-[0_0_5px_#23d18b]" />
+                     <div className="w-1.5 h-1.5 bg-league-accent rounded-full animate-pulse" />
+                  </div>
+               </div>
+            </div>
+            
+            <div className="hidden lg:block">
               <DraftClock />
             </div>
             
