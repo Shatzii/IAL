@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '../App';
 import { RegistrationForm } from './RegistrationForm';
@@ -21,6 +20,9 @@ export const LandingPage: React.FC = () => {
             <div className="inline-block px-6 md:px-8 py-3 rounded-full border-2 border-league-accent bg-league-accent/10 text-league-accent text-[10px] md:text-[12px] font-black uppercase tracking-[0.4em] md:tracking-[0.6em] animate-pulse">
               Node Hub • Authorized Recruitment Portal
             </div>
+            <p className="text-league-muted font-bold italic uppercase text-sm md:text-lg max-w-2xl mx-auto opacity-70 tracking-widest">
+              Secure your spot in the future of arena football. Central Registry now accepting applications for Zurich, Dusseldorf, Nottingham, Stuttgart, and Glasgow.
+            </p>
           </div>
           
           <div className="bg-league-panel border-2 md:border-4 border-league-accent p-6 md:p-20 rounded-[3rem] md:rounded-[5rem] shadow-[0_0_150px_rgba(228,29,36,0.2)] relative backdrop-blur-3xl overflow-hidden">

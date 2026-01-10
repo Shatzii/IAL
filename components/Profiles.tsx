@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Role, Profile, TalentTier, SystemRole, RecruitingStatus } from '../types';
 import { useApp } from '../App';
@@ -6,15 +5,24 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 
 const getTierColor = (tier: TalentTier) => {
   switch (tier) {
-    case TalentTier.TIER1: return 'bg-league-accent text-white border-league-accent';
-    case TalentTier.TIER2: return 'bg-league-blue text-white border-league-blue';
+    case TalentTier.TIER1: return 'bg-league-accent text-white border-league-accent shadow-[0_0_15px_rgba(228,29,36,0.4)]';
+    case TalentTier.TIER2: return 'bg-league-blue text-white border-league-blue shadow-[0_0_15px_rgba(64,169,255,0.4)]';
     case TalentTier.TIER3: return 'bg-league-pill text-league-muted border-league-border';
     default: return 'bg-league-bg text-white border-league-border';
   }
 };
 
+const TierBadge: React.FC<{ tier: TalentTier, size?: 'sm' | 'lg' }> = ({ tier, size = 'sm' }) => {
+  const isLarge = size === 'lg';
+  return (
+    <span className={`${isLarge ? 'text-[10px] px-4 py-1.5' : 'text-[7px] px-2 py-0.5'} font-black uppercase tracking-[0.2em] rounded-full border transition-all ${getTierColor(tier)}`}>
+      {tier}
+    </span>
+  );
+};
+
 export const Profiles: React.FC = () => {
-  const { profiles, translateIntel, summarizeVoucher, addToast } = useApp();
+  const { profiles, updateProfile, translateIntel, summarizeVoucher, addToast, logActivity } = useApp();
   const [activeTab, setActiveTab] = useState<Role>(Role.PLAYER);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -40,6 +48,15 @@ export const Profiles: React.FC = () => {
     addToast("Document Summarized", "success");
   };
 
+  const handleEstablishContact = (id: string, name: string) => {
+    updateProfile(id, { status: RecruitingStatus.PRE_SCREENED });
+    addToast(`Contact Established with ${name}`, 'info');
+    logActivity('CONTACT', `Secure handshake completed with ${name}. Node active.`, id);
+    if (selectedProfile && selectedProfile.id === id) {
+      setSelectedProfile({ ...selectedProfile, status: RecruitingStatus.PRE_SCREENED });
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-league-border pb-8">
@@ -57,17 +74,25 @@ export const Profiles: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
         {filteredProfiles.map((p, idx) => (
           <div key={p.id} onClick={() => setSelectedProfile(p)} className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 group cursor-pointer hover:border-league-accent transition-all flex flex-col shadow-2xl relative overflow-hidden h-[420px]">
+            <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+               <TierBadge tier={p.tier} />
+            </div>
             <div className="flex items-center gap-6 mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-league-bg border border-league-border flex items-center justify-center font-black italic text-2xl text-white shadow-inner">{p.fullName.charAt(0)}</div>
+              <div className="w-16 h-16 rounded-2xl bg-league-bg border border-league-border flex items-center justify-center font-black italic text-2xl text-white shadow-inner overflow-hidden">
+                {p.avatar_url ? <img src={p.avatar_url} className="w-full h-full object-cover" /> : p.fullName.charAt(0)}
+              </div>
               <div className="flex-1">
-                <h4 className="text-xl font-black italic uppercase text-white leading-none mb-2 tracking-tighter group-hover:text-league-accent transition-colors">{p.fullName}</h4>
+                <div className="flex items-center gap-2 mb-1">
+                   {p.status === RecruitingStatus.NEW_LEAD && <div className="w-1.5 h-1.5 rounded-full bg-league-accent animate-pulse" />}
+                   <h4 className="text-xl font-black italic uppercase text-white leading-none tracking-tighter group-hover:text-league-accent transition-colors">{p.fullName}</h4>
+                </div>
                 <div className="flex items-center gap-3">
-                   <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${getTierColor(p.tier)}`}>{p.tier}</span>
+                   <TierBadge tier={p.tier} />
                    <span className="text-[8px] font-black text-league-muted uppercase tracking-widest">{p.positions.join('/')}</span>
                 </div>
               </div>
             </div>
-            <p className="text-[11px] text-league-muted font-bold italic line-clamp-3 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{p.personalBio}</p>
+            <p className="text-[11px] text-league-muted font-bold italic line-clamp-3 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{p.personalBio || `Official profile for ${p.fullName}. Validated ${p.positions[0]} asset currently operational.`}</p>
             <div className="mt-auto pt-6 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                <span className="text-[9px] font-black uppercase text-league-accent">View Full Dossier →</span>
                <span className="text-[10px] font-black italic text-white/50">{p.scoutGrade || '--'} Grade</span>
@@ -85,8 +110,24 @@ export const Profiles: React.FC = () => {
                 <div className="w-48 h-48 rounded-[3rem] bg-league-bg border-4 border-league-accent flex items-center justify-center font-black italic text-7xl text-white shadow-2xl overflow-hidden">
                    {selectedProfile.avatar_url ? <img src={selectedProfile.avatar_url} className="w-full h-full object-cover" /> : selectedProfile.fullName.charAt(0)}
                 </div>
-                <div className="flex-1">
-                   <h3 className="text-5xl md:text-7xl font-black italic uppercase text-white mb-4 tracking-tighter leading-none">{selectedProfile.fullName}</h3>
+                <div className="flex-1 w-full">
+                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                     <div>
+                        <h3 className="text-5xl md:text-7xl font-black italic uppercase text-white tracking-tighter leading-none mb-2">{selectedProfile.fullName}</h3>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[10px] font-black uppercase tracking-widest text-league-muted italic opacity-50">Status: {selectedProfile.status}</span>
+                           {selectedProfile.status === RecruitingStatus.NEW_LEAD && (
+                             <button 
+                               onClick={() => handleEstablishContact(selectedProfile.id, selectedProfile.fullName)}
+                               className="bg-league-ok text-black text-[9px] font-black uppercase px-4 py-1 rounded-full shadow-lg hover:brightness-110"
+                             >
+                               Activate Induction
+                             </button>
+                           )}
+                        </div>
+                     </div>
+                     <TierBadge tier={selectedProfile.tier} size="lg" />
+                   </div>
                    <div className="flex flex-wrap gap-4">
                      <button onClick={() => handleTranslate(selectedProfile.personalBio || '')} disabled={isTranslating} className="bg-league-blue/10 border border-league-blue/30 text-league-blue px-6 py-2 rounded-xl font-black uppercase italic text-[10px] tracking-widest flex items-center gap-2 hover:bg-league-blue hover:text-white transition-all">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
@@ -103,7 +144,7 @@ export const Profiles: React.FC = () => {
                 <div className="lg:col-span-7 space-y-12">
                    <div className="space-y-6">
                       <div className="flex items-center gap-4"><div className="h-0.5 w-10 bg-league-accent" /><h4 className="text-xs font-black uppercase text-white tracking-[0.4em]">Strategic Assessment</h4></div>
-                      <p className="text-base text-white/90 leading-relaxed italic font-bold border-l-4 border-league-accent pl-8 py-2 bg-white/5 rounded-r-2xl shadow-inner">{selectedProfile.personalBio}</p>
+                      <p className="text-base text-white/90 leading-relaxed italic font-bold border-l-4 border-league-accent pl-8 py-2 bg-white/5 rounded-r-2xl shadow-inner">{selectedProfile.personalBio || `Registry analysis for asset ${selectedProfile.id}. Candidate displays high tactical proficiency in ${selectedProfile.positions.join('/')} roles.`}</p>
                    </div>
                    <div className="h-[300px] w-full bg-league-bg rounded-[2.5rem] border border-league-border p-8">
                       <ResponsiveContainer width="100%" height="100%">

@@ -17,63 +17,24 @@ import { AthletePortal } from './components/AthletePortal';
 import { RosterBuilder } from './components/RosterBuilder';
 import { WarRoom } from './components/WarRoom';
 import { ElfRegistry } from './components/ElfRegistry';
+import { CoachDashboard } from './components/CoachDashboard';
 import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, OnboardingTask, Document, BroadcastDirective } from './types';
 import { GoogleGenAI } from "@google/genai";
 
+export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'elf-registry' | 'coach-dashboard';
+
 const INITIAL_PROFILES: Profile[] = [
-  // STUTTGART SURGE FULL ROSTER (2024 Selection)
-  { id: 'surge-0', fullName: 'Tomiwa Oyewo', email: 't.oyewo@stuttgart-surge.de', phone: '+49 170 0000000', dateOfBirth: '1998-01-01', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['RB'], height_cm: 180, weight_kg: 95, metrics: { speed: 9, strength: 8, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-0' },
-  { id: 'surge-1', fullName: 'Sasan Jelvani', email: 's.jelvani@stuttgart-surge.de', phone: '+49 170 0000001', dateOfBirth: '1994-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.BERLIN, rank3: Franchise.FRANKFURT, rank4: Franchise.MUNICH, rank5: Franchise.ZURICH }, createdAt: '2024-01-01', positions: ['LB'], height_cm: 183, weight_kg: 95, metrics: { speed: 8, strength: 9, agility: 8, iq: 9, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-1' },
-  { id: 'surge-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '+49 170 0000004', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-4' },
-  { id: 'surge-7', fullName: 'Louis Geyer', email: 'l.geyer@stuttgart-surge.de', phone: '+49 170 0000007', dateOfBirth: '2000-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.FRANKFURT, rank3: Franchise.BERLIN, rank4: Franchise.MUNICH, rank5: Franchise.DUSSELDORF }, createdAt: '2024-01-01', positions: ['WR'], height_cm: 188, weight_kg: 90, metrics: { speed: 9, strength: 7, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-7' },
-  { id: 'surge-31', fullName: 'Nick Wenzelburger', email: 'n.wenzelburger@stuttgart-surge.de', phone: '+49 170 0000031', dateOfBirth: '1998-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.MUNICH, rank3: Franchise.ZURICH, rank4: Franchise.RAIDERS_TIROL, rank5: Franchise.VIENNA }, createdAt: '2024-01-01', positions: ['SS'], height_cm: 184, weight_kg: 89, metrics: { speed: 8, strength: 8, agility: 9, iq: 9, versatility: 8 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-31' },
-  { id: 'surge-32', fullName: 'Luis Bach', email: 'l.bach@stuttgart-surge.de', phone: '+49 170 0000032', dateOfBirth: '1993-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.MUNICH, rank3: Franchise.FRANKFURT, rank4: Franchise.BERLIN, rank5: Franchise.PARIS }, createdAt: '2024-01-01', positions: ['LB'], height_cm: 189, weight_kg: 101, metrics: { speed: 8, strength: 9, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-32' },
-  { id: 'surge-50', fullName: 'Marvin Biegert', email: 'm.biegert@stuttgart-surge.de', phone: '+49 170 0000050', dateOfBirth: '1995-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.COLOGNE, rank4: Franchise.HAMBURG, rank5: Franchise.BERLIN }, createdAt: '2024-01-01', positions: ['C'], height_cm: 188, weight_kg: 135, metrics: { speed: 5, strength: 10, agility: 6, iq: 9, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-50' },
-  { id: 'surge-94', fullName: 'Berend Grube', email: 'b.grube@stuttgart-surge.de', phone: '+49 170 0000094', dateOfBirth: '1990-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.HAMBURG, rank3: Franchise.BERLIN, rank4: Franchise.COLOGNE, rank5: Franchise.FRANKFURT }, createdAt: '2024-01-01', positions: ['DE'], height_cm: 197, weight_kg: 120, metrics: { speed: 7, strength: 10, agility: 7, iq: 9, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=surge-94' },
+  // STUTTGART SURGE - ACTIVE & PROSPECTS
+  { id: 'str-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '0', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-4' },
+  { id: 'str-0', fullName: 'Tomiwa Oyewo', email: 't.oyewo@stuttgart-surge.de', phone: '0', dateOfBirth: '1998-01-01', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['RB'], height_cm: 180, weight_kg: 95, metrics: { speed: 9, strength: 8, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-0' },
+  { id: 'str-7', fullName: 'Louis Geyer', email: 'l.geyer@stuttgart-surge.de', phone: '0', dateOfBirth: '2000-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['WR'], height_cm: 188, weight_kg: 90, metrics: { speed: 9, strength: 7, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-7' },
   
-  // BERLIN THUNDER ROSTER (2024 Selection)
-  { id: 'thunder-7', fullName: 'Jakeb Sullivan', email: 'j.sullivan@berlin-thunder.de', phone: '+49 170 1000007', dateOfBirth: '1993-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.BERLIN, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 185, weight_kg: 85, metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.BERLIN, assignedTeam: 'Thunder', avatar_url: 'https://i.pravatar.cc/150?u=thunder-7' },
-
-  // FEHÉRVÁR ENTHRONERS ROSTER (2024 Selection)
-  { id: 'fehervar-7', fullName: 'Brett Pullman', email: 'b.pullman@enthroners.hu', phone: '+36 1 0000007', dateOfBirth: '2000-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.FEHERVAR, rank2: Franchise.BERLIN, rank3: Franchise.STUTTGART, rank4: Franchise.DUSSELDORF, rank5: Franchise.ZURICH }, createdAt: '2024-01-01', positions: ['QB'], metrics: { speed: 7, strength: 6, agility: 7, iq: 10, versatility: 5 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.FEHERVAR, assignedTeam: 'Enthroners', avatar_url: 'https://i.pravatar.cc/150?u=fehervar-7' },
-
-  // WROCLAW PANTHERS ROSTER (2024 Selection)
-  { id: 'wroclaw-0', fullName: 'Demarcus Irons', email: 'd.irons@pantherswroclaw.pl', phone: '+48 71 0000000', dateOfBirth: '1999-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.WROCLAW, rank2: Franchise.BERLIN, rank3: Franchise.STUTTGART, rank4: Franchise.FEHERVAR, rank5: Franchise.DUSSELDORF }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 193, weight_kg: 93, metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.WROCLAW, assignedTeam: 'Panthers', avatar_url: 'https://i.pravatar.cc/150?u=wroclaw-0' },
-
-  // HAMBURG SEA DEVILS ROSTER (2024 Selection)
-  { id: 'hamburg-0', fullName: 'Roedion Henrique', email: 'r.henrique@hamburg-seadevils.de', phone: '+49 40 0000000', dateOfBirth: '1991-01-01', nationality: 'Netherlands', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.HAMBURG, rank2: Franchise.BERLIN, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['CB'], height_cm: 189, weight_kg: 89, metrics: { speed: 9, strength: 7, agility: 9, iq: 9, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.HAMBURG, assignedTeam: 'Sea Devils', avatar_url: 'https://i.pravatar.cc/150?u=hamburg-0' },
-
-  // PRAGUE LIONS ROSTER (2024 Selection)
-  { id: 'prague-1', fullName: 'Javarian Smith', email: 'j.smith@praguelions.cz', phone: '+420 2 0000001', dateOfBirth: '1995-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.PRAGUE, rank2: Franchise.BERLIN, rank3: Franchise.WROCLAW, rank4: Franchise.HAMBURG, rank5: Franchise.STUTTGART }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 183, weight_kg: 93, metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.PRAGUE, assignedTeam: 'Lions', avatar_url: 'https://i.pravatar.cc/150?u=prague-1' },
-
-  // NORDIC STORM ROSTER (2024 Selection)
-  { id: 'nordic-18', fullName: 'Jadrian Clark', email: 'j.clark@nordicstorm.dk', phone: '+45 30 0000018', dateOfBirth: '1994-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.NORDIC_STORM, rank2: Franchise.HAMBURG, rank3: Franchise.BERLIN, rank4: Franchise.DUSSELDORF, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 190, weight_kg: 100, metrics: { speed: 7, strength: 8, agility: 7, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NORDIC_STORM, assignedTeam: 'Storm', avatar_url: 'https://i.pravatar.cc/150?u=nordic-18' },
-
-  // VIENNA VIKINGS ROSTER (2024 Selection)
-  { id: 'vienna-3', fullName: 'Ben Holmes', email: 'b.holmes@viennavikings.com', phone: '+43 1 0000003', dateOfBirth: '1994-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.VIENNA, rank2: Franchise.PRAGUE, rank3: Franchise.FEHERVAR, rank4: Franchise.BERLIN, rank5: Franchise.ZURICH }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 183, weight_kg: 95, metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.VIENNA, assignedTeam: 'Vikings', avatar_url: 'https://i.pravatar.cc/150?u=vienna-3' },
-
-  // COLOGNE CENTURIONS ROSTER (2024 Selection)
-  { id: 'cologne-1', fullName: 'Richard Agyekum', email: 'r.agyekum@cologne-centurions.de', phone: '+49 221 0000001', dateOfBirth: '1999-01-01', nationality: 'Netherlands', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.COLOGNE, rank2: Franchise.DUSSELDORF, rank3: Franchise.HAMBURG, rank4: Franchise.BERLIN, rank5: Franchise.STUTTGART }, createdAt: '2024-01-01', positions: ['CB'], height_cm: 178, weight_kg: 81, metrics: { speed: 10, strength: 7, agility: 10, iq: 9, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.COLOGNE, assignedTeam: 'Centurions', avatar_url: 'https://i.pravatar.cc/150?u=cologne-1' },
-
-  // FRANKFURT GALAXY ROSTER (2024 Selection)
-  { id: 'frankfurt-16', fullName: 'Jameson Wang', email: 'j.wang@frankfurt-galaxy.de', phone: '+49 69 0000016', dateOfBirth: '2000-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.FRANKFURT, rank2: Franchise.BERLIN, rank3: Franchise.STUTTGART, rank4: Franchise.VIENNA, rank5: Franchise.ZURICH }, createdAt: '2024-01-01', positions: ['QB'], metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.FRANKFURT, assignedTeam: 'Galaxy', avatar_url: 'https://i.pravatar.cc/150?u=frankfurt-16' },
-
-  // MADRID BRAVOS ROSTER (2024 Selection)
-  { id: 'madrid-7', fullName: 'Reid Sinnett', email: 'r.sinnett@madridbravos.com', phone: '+34 91 0000007', dateOfBirth: '1997-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.MADRID, rank2: Franchise.COLOGNE, rank3: Franchise.FRANKFURT, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 193, weight_kg: 97, metrics: { speed: 7, strength: 7, agility: 7, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.MADRID, assignedTeam: 'Bravos', avatar_url: 'https://i.pravatar.cc/150?u=madrid-7' },
-
-  // MUNICH RAVENS ROSTER (2024 Selection)
-  { id: 'munich-7', fullName: 'Russell Tabor', email: 'r.tabor@munichravens.de', phone: '+49 89 0000007', dateOfBirth: '2002-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.MUNICH, rank2: Franchise.STUTTGART, rank3: Franchise.VIENNA, rank4: Franchise.FRANKFURT, rank5: Franchise.BERLIN }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 191, weight_kg: 93, metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.MUNICH, assignedTeam: 'Ravens', avatar_url: 'https://i.pravatar.cc/150?u=munich-7' },
-
-  // PARIS MUSKETEERS ROSTER (2024 Selection)
-  { id: 'paris-8', fullName: 'Jaylon Henderson', email: 'j.henderson@parismusketeers.com', phone: '+33 1 0000008', dateOfBirth: '1997-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.PARIS, rank2: Franchise.MADRID, rank3: Franchise.FRANKFURT, rank4: Franchise.COLOGNE, rank5: Franchise.STUTTGART }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 187, weight_kg: 93, metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.PARIS, assignedTeam: 'Musketeers', avatar_url: 'https://i.pravatar.cc/150?u=paris-8' },
-
-  // RAIDERS TIROL ROSTER (2024 Selection)
-  { id: 'tirol-15', fullName: "N'Kosi Perry", email: 'n.perry@raiders.at', phone: '+43 512 0000015', dateOfBirth: '1998-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.RAIDERS_TIROL, rank2: Franchise.MUNICH, rank3: Franchise.VIENNA, rank4: Franchise.ZURICH, rank5: Franchise.STUTTGART }, createdAt: '2024-01-01', positions: ['QB'], height_cm: 190, weight_kg: 90, metrics: { speed: 8, strength: 7, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.RAIDERS_TIROL, assignedTeam: 'Raiders', avatar_url: 'https://i.pravatar.cc/150?u=tirol-15' },
-  { id: 'tirol-0', fullName: 'Miche Vandekerkhof', email: 'm.vdk@raiders.at', phone: '+43 512 0000000', dateOfBirth: '1998-01-01', nationality: 'Belgian', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.RAIDERS_TIROL, rank2: Franchise.DUSSELDORF, rank3: Franchise.COLOGNE, rank4: Franchise.HAMBURG, rank5: Franchise.BERLIN }, createdAt: '2024-01-01', positions: ['DT'], height_cm: 194, weight_kg: 122, metrics: { speed: 6, strength: 10, agility: 6, iq: 8, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.RAIDERS_TIROL, assignedTeam: 'Raiders', avatar_url: 'https://i.pravatar.cc/150?u=tirol-0' },
-  { id: 'tirol-1', fullName: 'Ruben Seeber', email: 'r.seeber@raiders.at', phone: '+43 512 0000001', dateOfBirth: '1998-01-01', nationality: 'Austrian', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.RAIDERS_TIROL, rank2: Franchise.VIENNA, rank3: Franchise.MUNICH, rank4: Franchise.FEHERVAR, rank5: Franchise.PRAGUE }, createdAt: '2024-01-01', positions: ['LB'], height_cm: 183, weight_kg: 102, metrics: { speed: 8, strength: 8, agility: 8, iq: 9, versatility: 8 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.RAIDERS_TIROL, assignedTeam: 'Raiders', avatar_url: 'https://i.pravatar.cc/150?u=tirol-1' }
+  // DRAFT POOL CANDIDATES (ELF PROS NOT YET ASSIGNED FOR 2026)
+  { id: 'str-3', fullName: 'Michael Harley Jr', email: 'm.harley@prospect.ial.com', phone: '0', dateOfBirth: '1996-01-01', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-05-01', positions: ['WR'], height_cm: 178, weight_kg: 82, metrics: { speed: 10, strength: 6, agility: 9, iq: 9, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-3' },
+  { id: 'str-1', fullName: 'Sasan Jelvani', email: 's.jelvani@prospect.ial.com', phone: '0', dateOfBirth: '1994-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-05-01', positions: ['LB'], height_cm: 183, weight_kg: 95, metrics: { speed: 8, strength: 9, agility: 8, iq: 10, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-1' },
+  { id: 'str-13', fullName: 'Chris Mulumba', email: 'c.mulumba@prospect.ial.com', phone: '0', dateOfBirth: '1991-01-01', nationality: 'Finland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.NEW_LEAD, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-05-01', positions: ['DE'], height_cm: 190, weight_kg: 127, metrics: { speed: 7, strength: 10, agility: 7, iq: 9, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-13' },
+  { id: 'str-17', fullName: 'Daniel Pedro', email: 'd.pedro@prospect.ial.com', phone: '0', dateOfBirth: '2003-01-01', nationality: 'UK', role: Role.PLAYER, tier: TalentTier.TIER3, status: RecruitingStatus.INACTIVE, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.NOTTINGHAM, rank3: Franchise.DUSSELDORF, rank4: Franchise.GLASGOW, rank5: Franchise.ZURICH }, createdAt: '2024-05-01', positions: ['WR'], height_cm: 189, weight_kg: 92, metrics: { speed: 8, strength: 6, agility: 8, iq: 7, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], avatar_url: 'https://i.pravatar.cc/150?u=str-17' },
 ];
-
-export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'elf-registry';
 
 interface AppState {
   profiles: Profile[];
@@ -87,6 +48,7 @@ interface AppState {
   login: (email: string, role: SystemRole, franchise?: Franchise, profileId?: string) => void;
   logout: () => void;
   setView: (v: ViewState) => void;
+  goBack: () => void;
   updateProfile: (id: string, updates: Partial<Profile>) => void;
   deleteProfile: (id: string) => void;
   addProfile: (p: Profile) => void;
@@ -127,7 +89,20 @@ export const useApp = () => {
 };
 
 const App: React.FC = () => {
-  const [view, setView] = useState<ViewState>('landing');
+  const [viewHistory, setViewHistory] = useState<ViewState[]>(['landing']);
+  const view = viewHistory[viewHistory.length - 1];
+
+  const setView = (v: ViewState) => {
+    setViewHistory(prev => {
+      // Don't duplicate the current view if it's already at the top
+      if (prev[prev.length - 1] === v) return prev;
+      return [...prev, v];
+    });
+  };
+
+  const goBack = () => {
+    setViewHistory(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
+  };
   
   const [profiles, setProfiles] = useState<Profile[]>(() => {
     const saved = localStorage.getItem('IAL_PERSONNEL_REGISTRY');
@@ -177,10 +152,17 @@ const App: React.FC = () => {
     if (franchise) setSelectedFranchise(franchise);
     if (profileId) setCurrentUserProfileId(profileId);
     logActivity('AUTH', `Session initialized for ${email}`, 'auth-node');
-    setView(role === SystemRole.PLAYER ? 'athlete-portal' : 'landing');
+    
+    if (role === SystemRole.PLAYER) {
+      setView('athlete-portal');
+    } else if (role === SystemRole.COACH_STAFF) {
+      setView('coach-dashboard');
+    } else {
+      setView('landing');
+    }
   };
 
-  const logout = () => { setIsLoggedIn(false); setCurrentUserProfileId(null); setView('landing'); };
+  const logout = () => { setIsLoggedIn(false); setCurrentUserProfileId(null); setViewHistory(['landing']); };
 
   const logActivity = (type: string, message: string, subjectId: string) => {
     setActivityLogs(prev => [{ id: Math.random().toString(36), timestamp: new Date().toISOString(), type, message, subjectId }, ...prev].slice(0, 50));
@@ -267,7 +249,7 @@ const App: React.FC = () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Simulate a mock draft for the International Arena League. Using these players: ${JSON.stringify(profiles.map(p => ({id: p.id, name: p.fullName, pos: p.positions, grade: p.scoutGrade})))}. Predict which of the 18 franchises (Nottingham, Glasgow, Düsseldorf, Stuttgart, Zürich, Berlin, Fehérvár, Wroclaw, Hamburg, Prague, Nordic Storm, Vienna, Cologne, Frankfurt, Madrid, Munich, Paris, Raiders Tirol) would take them and why. Keep it concise.`
+      contents: `Simulate a mock draft for the International Arena League. Using these players: ${JSON.stringify(profiles.map(p => ({id: p.id, name: p.fullName, pos: p.positions, grade: p.scoutGrade})))}. Predict which of the 18 franchises would take them and why. Keep it concise.`
     });
     return response.text || "Simulation offline.";
   };
@@ -293,12 +275,18 @@ const App: React.FC = () => {
   return (
     <AppContext.Provider value={{ 
       profiles, activityLogs, currentSystemRole, currentUserProfileId, isLoggedIn, selectedFranchise, messages, broadcasts,
-      login, logout, setView, updateProfile, deleteProfile, addProfile, logActivity, addToast, sendMessage, setSelectedFranchise,
+      login, logout, setView, goBack, updateProfile, deleteProfile, addProfile, logActivity, addToast, sendMessage, setSelectedFranchise,
       activeChannelId, setActiveChannelId, gradingConfig, comparisonIds, toggleComparison, aiScoutSearch, enrichDossier,
       generateHypeAsset, issueBroadcast, runTacticalSim, runAiRosterStrategy, runMockDraft, translateIntel, summarizeVoucher, 
       startEvaluation: (e) => { setActiveEvaluationEvent(e); setView('evaluation'); },
-      closeEvaluation: () => { setActiveEvaluationEvent(null); setView('schedule'); },
-      activeEvaluationEvent, isPrivacyMode, setPrivacyMode, alertConfigs: { Nottingham: { minRosterSize: 12 }, Glasgow: { minRosterSize: 12 }, Düsseldorf: { minRosterSize: 12 }, Stuttgart: { minRosterSize: 12 }, Zürich: { minRosterSize: 12 }, Berlin: { minRosterSize: 12 }, Fehérvár: { minRosterSize: 12 }, Wroclaw: { minRosterSize: 12 }, Hamburg: { minRosterSize: 12 }, Prague: { minRosterSize: 12 }, 'Nordic Storm': { minRosterSize: 12 }, Vienna: { minRosterSize: 12 }, Cologne: { minRosterSize: 12 }, Frankfurt: { minRosterSize: 12 }, Madrid: { minRosterSize: 12 }, Munich: { minRosterSize: 12 }, Paris: { minRosterSize: 12 }, 'Raiders Tirol': { minRosterSize: 12 } },
+      closeEvaluation: () => { setActiveEvaluationEvent(null); goBack(); },
+      activeEvaluationEvent, isPrivacyMode, setPrivacyMode, alertConfigs: { 
+        [Franchise.NOTTINGHAM]: { minRosterSize: 12 }, 
+        [Franchise.GLASGOW]: { minRosterSize: 12 }, 
+        [Franchise.DUSSELDORF]: { minRosterSize: 12 }, 
+        [Franchise.STUTTGART]: { minRosterSize: 12 }, 
+        [Franchise.ZURICH]: { minRosterSize: 12 } 
+      },
       playbooks, learningModules, isBooting
     }}>
       <style>{`:root { --franchise-accent: ${FRANCHISE_COLORS[selectedFranchise]}; }`}</style>
@@ -336,6 +324,20 @@ const App: React.FC = () => {
           </div>
         )}
         <main className={`flex-grow ${view === 'landing' ? '' : 'container mx-auto px-4 py-8 max-w-7xl'}`}>
+          {view !== 'landing' && (
+            <div className="mb-6 flex items-center gap-4">
+              <button 
+                onClick={goBack}
+                className="group flex items-center gap-2 px-4 py-2 bg-league-panel border border-league-border rounded-xl text-[10px] font-black uppercase tracking-widest text-league-muted hover:text-white hover:border-league-accent transition-all"
+              >
+                <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                  <path d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back
+              </button>
+            </div>
+          )}
+          
           {view === 'landing' && <LandingPage />}
           {view === 'login' && <Login />}
           {view === 'register' && <RegistrationForm />}
@@ -353,6 +355,7 @@ const App: React.FC = () => {
           {view === 'roster-builder' && <RosterBuilder />}
           {view === 'war-room' && <WarRoom />}
           {view === 'elf-registry' && <ElfRegistry />}
+          {view === 'coach-dashboard' && <CoachDashboard />}
         </main>
         
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2 pointer-events-none">

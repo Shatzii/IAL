@@ -1,3 +1,4 @@
+
 export enum Role {
   PLAYER = 'PLAYER',
   COACH = 'COACH'
@@ -32,20 +33,7 @@ export enum Franchise {
   GLASGOW = 'Glasgow',
   DUSSELDORF = 'Düsseldorf',
   STUTTGART = 'Stuttgart',
-  ZURICH = 'Zürich',
-  BERLIN = 'Berlin',
-  FEHERVAR = 'Fehérvár',
-  WROCLAW = 'Wroclaw',
-  HAMBURG = 'Hamburg',
-  PRAGUE = 'Prague',
-  NORDIC_STORM = 'Nordic Storm',
-  VIENNA = 'Vienna',
-  COLOGNE = 'Cologne',
-  FRANKFURT = 'Frankfurt',
-  MADRID = 'Madrid',
-  MUNICH = 'Munich',
-  PARIS = 'Paris',
-  RAIDERS_TIROL = 'Raiders Tirol'
+  ZURICH = 'Zürich'
 }
 
 export const FRANCHISE_COLORS: Record<Franchise, string> = {
@@ -53,20 +41,7 @@ export const FRANCHISE_COLORS: Record<Franchise, string> = {
   [Franchise.GLASGOW]: '#40a9ff',
   [Franchise.DUSSELDORF]: '#23d18b',
   [Franchise.STUTTGART]: '#ffb84d',
-  [Franchise.ZURICH]: '#722ed1',
-  [Franchise.BERLIN]: '#ffcc00',
-  [Franchise.FEHERVAR]: '#c5a059',
-  [Franchise.WROCLAW]: '#00529b',
-  [Franchise.HAMBURG]: '#003153',
-  [Franchise.PRAGUE]: '#ffd700',
-  [Franchise.NORDIC_STORM]: '#4682b4',
-  [Franchise.VIENNA]: '#5d2a8f',
-  [Franchise.COLOGNE]: '#af0000',
-  [Franchise.FRANKFURT]: '#4b0082',
-  [Franchise.MADRID]: '#f57c00',
-  [Franchise.MUNICH]: '#000080',
-  [Franchise.PARIS]: '#002654',
-  [Franchise.RAIDERS_TIROL]: '#a0a0a0'
+  [Franchise.ZURICH]: '#722ed1'
 };
 
 export const FRANCHISE_TEAMS: Record<Franchise, string[]> = {
@@ -74,20 +49,7 @@ export const FRANCHISE_TEAMS: Record<Franchise, string[]> = {
   [Franchise.GLASGOW]: ['Tigers', 'Rocks'],
   [Franchise.DUSSELDORF]: ['Panthers', 'Fire'],
   [Franchise.STUTTGART]: ['Surge', 'Scorpions'],
-  [Franchise.ZURICH]: ['Helvetic Guards', 'Renegades'],
-  [Franchise.BERLIN]: ['Thunder', 'Adler'],
-  [Franchise.FEHERVAR]: ['Enthroners', 'Crowns'],
-  [Franchise.WROCLAW]: ['Panthers', 'Jaguars'],
-  [Franchise.HAMBURG]: ['Sea Devils', 'Blue Devils'],
-  [Franchise.PRAGUE]: ['Lions', 'Royals'],
-  [Franchise.NORDIC_STORM]: ['Storm', 'Vikings'],
-  [Franchise.VIENNA]: ['Vikings', 'Empire'],
-  [Franchise.COLOGNE]: ['Centurions', 'Legion'],
-  [Franchise.FRANKFURT]: ['Galaxy', 'Universe'],
-  [Franchise.MADRID]: ['Bravos', 'Toros'],
-  [Franchise.MUNICH]: ['Ravens', 'Blizzard'],
-  [Franchise.PARIS]: ['Musketeers', 'Guard'],
-  [Franchise.RAIDERS_TIROL]: ['Raiders', 'Explorers']
+  [Franchise.ZURICH]: ['Helvetic Guards', 'Renegades']
 };
 
 export interface Preferences {

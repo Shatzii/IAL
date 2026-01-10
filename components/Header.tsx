@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../App';
 import { SystemRole, Franchise } from '../types';
@@ -59,6 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
         { view: 'register', label: 'Draft Induction', roles: [SystemRole.PLAYER, SystemRole.LEAGUE_ADMIN] },
         { view: 'schedule', label: 'Operations Timeline' },
         { view: 'athlete-portal', label: 'Athlete Portal', roles: [SystemRole.PLAYER, SystemRole.LEAGUE_ADMIN] },
+        { view: 'coach-dashboard', label: 'Coach Dashboard', roles: [SystemRole.COACH_STAFF, SystemRole.LEAGUE_ADMIN] },
       ]
     },
     {
