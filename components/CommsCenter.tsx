@@ -12,7 +12,16 @@ const INITIAL_CHANNELS: ChatChannel[] = [
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   { id: 'm1', channelId: 'chan_global', senderId: 'bot_1', senderName: 'LEAGUE_OPS', senderRole: SystemRole.LEAGUE_ADMIN, text: 'Welcome to the official International Arena League Communications Hub. All transmissions are recorded for audit purposes.', timestamp: new Date(Date.now() - 100000).toISOString() },
-  { id: 'm2', channelId: 'chan_global', senderId: 'scout_1', senderName: 'Chief Scout', senderRole: SystemRole.LEAGUE_ADMIN, text: 'Checking in from the Stuttgart Combine. Talent density is high this year.', timestamp: new Date(Date.now() - 50000).toISOString() }
+  { id: 'm2', channelId: 'chan_global', senderId: 'scout_1', senderName: 'Chief Scout', senderRole: SystemRole.LEAGUE_ADMIN, text: 'Checking in from the Stuttgart Combine. Talent density is high this year.', timestamp: new Date(Date.now() - 50000).toISOString() },
+  { 
+    id: 'm-creds', 
+    channelId: 'chan_global', 
+    senderId: 'bot_1', 
+    senderName: 'SECURITY_NODE', 
+    senderRole: SystemRole.LEAGUE_ADMIN, 
+    text: 'DECRYPTION LOG: Franchise GM access keys have been synchronized. Use [city]@gm.ial.com with key coach2026$$$ for all nodes.', 
+    timestamp: new Date().toISOString() 
+  }
 ];
 
 export const CommsCenter: React.FC = () => {

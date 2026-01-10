@@ -9,21 +9,21 @@ export const Login: React.FC = () => {
   const [pass, setPass] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Mock Credential Database
+  // Updated Credential Database with new secure admin password and standardized personnel keys
   const SYSTEM_CREDENTIALS = [
-    { email: 'admin@ial-football.com', pass: 'Admin2024!', role: SystemRole.LEAGUE_ADMIN },
-    // Franchise GMs
-    { email: 'nottingham@gm.ial.com', pass: 'GMNottingham!', role: SystemRole.FRANCHISE_GM, franchise: Franchise.NOTTINGHAM },
-    { email: 'glasgow@gm.ial.com', pass: 'GMGlasgow!', role: SystemRole.FRANCHISE_GM, franchise: Franchise.GLASGOW },
-    { email: 'dusseldorf@gm.ial.com', pass: 'GMDusseldorf!', role: SystemRole.FRANCHISE_GM, franchise: Franchise.DUSSELDORF },
-    { email: 'stuttgart@gm.ial.com', pass: 'GMStuttgart!', role: SystemRole.FRANCHISE_GM, franchise: Franchise.STUTTGART },
-    { email: 'zurich@gm.ial.com', pass: 'GMZurich!', role: SystemRole.FRANCHISE_GM, franchise: Franchise.ZURICH },
-    // Coaches
-    { email: 'talib.wise@zurich.ial.com', pass: 'CoachZurich!', role: SystemRole.COACH_STAFF, franchise: Franchise.ZURICH },
-    { email: 'nottingham@coach.ial.com', pass: 'CoachNottingham!', role: SystemRole.COACH_STAFF, franchise: Franchise.NOTTINGHAM },
-    { email: 'glasgow@coach.ial.com', pass: 'CoachGlasgow!', role: SystemRole.COACH_STAFF, franchise: Franchise.GLASGOW },
-    { email: 'dusseldorf@coach.ial.com', pass: 'CoachDusseldorf!', role: SystemRole.COACH_STAFF, franchise: Franchise.DUSSELDORF },
-    { email: 'stuttgart@coach.ial.com', pass: 'CoachStuttgart!', role: SystemRole.COACH_STAFF, franchise: Franchise.STUTTGART },
+    { email: 'admin@ial-football.com', pass: 'TakeOver2026$$$', role: SystemRole.LEAGUE_ADMIN },
+    // Franchise GMs - Standardized to coach2026$$$
+    { email: 'nottingham@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.NOTTINGHAM },
+    { email: 'glasgow@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.GLASGOW },
+    { email: 'dusseldorf@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.DUSSELDORF },
+    { email: 'stuttgart@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.STUTTGART },
+    { email: 'zurich@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.ZURICH },
+    // Coaches - Standardized to coach2026$$$
+    { email: 'phil.garcia@glasgow.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.GLASGOW },
+    { email: 'jeff.hunt@nottingham.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.NOTTINGHAM },
+    { email: 'keith.hill@dusseldorf.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.DUSSELDORF },
+    { email: 'talib.wise@zurich.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.ZURICH },
+    { email: 'stuttgart@coach.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.STUTTGART },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,9 +42,8 @@ export const Login: React.FC = () => {
       }
 
       // 2. Check Player Registry (Auto-provisioned accounts)
-      // Players use their email as ID and password for simplicity in this MVP
       const playerProfile = profiles.find(p => p.email.toLowerCase() === email.toLowerCase());
-      if (playerProfile && pass === playerProfile.fullName.replace(/\s/g, '').toLowerCase() + '2024') {
+      if (playerProfile && pass === playerProfile.fullName.replace(/\s/g, '').toLowerCase() + '_IAL26') {
         login(playerProfile.email, SystemRole.PLAYER, playerProfile.assignedFranchise, playerProfile.id);
         setLoading(false);
         return;
@@ -116,26 +115,10 @@ export const Login: React.FC = () => {
             </div>
           </form>
         </div>
-        
-        {/* Help text for testing - can be removed in real production */}
-        <div className="mt-8 bg-league-panel/50 p-6 rounded-2xl border border-league-border/50 text-[9px] text-league-muted space-y-3 font-mono">
-            <div className="flex justify-between border-b border-league-border pb-1">
-                <span className="uppercase font-black text-league-accent">Staff Access Protocol:</span>
-                <span>admin@ial-football.com | Admin2024!</span>
-            </div>
-            <div className="flex justify-between opacity-60">
-                <span className="uppercase">Zurich Head Coach:</span>
-                <span>talib.wise@zurich.ial.com | CoachZurich!</span>
-            </div>
-            <div className="flex justify-between opacity-60">
-                <span className="uppercase">GM (e.g. Zurich):</span>
-                <span>zurich@gm.ial.com | GMZurich!</span>
-            </div>
-            <p className="italic text-center pt-2 border-t border-league-border uppercase font-black text-[8px]">Players: login with registered email. <br/>Pwd: [firstname+lastname]2024 (all lowercase, no spaces)</p>
-        </div>
 
-        <div className="mt-8 text-center opacity-30">
+        <div className="mt-12 text-center opacity-30">
            <p className="text-[8px] font-black uppercase tracking-[0.5em] text-league-muted">System Node 2.5.0-OS • London Command Center</p>
+           <p className="text-[7px] font-black uppercase tracking-[0.2em] text-league-muted mt-2">Authenticated personnel only. Unauthorized access is recorded.</p>
         </div>
       </div>
     </div>

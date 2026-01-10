@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../App';
 import { SystemRole, Franchise } from '../types';
@@ -34,6 +35,17 @@ const Ticker = () => {
     </div>
   );
 };
+
+const IALLogoSVG = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 240 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 45C10 25 25 15 45 15C65 15 75 25 75 45V60H10V45Z" fill="#e41d24"/>
+    <path d="M35 15V45M55 15V45" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+    <rect x="18" y="52" width="50" height="6" rx="1" fill="#111" stroke="white" strokeWidth="1"/>
+    <text x="85" y="58" fill="white" fontSize="52" fontWeight="900" fontStyle="italic" fontFamily="Inter, sans-serif">IAL</text>
+    <rect x="85" y="32" width="70" height="5" fill="#e41d24" />
+    <text x="85" y="74" fill="white" fontSize="8" fontWeight="900" letterSpacing="3" fontFamily="Inter, sans-serif" opacity="0.8">INTERNATIONAL ARENA LEAGUE</text>
+  </svg>
+);
 
 export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
   const { currentSystemRole, isLoggedIn, logout } = useApp();
@@ -75,6 +87,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       title: "Tactics",
       items: [
         { view: 'academy', label: 'Tactical Academy' },
+        { view: 'film-room', label: 'Team Film Room', roles: [SystemRole.COACH_STAFF, SystemRole.PLAYER, SystemRole.LEAGUE_ADMIN] },
         { view: 'comms', label: 'Secure Inbox' },
         { view: 'roster-builder', label: 'Ironman Depth Chart', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM, SystemRole.COACH_STAFF] },
       ]
@@ -82,6 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
     {
       title: "Administration",
       items: [
+        { view: 'contract-structure', label: 'Contract Structures', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'franchise-admin', label: 'Franchise Desk', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'admin', label: 'Central Command', roles: [SystemRole.LEAGUE_ADMIN] },
       ]
@@ -94,24 +108,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       <header className="bg-league-bg/90 backdrop-blur-xl border-b-2 border-league-accent shadow-2xl">
         <div className="container mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-4 md:gap-8">
-            <div className="flex-shrink-0 cursor-pointer group flex items-center gap-3" onClick={() => setView('landing')}>
-              {/* Refined IAL Logo SVG based on provided image */}
-              <svg className="h-8 md:h-10 w-auto" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Red Helmet */}
-                <path d="M10 40C10 25 22 15 35 15C48 15 60 25 60 40V55H10V40Z" fill="#e41d24"/>
-                <path d="M25 15V35M35 15V35M45 15V35" stroke="white" strokeWidth="3"/>
-                <path d="M10 45H60M10 50H60" stroke="black" strokeWidth="1" opacity="0.3"/>
-                <rect x="15" y="45" width="40" height="8" rx="2" fill="#1a1a1a" stroke="white" strokeWidth="1"/>
-                
-                {/* IAL Text */}
-                <text x="70" y="55" fill="white" fontSize="48" fontWeight="900" fontStyle="italic" fontFamily="Inter, sans-serif">IAL</text>
-                
-                {/* Signature Red Strike Bar */}
-                <rect x="70" y="32" width="60" height="4" fill="#e41d24" />
-                
-                {/* Secondary Text */}
-                <text x="70" y="70" fill="white" fontSize="7" fontWeight="900" letterSpacing="2" fontFamily="Inter, sans-serif" opacity="0.8">INTERNATIONAL ARENA LEAGUE</text>
-              </svg>
+            <div className="flex-shrink-0 cursor-pointer group" onClick={() => setView('landing')}>
+              <IALLogoSVG className="h-10 md:h-14 w-auto" />
             </div>
 
             {isLoggedIn && (
@@ -160,21 +158,31 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           </div>
 
           <div className="flex items-center gap-3 md:gap-8">
-            <DraftClock />
+            <div className="hidden lg:block">
+              <DraftClock />
+            </div>
             
-            <div className="flex items-center gap-3 md:gap-6">
+            <div className="flex items-center gap-2 md:gap-4">
               {!isLoggedIn ? (
-                <button 
-                  onClick={() => setView('login')}
-                  className="bg-league-accent text-white px-4 md:px-8 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em] hover:brightness-125 transition-all shadow-[0_0_20px_#e41d2444]"
-                >
-                  Access
-                </button>
+                <>
+                  <button 
+                    onClick={() => setView('register')}
+                    className="hidden sm:block bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] hover:bg-league-accent hover:text-white transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                  >
+                    APPLY FOR DRAFT
+                  </button>
+                  <button 
+                    onClick={() => setView('login')}
+                    className="bg-league-accent text-white px-4 md:px-8 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em] hover:brightness-125 transition-all shadow-[0_0_20px_#e41d2444]"
+                  >
+                    LOGIN
+                  </button>
+                </>
               ) : (
                 <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4 border-l border-league-border">
                   <div className="flex flex-col items-end">
                     <span className="text-[7px] md:text-[8px] font-black text-league-accent uppercase tracking-widest">{currentSystemRole.split(' ')[0]}</span>
-                    <button onClick={logout} className="hidden md:block text-[10px] font-bold text-league-muted hover:text-white uppercase transition-colors">Logout</button>
+                    <button onClick={logout} className="text-[10px] font-bold text-league-muted hover:text-white uppercase transition-colors">Logout</button>
                   </div>
                 </div>
               )}

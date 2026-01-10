@@ -18,22 +18,91 @@ import { AthletePortal } from './components/AthletePortal';
 import { RosterBuilder } from './components/RosterBuilder';
 import { WarRoom } from './components/WarRoom';
 import { CoachDashboard } from './components/CoachDashboard';
-import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, OnboardingTask, Document, BroadcastDirective } from './types';
-import { GoogleGenAI } from "@google/genai";
+import { ContractStructures } from './components/ContractStructures';
+import { TeamFilmRoom } from './components/TeamFilmRoom';
+import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, OnboardingTask, Document, BroadcastDirective, Team, Video, VideoTag, VideoStatus, VideoSourceType } from './types';
+// Fixed: Import Type from @google/genai to support responseSchema definitions
+import { GoogleGenAI, Type } from "@google/genai";
 
-export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard';
+export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard' | 'contract-structure' | 'film-room';
+
+const INITIAL_TEAMS: Team[] = [
+  { id: 'team-nott-1', name: 'Nottingham Hoods', franchise: Franchise.NOTTINGHAM, rosterIds: ['str-4', 'str-0'], coachIds: ['jeff.hunt@nottingham.ial.com', 'nottingham@coach.ial.com'] },
+  { id: 'team-zuri-1', name: 'Zurich Guards', franchise: Franchise.ZURICH, rosterIds: [], coachIds: ['talib.wise@zurich.ial.com'] },
+  { id: 'team-glas-1', name: 'Glasgow Tigers', franchise: Franchise.GLASGOW, rosterIds: [], coachIds: ['phil.garcia@glasgow.ial.com'] },
+  { id: 'team-duss-1', name: 'Düsseldorf Panthers', franchise: Franchise.DUSSELDORF, rosterIds: [], coachIds: ['keith.hill@dusseldorf.ial.com'] }
+];
+
+const INITIAL_VIDEOS: Video[] = [
+  {
+    id: 'vid-1',
+    teamId: 'team-nott-1',
+    uploadedByUserId: 'coach-1',
+    title: 'Nottingham Q1 Game Film - vs London',
+    description: 'Offensive series 1-4 from opening day.',
+    sourceType: VideoSourceType.GAME,
+    status: VideoStatus.READY,
+    url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    durationSeconds: 596,
+    createdAt: '2024-03-01',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?q=80&w=300&h=200&fit=crop'
+  },
+  {
+    id: 'vid-scout-1',
+    teamId: 'team-zuri-1',
+    uploadedByUserId: 'admin',
+    title: 'Zurich Defensive Tendencies (Scouting Report)',
+    description: 'Deep dive into Zurich goal-line packages.',
+    sourceType: VideoSourceType.SCOUTING,
+    status: VideoStatus.READY,
+    url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    durationSeconds: 653,
+    createdAt: '2024-03-05',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1540747913346-19e3adbc6675?q=80&w=300&h=200&fit=crop'
+  }
+];
+
+const INITIAL_TAGS: VideoTag[] = [
+  { id: 'tag-1', videoId: 'vid-1', source: 'coach', tStartMs: 12000, tEndMs: 15000, label: 'pocket_movement', note: 'Great step up to avoid pressure.', approved: true, createdAt: '2024-03-01' },
+  { id: 'tag-2', videoId: 'vid-1', source: 'ai', tStartMs: 45000, tEndMs: 48000, label: 'wall_leverage', note: 'Elite use of wall to shield defender.', approved: false, createdAt: '2024-03-01', confidence: 0.92 }
+];
+
+const INITIAL_PLAYBOOKS: Playbook[] = [
+  {
+    id: 'pb-global-1',
+    name: 'IAL Base Arena Schemes',
+    lastUpdated: '2024-03-10',
+    plays: [
+      { id: 'play-1', name: 'Wall Stutter', formation: 'Trips Wall', category: 'Pass', description: 'Primary WR uses wall stutter to clear the corner.' },
+      { id: 'play-2', name: 'High Motion Mesh', formation: 'Spread 2x2', category: 'Pass', description: 'Vertical high motion to pull LB out of the box.' },
+      { id: 'play-3', name: 'Net Dive', formation: 'Heavy', category: 'Run', description: 'Direct dive off the rebound net post.' }
+    ]
+  }
+];
+
+const INITIAL_LEARNING_MODULES: LearningModule[] = [
+  { id: 'lm1', title: 'Ironman Substitution Logic', description: 'Mastering the dual-role transition in high-speed arena environments.', category: 'Tactics', lessons: [{id: 'l1', title: 'The 20-Second Personnel Switch', durationMins: 12}, {id: 'l2', title: 'Managing Motion Fatigue', durationMins: 15}] },
+  { id: 'lm2', title: 'Professionalism & Media 1.0', description: 'IAL standard briefing for global personnel engagement.', category: 'Compliance', lessons: [{id: 'l3', title: 'Node Press Protocol', durationMins: 10}] }
+];
 
 const INITIAL_PROFILES: Profile[] = [
-  { id: 'str-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '0', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-4' },
-  { id: 'str-0', fullName: 'Tomiwa Oyewo', email: 't.oyewo@stuttgart-surge.de', phone: '0', dateOfBirth: '1998-01-01', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['RB'], height_cm: 180, weight_kg: 95, metrics: { speed: 9, strength: 8, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-0' },
-  { id: 'str-7', fullName: 'Louis Geyer', email: 'l.geyer@stuttgart-surge.de', phone: '0', dateOfBirth: '2000-01-01', nationality: 'Germany', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['WR'], height_cm: 188, weight_kg: 90, metrics: { speed: 9, strength: 7, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.STUTTGART, assignedTeam: 'Surge', avatar_url: 'https://i.pravatar.cc/150?u=str-7' },
+  { id: 'str-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '0', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods', avatar_url: 'https://i.pravatar.cc/150?u=str-4', videoAnalysisTags: [] },
+  { id: 'str-0', fullName: 'Tomiwa Oyewo', email: 't.oyewo@stuttgart-surge.de', phone: '0', dateOfBirth: '1998-01-01', nationality: 'Ireland', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.DUSSELDORF, rank3: Franchise.ZURICH, rank4: Franchise.GLASGOW, rank5: Franchise.NOTTINGHAM }, createdAt: '2024-01-01', positions: ['RB'], height_cm: 180, weight_kg: 95, metrics: { speed: 9, strength: 8, agility: 9, iq: 8, versatility: 7 }, isIronmanPotential: true, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods', avatar_url: 'https://i.pravatar.cc/150?u=str-0' },
+  // New Tactical Leadership
+  { id: 'c-glas-1', fullName: 'Phillip Garcia', email: 'phil.garcia@glasgow.ial.com', phone: '+44 141 000 000', dateOfBirth: '1978-05-20', nationality: 'USA', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.GLASGOW, rank2: Franchise.NOTTINGHAM, rank3: Franchise.ZURICH, rank4: Franchise.DUSSELDORF, rank5: Franchise.STUTTGART }, createdAt: '2024-03-12', positions: ['Head Coach', 'OC'], metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 9 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.GLASGOW, assignedTeam: 'Tigers' },
+  { id: 'c-nott-1', fullName: 'Jeff Hunt', email: 'jeff.hunt@nottingham.ial.com', phone: '+44 115 000 000', dateOfBirth: '1982-11-14', nationality: 'USA', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.NOTTINGHAM, rank2: Franchise.GLASGOW, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH }, createdAt: '2024-03-12', positions: ['Head Coach', 'DC'], metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods' },
+  { id: 'c-duss-1', fullName: 'Keith Hill', email: 'keith.hill@dusseldorf.ial.com', phone: '+49 211 000 000', dateOfBirth: '1975-09-03', nationality: 'USA', role: Role.COACH, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.DUSSELDORF, rank2: Franchise.STUTTGART, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-03-12', positions: ['Head Coach', 'ST'], metrics: { speed: 5, strength: 5, agility: 5, iq: 10, versatility: 8 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.DUSSELDORF, assignedTeam: 'Panthers' }
 ];
 
 interface AppState {
   profiles: Profile[];
+  teams: Team[];
+  videos: Video[];
+  videoTags: VideoTag[];
   activityLogs: ActivityLog[];
   currentSystemRole: SystemRole;
   currentUserProfileId: string | null; 
+  currentUserEmail: string | null;
   isLoggedIn: boolean;
   selectedFranchise: Franchise;
   messages: ChatMessage[];
@@ -45,6 +114,10 @@ interface AppState {
   updateProfile: (id: string, updates: Partial<Profile>) => void;
   deleteProfile: (id: string) => void;
   addProfile: (p: Profile) => void;
+  addVideo: (v: Video) => void;
+  addVideoTag: (t: VideoTag) => void;
+  updateVideo: (id: string, updates: Partial<Video>) => void;
+  updateVideoTag: (id: string, updates: Partial<VideoTag>) => void;
   logActivity: (type: string, message: string, subjectId: string) => void;
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
   sendMessage: (text: string, channelId: string, recipientId?: string) => void;
@@ -57,12 +130,13 @@ interface AppState {
   aiScoutSearch: (query: string) => Promise<string[] | null>;
   enrichDossier: (profileId: string) => Promise<void>;
   generateHypeAsset: (profileId: string) => Promise<void>;
-  issueBroadcast: (msg: string, priority: 'CRITICAL' | 'STANDARD') => void;
+  issueBroadcast: (message: string, priority: 'CRITICAL' | 'STANDARD') => void;
   runTacticalSim: (playId: string) => Promise<void>;
   runAiRosterStrategy: (franchise: Franchise) => Promise<string>;
   runMockDraft: () => Promise<string>;
   translateIntel: (text: string, lang: string) => Promise<string>;
   summarizeVoucher: (id: string) => Promise<string>;
+  analyzeVideoAi: (videoId: string) => Promise<void>;
   startEvaluation: (event: LeagueEvent) => void;
   closeEvaluation: () => void;
   activeEvaluationEvent: LeagueEvent | null;
@@ -82,6 +156,17 @@ export const useApp = () => {
   return context;
 };
 
+const LoadingLogo = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 240 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 45C10 25 25 15 45 15C65 15 75 25 75 45V60H10V45Z" fill="#e41d24"/>
+    <path d="M35 15V45M55 15V45" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+    <rect x="18" y="52" width="50" height="6" rx="1" fill="#111" stroke="white" strokeWidth="1"/>
+    <text x="85" y="58" fill="white" fontSize="52" fontWeight="900" fontStyle="italic" fontFamily="Inter, sans-serif">IAL</text>
+    <rect x="85" y="32" width="70" height="5" fill="#e41d24" />
+    <text x="85" y="74" fill="white" fontSize="8" fontWeight="900" letterSpacing="3" fontFamily="Inter, sans-serif" opacity="0.8">INTERNATIONAL ARENA LEAGUE</text>
+  </svg>
+);
+
 const App: React.FC = () => {
   const [viewHistory, setViewHistory] = useState<ViewState[]>(['landing']);
   const [isLoading, setIsLoading] = useState(false);
@@ -90,13 +175,10 @@ const App: React.FC = () => {
   const setView = (v: ViewState) => {
     setIsLoading(true);
     setTimeout(() => {
-      setViewHistory(prev => {
-        if (prev[prev.length - 1] === v) return prev;
-        return [...prev, v];
-      });
+      setViewHistory(prev => (prev[prev.length - 1] === v ? prev : [...prev, v]));
       setIsLoading(false);
       window.scrollTo(0, 0);
-    }, 600);
+    }, 800);
   };
 
   const goBack = () => {
@@ -111,22 +193,21 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('IAL_PERSONNEL_REGISTRY');
     return saved ? JSON.parse(saved) : INITIAL_PROFILES;
   });
+
+  const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
+  const [videos, setVideos] = useState<Video[]>(INITIAL_VIDEOS);
+  const [videoTags, setVideoTags] = useState<VideoTag[]>(INITIAL_TAGS);
+  const [playbooks] = useState<Playbook[]>(INITIAL_PLAYBOOKS);
+  const [learningModules] = useState<LearningModule[]>(INITIAL_LEARNING_MODULES);
   
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
     const saved = localStorage.getItem('IAL_AUDIT_LOG');
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => {
-    localStorage.setItem('IAL_PERSONNEL_REGISTRY', JSON.stringify(profiles));
-  }, [profiles]);
-
-  useEffect(() => {
-    localStorage.setItem('IAL_AUDIT_LOG', JSON.stringify(activityLogs));
-  }, [activityLogs]);
-
   const [currentSystemRole, setCurrentSystemRole] = useState<SystemRole>(SystemRole.PLAYER);
   const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedFranchise, setSelectedFranchise] = useState<Franchise>(Franchise.NOTTINGHAM);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -134,14 +215,21 @@ const App: React.FC = () => {
   const [toasts, setToasts] = useState<any[]>([]);
   const [activeChannelId, setActiveChannelId] = useState('chan_global');
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
+  
+  const toggleComparison = (id: string) => {
+    setComparisonIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(cid => cid !== id) 
+        : (prev.length < 2 ? [...prev, id] : prev)
+    );
+  };
+
   const [activeEvaluationEvent, setActiveEvaluationEvent] = useState<LeagueEvent | null>(null);
   const [isPrivacyMode, setPrivacyMode] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
-  const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
-  const [learningModules, setLearningModules] = useState<LearningModule[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsBooting(false), 3000);
+    const timer = setTimeout(() => setIsBooting(false), 2500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -152,7 +240,9 @@ const App: React.FC = () => {
   const login = (email: string, role: SystemRole, franchise?: Franchise, profileId?: string) => {
     setIsLoggedIn(true);
     setCurrentSystemRole(role);
+    setCurrentUserEmail(email);
     if (franchise) setSelectedFranchise(franchise);
+    if (profileId) setCurrentUserProfileId(profileId);
     
     if (role === SystemRole.PLAYER) {
       const foundProfile = profiles.find(p => p.email.toLowerCase() === email.toLowerCase());
@@ -160,41 +250,39 @@ const App: React.FC = () => {
         setCurrentUserProfileId(foundProfile.id);
         setView('athlete-portal');
       } else {
-        addToast("No personnel dossier found. Registration required.", "info");
         setView('register');
       }
     } else if (role === SystemRole.COACH_STAFF) {
       setView('coach-dashboard');
-    } else if (role === SystemRole.LEAGUE_ADMIN || role === SystemRole.FRANCHISE_GM) {
-      setView('admin');
     } else {
-      setView('landing');
+      setView('admin');
     }
-    
-    logActivity('AUTH', `Session initialized for ${email}`, 'auth-node');
   };
 
   const logout = () => { 
     setIsLoggedIn(false); 
     setCurrentUserProfileId(null); 
+    setCurrentUserEmail(null);
     setViewHistory(['landing']); 
-    addToast("Session Terminated.", "info");
+    addToast("Session Securely Terminated.", "info");
   };
 
   const logActivity = (type: string, message: string, subjectId: string) => {
-    setActivityLogs(prev => [{ id: Math.random().toString(36), timestamp: new Date().toISOString(), type, message, subjectId }, ...prev].slice(0, 50));
+    const newLog = { id: Math.random().toString(36), timestamp: new Date().toISOString(), type, message, subjectId };
+    setActivityLogs(prev => [newLog, ...prev].slice(0, 50));
   };
 
   const updateProfile = (id: string, updates: Partial<Profile>) => {
     setProfiles(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
-  const deleteProfile = (id: string) => {
-    setProfiles(prev => prev.filter(p => p.id !== id));
-    logActivity('PURGE', `Personnel record ${id} removed from registry.`, 'admin');
-  };
-
+  const deleteProfile = (id: string) => setProfiles(prev => prev.filter(p => p.id !== id));
   const addProfile = (p: Profile) => setProfiles(prev => [...prev, p]);
+
+  const addVideo = (v: Video) => setVideos(prev => [v, ...prev]);
+  const addVideoTag = (t: VideoTag) => setVideoTags(prev => [...prev, t]);
+  const updateVideo = (id: string, updates: Partial<Video>) => setVideos(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
+  const updateVideoTag = (id: string, updates: Partial<VideoTag>) => setVideoTags(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
   
   const addToast = (message: string, type: any = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -210,20 +298,19 @@ const App: React.FC = () => {
   const issueBroadcast = (message: string, priority: 'CRITICAL' | 'STANDARD') => {
     const b: BroadcastDirective = { id: Math.random().toString(36), message, priority, active: true, timestamp: new Date().toISOString() };
     setBroadcasts(prev => [b, ...prev]);
-  };
-
-  const toggleComparison = (id: string) => {
-    setComparisonIds(prev => prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id].slice(-2));
+    logActivity('BROADCAST', `League-wide directive issued: ${message}`, 'HQ');
   };
 
   const aiScoutSearch = async (query: string) => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({ 
       model: 'gemini-3-pro-preview', 
-      contents: `Find registry IDs matching: ${query}. Available: ${JSON.stringify(profiles.map(p => ({id: p.id, pos: p.positions, grade: p.scoutGrade})))}. Return JSON [id1, id2].` 
+      contents: `Find registry IDs matching: ${query}. Available: ${JSON.stringify(profiles.map(p => ({id: p.id, pos: p.positions, grade: p.scoutGrade, name: p.fullName, loc: p.nationality})))}. Return ONLY a JSON array of matching IDs, e.g. ["id1", "id2"].` 
     });
-    const match = response.text.match(/\[.*\]/s);
-    return match ? JSON.parse(match[0]) : null;
+    try {
+      const match = response.text.match(/\[.*\]/s);
+      return match ? JSON.parse(match[0]) : null;
+    } catch { return null; }
   };
 
   const enrichDossier = async (profileId: string) => {
@@ -232,41 +319,129 @@ const App: React.FC = () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
-      contents: `Enrich athlete profile for ${profile.fullName}. focus on stats and news.`,
+      contents: `Deep dive enrichment for athlete ${profile.fullName}. Provide competitive intelligence, news, and scouting highlights.`,
       config: { tools: [{ googleSearch: {} }] }
     });
-    updateProfile(profileId, { aiIntel: response.text });
+    const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((c: any) => ({
+      title: c.web?.title || 'Intelligence Source', uri: c.web?.uri || '#'
+    })) || [];
+    updateProfile(profileId, { aiIntel: response.text, aiIntelSources: sources });
+  };
+
+  const analyzeVideoAi = async (videoId: string) => {
+    const video = videos.find(v => v.id === videoId);
+    if (!video) return;
+    
+    updateVideo(videoId, { status: VideoStatus.ANALYZING });
+    addToast("Neural Strategy Engine Engaged...", "info");
+
+    const team = teams.find(t => t.id === video.teamId);
+    const roster = profiles.filter(p => team?.rosterIds.includes(p.id)).map(p => ({ name: p.fullName, pos: p.positions[0] }));
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-pro-preview',
+        contents: JSON.stringify({
+          task: "Generate timestamped tactical field notes for arena football film.",
+          taxonomy: ["wall_leverage", "motion_timing", "release", "mac_jack_handover", "rebound_net_play", "decision_speed", "pocket_movement", "explosive_play", "missed_assignment"],
+          context: { team: team?.name || "Unknown", roster: roster }
+        }),
+        config: { 
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    tags: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                t_start_ms: { type: Type.NUMBER },
+                                t_end_ms: { type: Type.NUMBER },
+                                label: { type: Type.STRING },
+                                note: { type: Type.STRING },
+                                players: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                confidence: { type: Type.NUMBER }
+                            },
+                            required: ["t_start_ms", "t_end_ms", "label", "note"]
+                        }
+                    }
+                }
+            }
+        }
+      });
+
+      const result = JSON.parse(response.text);
+      if (result.tags) {
+        result.tags.forEach((tag: any) => {
+          addVideoTag({
+            id: 'ai-tag-' + Math.random().toString(36).substr(2, 5),
+            videoId: videoId,
+            source: 'ai',
+            tStartMs: tag.t_start_ms,
+            tEndMs: tag.t_end_ms,
+            label: tag.label,
+            note: tag.note,
+            players: tag.players,
+            confidence: tag.confidence,
+            approved: false,
+            createdAt: new Date().toISOString()
+          });
+        });
+      }
+      updateVideo(videoId, { status: VideoStatus.READY });
+      addToast("AI Analysis Complete.", "success");
+      logActivity('AI_ANALYSIS', `Tactical scan completed for ${video.title}`, videoId);
+    } catch (err) {
+      console.error(err);
+      updateVideo(videoId, { status: VideoStatus.FAILED });
+      addToast("AI Node Error.", "error");
+    }
   };
 
   const generateHypeAsset = async (profileId: string) => {
+    const profile = profiles.find(p => p.id === profileId);
+    if (!profile) return;
+
+    // Mandatory API Key Selection for gemini-3-pro-image-preview
+    if (!(await (window as any).aistudio.hasSelectedApiKey())) {
+      await (window as any).aistudio.openSelectKey();
+    }
+
+    addToast("Synthesizing Neural Asset...", "info");
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
-      contents: { parts: [{ text: `A futuristic sports hype poster for an arena football player.` }] },
+      contents: { parts: [{ text: `High-energy cinematic arena football poster for ${profile.fullName} (${profile.positions[0]}). Neon red lighting, metallic textures, professional sports design.` }] },
       config: { imageConfig: { aspectRatio: "9:16", imageSize: "1K" } }
     });
-    const imagePart = response.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
-    if (imagePart) updateProfile(profileId, { hypeAssetUrl: `data:image/png;base64,${imagePart.inlineData.data}` });
+    const part = response.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
+    if (part) {
+      updateProfile(profileId, { hypeAssetUrl: `data:image/png;base64,${part.inlineData.data}` });
+      addToast("Hype Asset Finalized.", "success");
+    }
   };
 
-  const runTacticalSim = async (playId: string) => {
-    addToast("Initializing Tactical Simulation Engine...", "info");
+  const runTacticalSim = async (playId: string): Promise<void> => {
+    console.debug(`Simulating: ${playId}`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
   };
 
   const runAiRosterStrategy = async (franchise: Franchise) => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Analyze roster for ${franchise} and suggest strategy.`
+      contents: `Analyze roster for ${franchise} and list 3 recruitment priorities.`
     });
-    return response.text || "Strategy generation unavailable.";
+    return response.text || "Strategy offline.";
   };
 
   const runMockDraft = async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Simulate a mock draft for the International Arena League. Predict which of the 5 franchises would take them and why. Keep it concise.`
+      contents: "Predict top 3 2026 IAL picks."
     });
     return response.text || "Simulation offline.";
   };
@@ -275,7 +450,7 @@ const App: React.FC = () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Translate the following sports intel to ${lang}: "${text}"`
+      contents: `Translate to ${lang}: "${text}"`
     });
     return response.text || text;
   };
@@ -284,17 +459,17 @@ const App: React.FC = () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Generate a 3-bullet executive summary for a professional football scouting document ID: ${id}.`
+      contents: `Summarize athlete document ${id} in 2 bullets.`
     });
     return response.text || "Summary unavailable.";
   };
 
   return (
     <AppContext.Provider value={{ 
-      profiles, activityLogs, currentSystemRole, currentUserProfileId, isLoggedIn, selectedFranchise, messages, broadcasts,
-      login, logout, setView, goBack, updateProfile, deleteProfile, addProfile, logActivity, addToast, sendMessage, setSelectedFranchise,
+      profiles, teams, videos, videoTags, activityLogs, currentSystemRole, currentUserProfileId, currentUserEmail, isLoggedIn, selectedFranchise, messages, broadcasts,
+      login, logout, setView, goBack, updateProfile, deleteProfile, addProfile, addVideo, addVideoTag, updateVideo, updateVideoTag, logActivity, addToast, sendMessage, setSelectedFranchise,
       activeChannelId, setActiveChannelId, gradingConfig, comparisonIds, toggleComparison, aiScoutSearch, enrichDossier,
-      generateHypeAsset, issueBroadcast, runTacticalSim, runAiRosterStrategy, runMockDraft, translateIntel, summarizeVoucher, 
+      generateHypeAsset, issueBroadcast, runTacticalSim, runAiRosterStrategy, runMockDraft, translateIntel, summarizeVoucher, analyzeVideoAi,
       startEvaluation: (e) => { setActiveEvaluationEvent(e); setView('evaluation'); },
       closeEvaluation: () => { setActiveEvaluationEvent(null); goBack(); },
       activeEvaluationEvent, isPrivacyMode, setPrivacyMode, alertConfigs: { 
@@ -306,67 +481,33 @@ const App: React.FC = () => {
       },
       playbooks, learningModules, isBooting, isLoading
     }}>
-      <style>{`:root { --franchise-accent: ${FRANCHISE_COLORS[selectedFranchise]}; }`}</style>
-      
       {isBooting && (
-        <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center font-mono p-6">
-           <div className="w-full max-w-md space-y-4">
-              <div className="text-league-accent font-black text-xl animate-pulse italic">IAL_SYSTEM_HANDSHAKE_INIT_v2.5</div>
-              <div className="space-y-1">
-                 <BootLine text="Verifying Registry Node Cluster..." delay={0} />
-                 <BootLine text="Loading Personnel Encrpytion Modules..." delay={400} />
-                 <BootLine text="Establishing Secure Franchise Uplinks..." delay={800} />
-                 <BootLine text="Syncing 2026 Draft Logic..." delay={1200} />
-                 <BootLine text="ACCESS GRANTED. COMMANDER." delay={1800} />
-              </div>
-              <div className="h-1 w-full bg-league-border rounded-full overflow-hidden mt-8">
-                 <div className="h-full bg-league-accent animate-[bootProgress_3s_ease-in-out_forwards]" />
-              </div>
-           </div>
+        <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center font-mono p-6 animate-in fade-in duration-500">
+           <LoadingLogo className="h-24 md:h-32 mb-8 animate-pulse" />
+           <p className="text-league-accent font-black tracking-[0.5em] animate-pulse">IAL_CORE_BOOT_v2.7</p>
         </div>
       )}
 
       {isLoading && (
         <div className="fixed inset-0 z-[900] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center transition-all duration-300">
-           <div className="relative">
-              <div className="w-16 h-16 border-4 border-league-accent/20 border-t-league-accent rounded-full animate-spin shadow-[0_0_20px_rgba(228,29,36,0.3)]" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                 <div className="w-2 h-2 bg-league-accent rounded-full animate-ping" />
-              </div>
+           <div className="relative animate-bounce duration-1000">
+              <LoadingLogo className="h-16 md:h-24" />
            </div>
-           <p className="mt-6 text-[10px] font-black uppercase tracking-[0.6em] text-league-accent animate-pulse italic">Syncing Node Cluster...</p>
+           <p className="mt-8 text-[10px] font-black uppercase tracking-[0.6em] text-league-accent animate-pulse italic">Syncing Node Cluster...</p>
         </div>
       )}
 
       <div className="min-h-screen bg-league-bg text-league-fg font-sans selection:bg-league-accent flex flex-col">
         <Header currentView={view} setView={setView} />
-        {broadcasts.some(b => b.active) && (
-          <div className="bg-league-accent text-white py-2 overflow-hidden border-b border-white/20 z-[100]">
-            <div className="flex animate-marquee whitespace-nowrap">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="mx-12 text-[10px] font-black uppercase tracking-[0.4em]">
-                  <span className="mr-4">⚠️ LEAGUE DIRECTIVE:</span>
-                  {broadcasts.find(b => b.active)?.message}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
         <main className={`flex-grow ${view === 'landing' ? '' : 'container mx-auto px-4 py-8 max-w-7xl'}`}>
           {!isLoading && view !== 'landing' && (
-            <div className="mb-6 flex items-center gap-4">
-              <button 
-                onClick={goBack}
-                className="group flex items-center gap-2 px-4 py-2 bg-league-panel border border-league-border rounded-xl text-[10px] font-black uppercase tracking-widest text-league-muted hover:text-white hover:border-league-accent transition-all"
-              >
-                <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
-                  <path d="M15 19l-7-7 7-7"></path>
-                </svg>
+            <div className="mb-6 flex items-center justify-between">
+              <button onClick={goBack} className="group flex items-center gap-2 px-4 py-2 bg-league-panel border border-league-border rounded-xl text-[10px] font-black uppercase tracking-widest text-league-muted hover:text-white transition-all">
+                <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M15 19l-7-7 7-7"></path></svg>
                 Back
               </button>
             </div>
           )}
-          
           <div className={`${isLoading ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'} transition-all duration-500`}>
             {view === 'landing' && <LandingPage />}
             {view === 'login' && <Login />}
@@ -385,29 +526,21 @@ const App: React.FC = () => {
             {view === 'roster-builder' && <RosterBuilder />}
             {view === 'war-room' && <WarRoom />}
             {view === 'coach-dashboard' && <CoachDashboard />}
+            {view === 'contract-structure' && <ContractStructures />}
+            {view === 'film-room' && <TeamFilmRoom />}
           </div>
         </main>
-        
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2 pointer-events-none">
-          {toasts.map(toast => (
-            <div key={toast.id} className="px-6 py-3 rounded-full border shadow-2xl animate-in slide-in-from-bottom-4 bg-black/80 border-white/10 flex items-center gap-3 pointer-events-auto">
-              <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-league-ok' : toast.type === 'error' ? 'bg-league-accent' : 'bg-league-blue'}`} />
-              <span className="text-[10px] font-black uppercase tracking-widest">{toast.message}</span>
+          {toasts.map(t => (
+            <div key={t.id} className="px-6 py-3 rounded-full border shadow-2xl bg-black/80 border-white/10 flex items-center gap-3 pointer-events-auto">
+              <div className={`w-2 h-2 rounded-full ${t.type === 'success' ? 'bg-league-ok' : 'bg-league-accent'}`} />
+              <span className="text-[10px] font-black uppercase tracking-widest">{t.message}</span>
             </div>
           ))}
         </div>
       </div>
     </AppContext.Provider>
   );
-};
-
-const BootLine = ({ text, delay }: { text: string, delay: number }) => {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-  return <div className={`text-[10px] uppercase font-bold tracking-widest ${visible ? 'text-white' : 'text-transparent'}`}>[ {visible ? 'OK' : '..'} ] {text}</div>;
 };
 
 export default App;

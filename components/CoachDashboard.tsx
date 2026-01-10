@@ -25,10 +25,14 @@ const FIELD_SLOTS: Slot[] = [
 ];
 
 export const CoachDashboard: React.FC = () => {
-  const { profiles, selectedFranchise, currentSystemRole, activityLogs } = useApp();
-  const [activeTab, setActiveTab] = useState<'Roster' | 'Depth Chart'>('Roster');
+  const { profiles, selectedFranchise, currentSystemRole, activityLogs, setView, addToast } = useApp();
+  const [activeTab, setActiveTab] = useState<'Roster' | 'Depth Chart' | 'Security Node'>('Roster');
   const [selectedTeam, setSelectedTeam] = useState<string>(FRANCHISE_TEAMS[selectedFranchise][0]);
   const [assignments, setAssignments] = useState<Record<string, Profile | null>>({});
+  
+  // Password Change State
+  const [passData, setPassData] = useState({ current: '', new: '', confirm: '' });
+  const [isUpdatingPass, setIsUpdatingPass] = useState(false);
 
   const teamRoster = useMemo(() => {
     return profiles.filter(p => p.assignedFranchise === selectedFranchise && p.role === Role.PLAYER);
@@ -63,6 +67,20 @@ export const CoachDashboard: React.FC = () => {
     setAssignments(prev => ({ ...prev, [slotId]: null }));
   };
 
+  const handlePassUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passData.new !== passData.confirm) {
+      addToast("Encryption Mismatch: New keys do not align.", "error");
+      return;
+    }
+    setIsUpdatingPass(true);
+    setTimeout(() => {
+      addToast("Security Credentials Rotated Successfully.", "success");
+      setPassData({ current: '', new: '', confirm: '' });
+      setIsUpdatingPass(false);
+    }, 1500);
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       {/* Team Header */}
@@ -88,13 +106,13 @@ export const CoachDashboard: React.FC = () => {
           </div>
         </div>
         <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl">
-          {(['Roster', 'Depth Chart'] as const).map(tab => (
+          {(['Roster', 'Depth Chart', 'Security Node'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
           ))}
         </div>
       </div>
 
-      {activeTab === 'Roster' ? (
+      {activeTab === 'Roster' && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <CoachStatCard label="Unit Strength" val={stats.total} sub="Personnel Online" />
@@ -173,21 +191,13 @@ export const CoachDashboard: React.FC = () => {
                      )}
                   </div>
                </div>
-               <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white border-b border-league-border pb-4 italic mb-6">Tactical Shortcuts</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                     <button className="w-full bg-league-bg border border-league-border p-4 rounded-2xl flex items-center justify-between hover:border-league-accent transition-all group">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-league-muted group-hover:text-white">Review Playbook</span>
-                        <svg className="w-4 h-4 text-league-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                     </button>
-                  </div>
-               </div>
             </div>
           </div>
         </>
-      ) : (
+      )}
+
+      {activeTab === 'Depth Chart' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in slide-in-from-bottom-10 duration-700">
-           {/* Depth Chart Field */}
            <div className="lg:col-span-8 bg-league-panel border border-league-border rounded-[3rem] p-10 shadow-2xl relative overflow-hidden">
               <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
               <div className="relative z-10 aspect-[4/3] bg-league-bg rounded-[2rem] border-2 border-league-border p-8 relative">
@@ -218,8 +228,6 @@ export const CoachDashboard: React.FC = () => {
                  </div>
               </div>
            </div>
-
-           {/* Personnel Selection */}
            <div className="lg:col-span-4 bg-league-panel border border-league-border rounded-[3rem] p-8 flex flex-col shadow-2xl h-[600px]">
               <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white mb-6 border-b border-league-border pb-4 italic">Assigned Personnel</h4>
               <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
@@ -232,18 +240,66 @@ export const CoachDashboard: React.FC = () => {
                             <div className="text-[8px] font-bold text-league-muted uppercase tracking-widest">{p.positions.join('/')}</div>
                          </div>
                       </div>
-                      <button 
-                        onClick={() => { 
-                          const firstOpenSlot = FIELD_SLOTS.find(s => !assignments[s.id] && p.positions.includes(s.pos)); 
-                          if (firstOpenSlot) handleAssign(firstOpenSlot.id, p); 
-                        }} 
-                        className="text-[8px] font-black uppercase text-league-accent hover:underline px-2"
-                      >
-                        Slot
-                      </button>
+                      <button onClick={() => { const firstOpenSlot = FIELD_SLOTS.find(s => !assignments[s.id] && p.positions.includes(s.pos)); if (firstOpenSlot) handleAssign(firstOpenSlot.id, p); }} className="text-[8px] font-black uppercase text-league-accent hover:underline px-2">Slot</button>
                    </div>
                  ))}
               </div>
+           </div>
+        </div>
+      )}
+
+      {activeTab === 'Security Node' && (
+        <div className="max-w-2xl mx-auto animate-in zoom-in-95 duration-500">
+           <div className="bg-league-panel border-4 border-league-accent p-12 rounded-[3.5rem] shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-12 opacity-5">
+                 <svg className="w-32 h-32 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeWidth="2"></path></svg>
+              </div>
+              <h3 className="text-3xl font-black italic uppercase text-white mb-2 tracking-tighter leading-none">Security Node</h3>
+              <p className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-10 italic">Rotate Personnel Access Keys</p>
+              
+              <form onSubmit={handlePassUpdate} className="space-y-6 relative z-10">
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase text-league-muted tracking-widest ml-2">Current Entry Key</label>
+                    <input 
+                      type="password" 
+                      required
+                      className="w-full bg-league-bg border border-league-border p-4 rounded-2xl text-white outline-none focus:border-league-accent font-bold"
+                      value={passData.current}
+                      onChange={e => setPassData({...passData, current: e.target.value})}
+                    />
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black uppercase text-league-muted tracking-widest ml-2">New Neural Key</label>
+                       <input 
+                         type="password" 
+                         required
+                         className="w-full bg-league-bg border border-league-border p-4 rounded-2xl text-white outline-none focus:border-league-accent font-bold"
+                         value={passData.new}
+                         onChange={e => setPassData({...passData, new: e.target.value})}
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[9px] font-black uppercase text-league-muted tracking-widest ml-2">Verify Synchronicity</label>
+                       <input 
+                         type="password" 
+                         required
+                         className="w-full bg-league-bg border border-league-border p-4 rounded-2xl text-white outline-none focus:border-league-accent font-bold"
+                         value={passData.confirm}
+                         onChange={e => setPassData({...passData, confirm: e.target.value})}
+                       />
+                    </div>
+                 </div>
+                 <button 
+                   type="submit" 
+                   disabled={isUpdatingPass}
+                   className="w-full bg-league-accent text-white py-5 rounded-2xl font-black uppercase italic tracking-widest text-sm shadow-xl hover:brightness-110 transition-all flex items-center justify-center gap-3"
+                 >
+                   {isUpdatingPass ? (
+                     <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Strengthing Encryption...</>
+                   ) : "Rotate Access Key"}
+                 </button>
+              </form>
            </div>
         </div>
       )}

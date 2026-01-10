@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../App';
-import { Franchise, Profile, Role, RecruitingStatus } from '../types';
+import { Franchise, Profile, Role, RecruitingStatus, TalentTier } from '../types';
 
 export const ElfRegistry: React.FC = () => {
   const { profiles, updateProfile, addToast, logActivity } = useApp();
@@ -163,7 +163,8 @@ export const ElfRegistry: React.FC = () => {
               <div className="grid grid-cols-3 gap-4 mb-6 border-t border-b border-league-border/50 py-5 relative z-10 bg-black/20 rounded-xl">
                  <StatItem label="Node" val={p.assignedFranchise || 'FREE'} color={p.assignedFranchise ? 'text-white' : 'text-league-ok'} />
                  <StatItem label="Status" val={p.status} color={p.status === RecruitingStatus.PLACED ? 'text-league-muted' : 'text-league-accent'} />
-                 <StatItem label="Class" val={p.tier === 'Franchise Athlete' ? 'PRO' : 'DEV'} />
+                 {/* Fixed comparison to use TalentTier enum */}
+                 <StatItem label="Class" val={p.tier === TalentTier.TIER1 ? 'PRO' : 'DEV'} />
               </div>
 
               <div className="flex-1 relative z-10 mb-6 px-2">

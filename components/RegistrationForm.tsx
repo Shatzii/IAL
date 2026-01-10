@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Role, Franchise, Preferences, RecruitingStatus, Profile, TalentTier } from '../types';
 import { useApp } from '../App';
@@ -24,19 +23,28 @@ export const RegistrationForm: React.FC = () => {
     setPreferences(newPrefs);
   };
 
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    // Validate Age
-    const birthDate = new Date(formData.dob);
-    const age = new Date().getFullYear() - birthDate.getFullYear();
+    const age = calculateAge(formData.dob);
     if (age < 18) {
-      addToast("IAL recruitment is restricted to 18+. Induction Rejected.", "error");
-      setLoading(false);
+      addToast("IAL recruiting is 18+. Submission blocked.", "error");
       return;
     }
 
+    setLoading(true);
+    
     setTimeout(() => {
       const p: Profile = {
         id: 'p' + Math.random().toString(36).substr(2, 5),
@@ -45,9 +53,9 @@ export const RegistrationForm: React.FC = () => {
         phone: formData.phone,
         dateOfBirth: formData.dob,
         nationality: formData.nationality,
-        role: Role.PLAYER, // All web registrations default to player pool for 2026
-        tier: TalentTier.TIER3,
-        status: RecruitingStatus.NEW_LEAD, // Enters player pool immediately
+        role: Role.PLAYER, 
+        tier: TalentTier.TIER3, // Default to Backup/Practice Squad for new leads
+        status: RecruitingStatus.NEW_LEAD,
         preferences: {
           rank1: preferences[0], rank2: preferences[1], rank3: preferences[2],
           rank4: preferences[3], rank5: preferences[4]
@@ -61,16 +69,15 @@ export const RegistrationForm: React.FC = () => {
         documents: [],
         onboardingChecklist: [],
         draftReadiness: 45,
-        assignedFranchise: undefined, // Must be unassigned to enter global pool
-        assignedTeam: undefined,
+        assignedFranchise: undefined,
         avatar_url: `https://i.pravatar.cc/150?u=${formData.email}`
       };
       
       addProfile(p);
-      logActivity('REGISTRATION', `Personnel Dossier Created: ${p.fullName} (Unassigned Pool)`, p.id);
+      logActivity('REGISTRATION', `Personnel Entry Created: ${p.fullName}`, p.id);
       setSuccess(true);
       setLoading(false);
-      addToast("Packet Committed. You are now in the 2026 Pool.", "success");
+      addToast("Registry Packet Committed Successfully.", "success");
     }, 1500);
   };
 
@@ -80,35 +87,40 @@ export const RegistrationForm: React.FC = () => {
          <svg className="w-10 h-10 text-league-ok" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
       </div>
       <h2 className="text-4xl font-black italic uppercase text-white mb-4">Registry Secure</h2>
-      <p className="text-league-muted uppercase tracking-widest text-[10px] mb-10 font-bold opacity-70">Your profile is live in the player pool. Coaches can now review your data.</p>
-      <button onClick={() => setView('landing')} className="bg-league-accent text-white px-12 py-5 rounded-2xl font-black italic uppercase tracking-widest text-sm shadow-xl hover:brightness-110">Return to HQ</button>
+      <p className="text-league-muted uppercase tracking-widest text-[10px] mb-10 font-bold opacity-70">
+        Your application has been received. Our scout nodes will review your dossier for Franchise (Negotiated), Starter (1k/Game), or Practice Squad placement.
+      </p>
+      <button onClick={() => setView('landing')} className="bg-league-accent text-white px-12 py-5 rounded-2xl font-black italic uppercase tracking-widest text-sm shadow-xl hover:brightness-110">Return to public node</button>
     </div>
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-12">
+    <form onSubmit={handleSubmit} id="draft-form" className="space-y-12">
       <div className="space-y-6">
-        <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Athletic Identification Nodes</h4>
+        <div className="flex justify-between items-end mb-4">
+           <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] italic">Athlete Induction Node</h4>
+           <span className="text-[8px] font-black uppercase text-league-muted bg-white/5 px-3 py-1 rounded-full border border-white/10 italic">Tiered Paid Contracts Active</span>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input label="First Name" value={formData.firstName} onChange={v => setFormData({...formData, firstName: v})} />
           <Input label="Last Name" value={formData.lastName} onChange={v => setFormData({...formData, lastName: v})} />
-          <Input label="Email Address" type="email" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
+          <Input label="Operational Email" type="email" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
           <Input label="Date of Birth" type="date" value={formData.dob} onChange={v => setFormData({...formData, dob: v})} />
-          <Input label="Nationality" value={formData.nationality} onChange={v => setFormData({...formData, nationality: v})} />
-          <Input label="Primary Positions" value={formData.positions} onChange={v => setFormData({...formData, positions: v})} placeholder="e.g. QB, WR, LB" />
+          <Input label="Nationality / Passport Origin" value={formData.nationality} onChange={v => setFormData({...formData, nationality: v})} />
+          <Input label="Tactical Positions" value={formData.positions} onChange={v => setFormData({...formData, positions: v})} placeholder="e.g. QB, WR, LB (Multi-select)" />
           <Input label="Height (cm)" type="number" value={formData.height_cm} onChange={v => setFormData({...formData, height_cm: v})} />
           <Input label="Weight (kg)" type="number" value={formData.weight_kg} onChange={v => setFormData({...formData, weight_kg: v})} />
         </div>
       </div>
 
       <div className="space-y-6">
-        <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Franchise Preference Index (Rank 1-5)</h4>
+        <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Node Preference Index</h4>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {preferences.map((pref, i) => (
             <div key={i} className="space-y-2">
               <label className="text-[8px] font-black uppercase text-league-muted tracking-widest">Priority {i+1}</label>
               <select 
-                className="w-full bg-league-bg border border-league-border p-3 rounded-xl text-white font-bold text-[10px] appearance-none focus:border-league-accent outline-none cursor-pointer"
+                className="w-full bg-league-bg border border-league-border p-3 rounded-xl text-white font-bold text-[10px] appearance-none focus:border-league-accent outline-none cursor-pointer shadow-inner"
                 value={pref}
                 onChange={e => handlePreferenceChange(i, e.target.value as Franchise)}
               >
@@ -119,15 +131,18 @@ export const RegistrationForm: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-start gap-4 bg-league-bg/50 p-6 rounded-2xl border border-league-border">
-        <input type="checkbox" required className="mt-1 accent-league-accent" checked={formData.consent} onChange={e => setFormData({...formData, consent: e.target.checked})} />
-        <label className="text-[9px] font-bold text-league-muted uppercase leading-relaxed tracking-widest">
-          I authorize the International Arena League to process my athletic, biometric, and contact data for 2026 Draft recruitment operations and sharing with Node-local Franchise GMs.
-        </label>
+      <div className="flex items-start gap-4 bg-black/40 p-8 rounded-3xl border border-league-border shadow-inner">
+        <input type="checkbox" required className="mt-1.5 w-5 h-5 accent-league-accent cursor-pointer" checked={formData.consent} onChange={e => setFormData({...formData, consent: e.target.checked})} />
+        <div className="space-y-2">
+           <label className="text-[10px] font-bold text-league-muted uppercase leading-relaxed tracking-widest block cursor-pointer">
+             I confirm I am 18+ and consent to being contacted about IAL opportunities across all global franchises.
+           </label>
+           <p className="text-[8px] text-league-accent font-black uppercase tracking-widest italic opacity-60">Applicants must be 18+ or older to enter the registry.</p>
+        </div>
       </div>
 
-      <button type="submit" disabled={!formData.consent || loading} className="w-full bg-league-accent text-white py-8 rounded-[2.5rem] font-black italic uppercase tracking-[0.5em] text-2xl shadow-2xl hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-4">
-        {loading ? <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" /> : "COMMIT TO POOL"}
+      <button type="submit" disabled={!formData.consent || loading} className="w-full bg-league-accent text-white py-8 rounded-[2.5rem] font-black italic uppercase tracking-[0.5em] text-2xl shadow-[0_0_50px_rgba(228,29,36,0.3)] hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-4">
+        {loading ? <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" /> : "TRANSMIT APPLICATION"}
       </button>
     </form>
   );
@@ -135,7 +150,7 @@ export const RegistrationForm: React.FC = () => {
 
 const Input = ({ label, value, onChange, type = "text", placeholder = "" }: any) => (
   <div className="space-y-2 group">
-    <label className="text-[9px] font-black uppercase text-league-muted tracking-widest group-focus-within:text-league-accent transition-colors">{label}</label>
-    <input required type={type} placeholder={placeholder} className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-xs focus:border-league-accent outline-none transition-all shadow-inner" value={value} onChange={e => onChange(e.target.value)} />
+    <label className="text-[9px] font-black uppercase text-league-muted tracking-widest group-focus-within:text-league-accent transition-colors ml-1">{label}</label>
+    <input required type={type} placeholder={placeholder} className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white font-bold text-xs focus:border-league-accent outline-none transition-all shadow-inner hover:border-white/20" value={value} onChange={e => onChange(e.target.value)} />
   </div>
 );
