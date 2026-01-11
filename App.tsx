@@ -29,7 +29,8 @@ const INITIAL_TEAMS: Team[] = [
   { id: 'team-nott-1', name: 'Nottingham Hoods', franchise: Franchise.NOTTINGHAM, rosterIds: ['str-4', 'str-0'], coachIds: ['jeff.hunt@nottingham.ial.com', 'nottingham@coach.ial.com'] },
   { id: 'team-zuri-1', name: 'Zurich Guards', franchise: Franchise.ZURICH, rosterIds: [], coachIds: ['talib.wise@zurich.ial.com'] },
   { id: 'team-glas-1', name: 'Glasgow Tigers', franchise: Franchise.GLASGOW, rosterIds: [], coachIds: ['phil.garcia@glasgow.ial.com'] },
-  { id: 'team-duss-1', name: 'Düsseldorf Panthers', franchise: Franchise.DUSSELDORF, rosterIds: [], coachIds: ['keith.hill@dusseldorf.ial.com'] }
+  { id: 'team-duss-1', name: 'Düsseldorf Panthers', franchise: Franchise.DUSSELDORF, rosterIds: [], coachIds: ['chris.mckinny@dusseldorf.ial.com'] },
+  { id: 'team-stut-1', name: 'Stuttgart Surge', franchise: Franchise.STUTTGART, rosterIds: [], coachIds: ['keith.hill@stuttgart.ial.com'] }
 ];
 
 const INITIAL_VIDEOS: Video[] = [

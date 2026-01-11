@@ -18,12 +18,12 @@ export const Login: React.FC = () => {
     { email: 'dusseldorf@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.DUSSELDORF },
     { email: 'stuttgart@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.STUTTGART },
     { email: 'zurich@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.ZURICH },
-    // Coaches - Standardized to coach2026$$$
+    // Coaches - Updated for requested transfer assignments
     { email: 'phil.garcia@glasgow.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.GLASGOW },
     { email: 'jeff.hunt@nottingham.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.NOTTINGHAM },
-    { email: 'keith.hill@dusseldorf.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.DUSSELDORF },
+    { email: 'chris.mckinny@dusseldorf.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.DUSSELDORF },
     { email: 'talib.wise@zurich.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.ZURICH },
-    { email: 'stuttgart@coach.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.STUTTGART },
+    { email: 'keith.hill@stuttgart.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.STUTTGART },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
