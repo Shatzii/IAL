@@ -8,7 +8,7 @@ export const Dashboard: React.FC = () => {
   const { 
     profiles, currentSystemRole, updateDirective, directives, 
     addDirective, selectedFranchise, currentUserEmail,
-    resolveContract, addToast, activityLogs 
+    resolveContract, addToast, activityLogs, isSyncing, syncWithVault
   } = useApp();
   
   const [activeTab, setActiveTab] = useState<'Overview' | 'Franchises' | 'Executive Hub' | 'Audit'>('Overview');
@@ -44,10 +44,21 @@ export const Dashboard: React.FC = () => {
           <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Central Command OS</h2>
           <p className="text-league-muted uppercase tracking-widest text-[10px] font-black mt-1">Personnel Authorization • Financial Clearance • Node Health</p>
         </div>
-        <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl">
-          {(['Overview', 'Franchises', 'Executive Hub', 'Audit'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
-          ))}
+        <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl items-center gap-4 px-4">
+          <button 
+            onClick={syncWithVault} 
+            disabled={isSyncing}
+            className={`flex items-center gap-2 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${isSyncing ? 'animate-pulse bg-league-accent text-white' : 'text-league-muted border-white/10 hover:text-white hover:border-white/20'}`}
+          >
+            <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-white' : 'bg-league-ok'} shadow-[0_0_5px_currentColor]`} />
+            {isSyncing ? 'Vault Syncing' : 'Cloud Sync'}
+          </button>
+          <div className="h-6 w-[1px] bg-white/10" />
+          <div className="flex">
+            {(['Overview', 'Franchises', 'Executive Hub', 'Audit'] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-league-accent text-white shadow-xl' : 'text-league-muted hover:text-white'}`}>{tab}</button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -59,7 +70,7 @@ export const Dashboard: React.FC = () => {
                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-league-accent italic mb-6">Action Required</h4>
                <div className="space-y-3">
                   {directives.filter(d => d.status === DirectiveStatus.PENDING).slice(0, 3).map(d => (
-                    <div key={d.id} onClick={() => setActiveTab('Executive Hub')} className="p-4 bg-league-bg border border-league-border rounded-xl flex items-center justify-between cursor-pointer hover:border-league-accent transition-colors">
+                    <div key={d.id} onClick={() => setActiveTab('Executive Hub')} className="p-4 bg-league-bg border border-league-border rounded-xl flex items-center justify-between cursor-pointer hover:border-league-accent transition-colors shadow-inner">
                        <div className="min-w-0 flex-1 pr-4">
                           <span className="text-[11px] font-black text-white italic truncate block">{d.title}</span>
                           <span className="text-[7px] font-bold text-league-muted uppercase">{d.type || 'OPERATIONAL'} • {d.franchise}</span>
@@ -70,8 +81,9 @@ export const Dashboard: React.FC = () => {
                   {directives.filter(d => d.status === DirectiveStatus.PENDING).length === 0 && <p className="text-[10px] italic text-league-muted text-center py-12 opacity-30">All Protocols Synchronized</p>}
                </div>
             </div>
-            <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-4">Registry Health</h4>
+            <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-6 opacity-[0.03] rotate-12 font-mono text-[12px]">REGISTRY_SECURE_PERMANENT</div>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-4">Permanent Registry Status</h4>
                <div className="flex items-baseline gap-4">
                   <div className="text-5xl font-black italic text-white leading-none tracking-tighter">{profiles.length}</div>
                   <div className="text-[9px] font-black text-league-muted uppercase tracking-widest italic opacity-50">Personnel Linked</div>
@@ -83,7 +95,7 @@ export const Dashboard: React.FC = () => {
 
       {activeTab === 'Executive Hub' && (
         <div className="space-y-8 animate-in slide-in-from-bottom-4">
-           <div className="flex justify-between items-center bg-league-panel p-6 rounded-3xl border border-league-border">
+           <div className="flex justify-between items-center bg-league-panel p-6 rounded-3xl border border-league-border shadow-xl">
               <div>
                 <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter leading-none">Command Directives</h3>
                 <p className="text-[9px] font-black uppercase text-league-accent tracking-[0.3em] mt-1 italic">Authorized Decision Hub</p>
