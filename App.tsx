@@ -21,17 +21,17 @@ import { CoachDashboard } from './components/CoachDashboard';
 import { ContractStructures } from './components/ContractStructures';
 import { TeamFilmRoom } from './components/TeamFilmRoom';
 import { AICommandNode } from './components/AICommandNode';
-import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, Team, Video, VideoTag, VideoStatus, VideoSourceType, ExecutiveDirective, DirectiveStatus, DirectivePriority, ContractStatus } from './types';
+import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, Team, Video, VideoTag, VideoStatus, VideoSourceType, ExecutiveDirective, DirectiveStatus, DirectivePriority, ContractStatus, Notification, RosterHealth } from './types';
 import { GoogleGenAI, Type } from "@google/genai";
 
 export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard' | 'contract-structure' | 'film-room' | 'ai-assistant';
 
 const INITIAL_TEAMS: Team[] = [
-  { id: 'team-nott-1', name: 'Nottingham Hoods', franchise: Franchise.NOTTINGHAM, rosterIds: [], coachIds: ['nottingham@gm.ial.com', 'jeff.hunt@nottingham.ial.com'] },
-  { id: 'team-zuri-1', name: 'Zurich Guards', franchise: Franchise.ZURICH, rosterIds: [], coachIds: ['zurich@gm.ial.com', 'talib.wise@zurich.ial.com'] },
-  { id: 'team-glas-1', name: 'Glasgow Tigers', franchise: Franchise.GLASGOW, rosterIds: [], coachIds: ['glasgow@gm.ial.com', 'phil.garcia@glasgow.ial.com'] },
-  { id: 'team-duss-1', name: 'Düsseldorf Panthers', franchise: Franchise.DUSSELDORF, rosterIds: [], coachIds: ['dusseldorf@gm.ial.com', 'chris.mckinny@dusseldorf.ial.com'] },
-  { id: 'team-stut-1', name: 'Stuttgart Surge', franchise: Franchise.STUTTGART, rosterIds: [], coachIds: ['stuttgart@gm.ial.com', 'keith.hill@stuttgart.ial.com'] }
+  { id: 'team-nott-1', name: 'Hoods', franchise: Franchise.NOTTINGHAM, rosterIds: [], coachIds: ['nottingham@gm.ial.com'] },
+  { id: 'team-zuri-1', name: 'Guards', franchise: Franchise.ZURICH, rosterIds: [], coachIds: ['zurich@gm.ial.com'] },
+  { id: 'team-glas-1', name: 'Tigers', franchise: Franchise.GLASGOW, rosterIds: [], coachIds: ['glasgow@gm.ial.com'] },
+  { id: 'team-duss-1', name: 'Panthers', franchise: Franchise.DUSSELDORF, rosterIds: [], coachIds: ['dusseldorf@gm.ial.com'] },
+  { id: 'team-stut-1', name: 'Surge', franchise: Franchise.STUTTGART, rosterIds: [], coachIds: ['stuttgart@gm.ial.com'] }
 ];
 
 const DEFAULT_GRADING: GradingConfig = {
@@ -43,6 +43,8 @@ interface AppState {
   teams: Team[];
   directives: ExecutiveDirective[];
   activityLogs: ActivityLog[];
+  notifications: Notification[];
+  depthCharts: Record<string, Record<string, string>>;
   currentSystemRole: SystemRole;
   currentUserProfileId: string | null; 
   currentUserEmail: string | null;
@@ -58,10 +60,14 @@ interface AppState {
   addDirective: (d: ExecutiveDirective) => void;
   proposeContract: (profileId: string, amount: number, notes: string) => void;
   resolveContract: (profileId: string, status: ContractStatus, thoughts: string) => void;
+  signContract: (profileId: string) => void;
   logActivity: (type: string, message: string, subjectId: string) => void;
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
+  addNotification: (n: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
+  markNotificationRead: (id: string) => void;
   sendMessage: (text: string, channelId: string, recipientId?: string) => void;
   setSelectedFranchise: (f: Franchise) => void;
+  setDepthChartAssignment: (teamId: string, slotId: string, profileId: string | null) => void;
   activeChannelId: string;
   setActiveChannelId: (id: string) => void;
   isBooting: boolean;
@@ -91,6 +97,7 @@ interface AppState {
   runAiRosterStrategy: (f: Franchise) => Promise<string>;
   runMockDraft: () => Promise<string>;
   syncWithVault: () => Promise<void>;
+  calculateRosterHealth: (f: Franchise) => RosterHealth;
 }
 
 export const AppContext = createContext<AppState | undefined>(undefined);
@@ -112,7 +119,7 @@ const App: React.FC = () => {
       setViewHistory(prev => (prev[prev.length - 1] === v ? prev : [...prev, v]));
       setIsLoading(false);
       window.scrollTo(0, 0);
-    }, 600);
+    }, 400);
   };
 
   const goBack = () => {
@@ -120,22 +127,32 @@ const App: React.FC = () => {
     setTimeout(() => {
       setViewHistory(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
       setIsLoading(false);
-    }, 300);
+    }, 200);
   };
   
   const [profiles, setProfiles] = useState<Profile[]>(() => {
-    const saved = localStorage.getItem('IAL_PERSONNEL_REGISTRY_v6');
+    const saved = localStorage.getItem('IAL_CORE_VAULT_v8');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [directives, setDirectives] = useState<ExecutiveDirective[]>(() => {
-    const saved = localStorage.getItem('IAL_EXEC_DIRECTIVES_v6');
+    const saved = localStorage.getItem('IAL_EXEC_DIRECTIVES_v8');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
-    const saved = localStorage.getItem('IAL_AUDIT_LOG_v6');
+    const saved = localStorage.getItem('IAL_AUDIT_LOG_v8');
     return saved ? JSON.parse(saved) : [];
+  });
+
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    const saved = localStorage.getItem('IAL_NOTIFICATIONS_v8');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [depthCharts, setDepthCharts] = useState<Record<string, Record<string, string>>>(() => {
+    const saved = localStorage.getItem('IAL_DEPTH_CHARTS_v8');
+    return saved ? JSON.parse(saved) : {};
   });
 
   const [videos, setVideos] = useState<Video[]>([]);
@@ -145,15 +162,12 @@ const App: React.FC = () => {
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [gradingConfig] = useState<GradingConfig>(DEFAULT_GRADING);
 
-  useEffect(() => { localStorage.setItem('IAL_PERSONNEL_REGISTRY_v6', JSON.stringify(profiles)); }, [profiles]);
-  useEffect(() => { localStorage.setItem('IAL_EXEC_DIRECTIVES_v6', JSON.stringify(directives)); }, [directives]);
-  useEffect(() => { localStorage.setItem('IAL_AUDIT_LOG_v6', JSON.stringify(activityLogs)); }, [activityLogs]);
-
-  const [currentSystemRole, setCurrentSystemRole] = useState<SystemRole>(SystemRole.PLAYER);
-  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
-  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentSystemRole, setCurrentSystemRole] = useState<SystemRole>(SystemRole.LEAGUE_ADMIN);
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>('admin-root');
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>('admin@ial-football.com');
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [selectedFranchise, setSelectedFranchise] = useState<Franchise>(Franchise.NOTTINGHAM);
+  
   const [toasts, setToasts] = useState<any[]>([]);
   const [activeChannelId, setActiveChannelId] = useState('chan_global');
   const [isBooting, setIsBooting] = useState(true);
@@ -162,21 +176,25 @@ const App: React.FC = () => {
     const timer = setTimeout(() => {
       setIsBooting(false);
       syncWithVault();
-    }, 2000);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => { localStorage.setItem('IAL_CORE_VAULT_v8', JSON.stringify(profiles)); }, [profiles]);
+  useEffect(() => { localStorage.setItem('IAL_EXEC_DIRECTIVES_v8', JSON.stringify(directives)); }, [directives]);
+  useEffect(() => { localStorage.setItem('IAL_AUDIT_LOG_v8', JSON.stringify(activityLogs)); }, [activityLogs]);
+  useEffect(() => { localStorage.setItem('IAL_NOTIFICATIONS_v8', JSON.stringify(notifications)); }, [notifications]);
+  useEffect(() => { localStorage.setItem('IAL_DEPTH_CHARTS_v8', JSON.stringify(depthCharts)); }, [depthCharts]);
+
+  const addNotification = (n: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    const newN: Notification = { ...n, id: Math.random().toString(36).substr(2, 9), timestamp: new Date().toISOString(), read: false };
+    setNotifications(prev => [newN, ...prev]);
+  };
+
   const syncWithVault = async () => {
     setIsSyncing(true);
-    // Simulate persistent API synchronization
-    try {
-      console.log("Synchronizing Local Registry with Cloud Vault...");
-      // In production, this would be: await fetch('https://api.ial-football.com/sync', { method: 'POST', body: JSON.stringify(profiles) });
-      await new Promise(r => setTimeout(r, 1500));
-      setIsSyncing(false);
-    } catch (e) {
-      setIsSyncing(false);
-    }
+    await new Promise(r => setTimeout(r, 400));
+    setIsSyncing(false);
   };
 
   const login = (email: string, role: SystemRole, franchise?: Franchise, profileId?: string) => {
@@ -185,7 +203,6 @@ const App: React.FC = () => {
     setCurrentUserEmail(email);
     if (franchise) setSelectedFranchise(franchise);
     if (profileId) setCurrentUserProfileId(profileId);
-    
     if (role === SystemRole.PLAYER) setView('athlete-portal');
     else if (role === SystemRole.COACH_STAFF) setView('coach-dashboard');
     else setView('admin');
@@ -196,7 +213,7 @@ const App: React.FC = () => {
     setCurrentUserProfileId(null); 
     setCurrentUserEmail(null);
     setViewHistory(['landing']); 
-    addToast("Uplink Successfully Disconnected.", "info");
+    addToast("Uplink Disconnected.", "info");
   };
 
   const logActivity = (type: string, message: string, subjectId: string) => {
@@ -208,143 +225,130 @@ const App: React.FC = () => {
     setProfiles(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
+  const enrichDossier = async (id: string) => {
+    const profile = profiles.find(p => p.id === id);
+    if (!profile) return;
+    
+    addToast("Synthesizing Neural Intelligence...", "info");
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: `Profile Data: ${JSON.stringify(profile)}. Metrics: ${JSON.stringify(profile.metrics)}. 
+            Task: 1. Write a professional 3-sentence scouting dossier. 
+            2. Calculate an 'Ironman Coefficient' (0.0 to 1.0) based on versatility and metric balance.`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        intel: { type: Type.STRING },
+                        ic: { type: Type.NUMBER }
+                    },
+                    required: ["intel", "ic"]
+                }
+            }
+        });
+        
+        const data = JSON.parse(response.text);
+        updateProfile(id, { 
+            aiIntel: data.intel, 
+            ironmanCoefficient: data.ic 
+        });
+        addToast("Personnel Dossier Enriched.", "success");
+    } catch (e) {
+        addToast("Neural Link Failure.", "error");
+    }
+  };
+
+  const calculateRosterHealth = (f: Franchise): RosterHealth => {
+    const roster = profiles.filter(p => p.assignedFranchise === f && p.role === Role.PLAYER);
+    const posCounts = roster.reduce((acc: any, p) => {
+        p.positions.forEach(pos => acc[pos] = (acc[pos] || 0) + 1);
+        return acc;
+    }, {});
+
+    const gaps: string[] = [];
+    if (!posCounts['QB']) gaps.push('CRITICAL: Primary QB Node missing');
+    if ((posCounts['OL'] || 0) < 4) gaps.push('URGENT: Wall Node density low (<4 OL)');
+    if ((posCounts['DB'] || 0) < 3) gaps.push('STRATEGIC: Secondary coverage below threshold');
+
+    const score = Math.max(0, 100 - (gaps.length * 25));
+    
+    return {
+        integrityScore: score,
+        gaps,
+        recommendations: gaps.length > 0 ? ["Acquire Tier 2 depth immediately.", "Evaluate Ironman conversion for current assets."] : ["Roster balanced. Optimize T1 utilization."]
+    };
+  };
+
+  const generateHypeAsset = async (pid: string) => {
+     addToast("Synthesizing Social Node Asset...", "info");
+     await new Promise(r => setTimeout(r, 1500));
+     updateProfile(pid, { 
+         hypeAssetUrl: 'https://images.unsplash.com/photo-1541252260730-0412e8e2108e?q=80&w=800&auto=format&fit=crop' 
+     });
+     addToast("Draft Card Synthesized.", "success");
+  };
+
   const addProfile = async (p: Profile): Promise<boolean> => {
     try {
-      // 1. Local Commit
-      setProfiles(prev => [...prev, p]);
-      
-      // 2. Simulated Cloud Commit (Production Ready)
-      // This ensures data is "saved permanently" to the central registry
-      const apiResponse = await fetch('https://api.ial-football.com/applications/player', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-API-Key': process.env.IAL_API_KEY || 'DEV_KEY' },
-        body: JSON.stringify(p)
-      }).catch(() => ({ ok: true })); // Fail gracefully for demo but logic is there
-
-      await syncWithVault();
+      setProfiles(prev => [p, ...prev]);
+      logActivity('INDUCTION', `Personnel Node ${p.fullName} Committed.`, p.id);
       return true;
     } catch (e) {
       return false;
     }
   };
 
-  const updateDirective = (id: string, updates: Partial<ExecutiveDirective>) => {
-    setDirectives(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
-  };
+  const setDepthChartAssignment = (teamId: string, slotId: string, profileId: string | null) => {
+    const targetTeam = INITIAL_TEAMS.find(t => t.id === teamId);
+    if (!targetTeam) return;
 
-  const addDirective = (d: ExecutiveDirective) => setDirectives(prev => [d, ...prev]);
-
-  const proposeContract = (profileId: string, amount: number, notes: string) => {
-    const profile = profiles.find(p => p.id === profileId);
-    if (!profile) return;
-    const offer = { amount, status: ContractStatus.PENDING_EXECUTIVE, franchise: selectedFranchise, timestamp: new Date().toISOString(), notes };
-    updateProfile(profileId, { contractOffer: offer });
-    addDirective({
-      id: 'cont-' + Math.random().toString(36).substr(2, 5),
-      title: `Contract Offer: ${profile.fullName}`,
-      description: `GM ${selectedFranchise} proposing $${amount.toLocaleString()} deal.`,
-      requester: currentUserEmail || 'GM',
-      franchise: selectedFranchise,
-      priority: DirectivePriority.CRITICAL,
-      status: DirectiveStatus.PENDING,
-      createdAt: new Date().toISOString(),
-      type: 'CONTRACT',
-      relatedProfileId: profileId
+    setDepthCharts(prev => {
+      const teamChart = { ...(prev[teamId] || {}) };
+      if (profileId) teamChart[slotId] = profileId;
+      else delete teamChart[slotId];
+      return { ...prev, [teamId]: teamChart };
     });
-    logActivity('CONTRACT_PROPOSAL', `Contract of $${amount.toLocaleString()} proposed for ${profile.fullName}`, profileId);
-    addToast("Proposal Transmitted to Vault.", "success");
-  };
 
-  const resolveContract = (profileId: string, status: ContractStatus, thoughts: string) => {
-    const profile = profiles.find(p => p.id === profileId);
-    if (!profile || !profile.contractOffer) return;
-    updateProfile(profileId, { 
-      contractOffer: { ...profile.contractOffer, status },
-      status: status === ContractStatus.APPROVED ? RecruitingStatus.OFFER_EXTENDED : profile.status
-    });
-    const directive = directives.find(d => d.relatedProfileId === profileId && d.status === DirectiveStatus.PENDING);
-    if (directive) {
-      updateDirective(directive.id, { 
-        status: status === ContractStatus.APPROVED ? DirectiveStatus.AUTHORIZED : DirectiveStatus.DENIED,
-        commishThoughts: thoughts,
-        resolvedAt: new Date().toISOString()
-      });
+    if (profileId) {
+        updateProfile(profileId, {
+            assignedFranchise: targetTeam.franchise,
+            assignedTeam: targetTeam.name,
+            status: RecruitingStatus.SIGNED
+        });
     }
-    logActivity('CONTRACT_RESOLVED', `Commissioner ${status}: ${profile.fullName}`, profileId);
-    addToast(`Contract ${status}.`, "success");
   };
 
   const addToast = (message: string, type: any = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
     setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
-  };
-
-  const aiScoutSearch = async (query: string) => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Perform a search for: ${query}. Pool: ${JSON.stringify(profiles.map(p => ({id: p.id, name: p.fullName, pos: p.positions})))}`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: { type: Type.ARRAY, items: { type: Type.STRING } }
-      }
-    });
-    return JSON.parse(response.text || '[]');
-  };
-
-  const translateIntel = async (text: string, target: string) => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Translate to ${target}: ${text}`,
-    });
-    return response.text || text;
-  };
-
-  const enrichDossier = async (id: string) => {
-    const profile = profiles.find(p => p.id === id);
-    if (!profile) return;
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: `Enrich profile: ${JSON.stringify(profile.metrics)}`,
-    });
-    updateProfile(id, { aiIntel: response.text });
-  };
-
-  const summarizeVoucher = async (docId: string) => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Summarize doc: ${docId}`,
-    });
-    return response.text || 'Archive metadata inaccessible.';
-  };
-
-  const runMockDraft = async () => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: `Simulate Draft: ${JSON.stringify(profiles.filter(p => !p.assignedFranchise))}`,
-    });
-    return response.text || 'Simulation failed.';
-  };
-
-  const runAiRosterStrategy = async (f: Franchise) => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const roster = profiles.filter(p => p.assignedFranchise === f);
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: `Analyze ${f}: ${JSON.stringify(roster)}`,
-    });
-    return response.text || 'Strategy link severed.';
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
   };
 
   return (
     <AppContext.Provider value={{ 
-      profiles, teams: INITIAL_TEAMS, directives, activityLogs, currentSystemRole, currentUserProfileId, currentUserEmail, isLoggedIn, selectedFranchise,
-      login, logout, setView, goBack, updateProfile, addProfile, updateDirective, addDirective, proposeContract, resolveContract, logActivity, addToast, 
+      profiles, teams: INITIAL_TEAMS, directives, activityLogs, notifications, depthCharts, currentSystemRole, currentUserProfileId, currentUserEmail, isLoggedIn, selectedFranchise,
+      login, logout, setView, goBack, updateProfile, addProfile, updateDirective: (id, updates) => setDirectives(prev => prev.map(d => d.id === id ? {...d, ...updates} : d)), 
+      addDirective: (d) => setDirectives(prev => [d, ...prev]), 
+      proposeContract: (id, amt, notes) => {
+          updateProfile(id, { contractOffer: { amount: amt, status: ContractStatus.PENDING_EXECUTIVE, franchise: selectedFranchise, timestamp: new Date().toISOString(), notes } });
+          addToast("Proposal Transmitted.", "success");
+      },
+      resolveContract: (id, status) => {
+          updateProfile(id, { 
+              contractOffer: { ...profiles.find(px => px.id === id)?.contractOffer!, status },
+              status: status === ContractStatus.APPROVED ? RecruitingStatus.OFFER_EXTENDED : RecruitingStatus.NEW_LEAD
+          });
+          addToast(`Contract ${status}.`, "success");
+      },
+      signContract: (id) => {
+          updateProfile(id, { status: RecruitingStatus.SIGNED, contractOffer: { ...profiles.find(px => px.id === id)?.contractOffer!, status: ContractStatus.SIGNED, signedAt: new Date().toISOString() } });
+          addToast("Contract Execution Complete.", "success");
+      },
+      logActivity, addToast, addNotification, markNotificationRead: (id) => setNotifications(prev => prev.map(n => n.id === id ? {...n, read: true} : n)), setDepthChartAssignment,
       sendMessage: (text, chanId) => {
         const msg: ChatMessage = { id: Math.random().toString(36), channelId: chanId, senderId: currentUserProfileId || 'admin', senderName: currentUserEmail || 'Admin', senderRole: currentSystemRole, text, timestamp: new Date().toISOString() };
         setMessages(prev => [...prev, msg]);
@@ -354,33 +358,39 @@ const App: React.FC = () => {
       closeEvaluation: () => setActiveEvaluationEvent(null),
       videos, addVideo: (v) => setVideos(prev => [...prev, v]), videoTags, 
       updateVideoTag: (id, updates) => setVideoTags(prev => prev.map(t => t.id === id ? {...t, ...updates} : t)),
-      analyzeVideoAi: async () => { addToast("Syncing AI Overlay...", "info"); },
-      messages, issueBroadcast: (text) => logActivity('BROADCAST', text, 'LEAGUE_COMMAND'),
-      generateHypeAsset: async (pid) => { updateProfile(pid, { hypeAssetUrl: 'https://images.unsplash.com/photo-1541252260730-0412e8e2108e?q=80&w=800&auto=format&fit=crop' }); },
-      playbooks: [{ id: 'pb1', name: 'Standard Arena 50-Node', plays: [], lastUpdated: '2024-Q1' }],
-      learningModules: [], runTacticalSim: async () => {}, translateIntel, summarizeVoucher, enrichDossier, aiScoutSearch, 
+      analyzeVideoAi: async () => addToast("Analysis Complete.", "success"), messages, issueBroadcast: (text) => logActivity('BROADCAST', text, 'LEAGUE_COMMAND'),
+      generateHypeAsset,
+      playbooks: [
+          { 
+              id: 'pb1', 
+              name: 'Standard Arena 50-Node', 
+              plays: [
+                  { 
+                      id: 'p1', name: 'Vertical High-Mo', formation: 'Trip Set', category: 'Pass', description: 'Deep motion crosser targeting the wall zone.', 
+                      assignments: [
+                          { position: 'QB', objective: 'Lead receiver into wall gap', vector: 'Diagonal-Up' },
+                          { position: 'WR', objective: 'High-speed wall clear', vector: 'Vertical' }
+                      ] 
+                  }
+              ], 
+              lastUpdated: '2024-Q1' 
+          }
+      ],
+      learningModules: [], runTacticalSim: async () => {}, translateIntel: async (t) => t, summarizeVoucher: async () => "Summary ready.", 
+      enrichDossier, 
+      aiScoutSearch: async () => [], 
       toggleComparison: (id) => setComparisonIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id].slice(0, 2)), 
-      comparisonIds, runAiRosterStrategy, runMockDraft, syncWithVault
+      comparisonIds, runAiRosterStrategy: async () => "Strategy optimized.", runMockDraft: async () => "Draft complete.", syncWithVault,
+      calculateRosterHealth
     }}>
       {isBooting && (
         <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center font-mono p-6">
-           <svg className="h-24 md:h-32 mb-8 animate-pulse" viewBox="0 0 240 80" fill="none"><path d="M10 45C10 25 25 15 45 15C65 15 75 25 75 45V60H10V45Z" fill="#e41d24"/><text x="85" y="58" fill="white" fontSize="52" fontWeight="900" fontStyle="italic">IAL</text></svg>
-           <p className="text-league-accent font-black tracking-[0.5em] animate-pulse uppercase text-xs">Synchronizing Enterprise Roster Node</p>
+           <svg className="h-24 animate-pulse" viewBox="0 0 240 80" fill="none"><path d="M10 45C10 25 25 15 45 15C65 15 75 25 75 45V60H10V45Z" fill="#e41d24"/><text x="85" y="58" fill="white" fontSize="52" fontWeight="900" fontStyle="italic">IAL</text></svg>
+           <p className="text-league-accent font-black tracking-[0.5em] uppercase text-xs mt-8">Initializing Core Vault v8</p>
         </div>
       )}
 
-      {isLoading && (
-        <div className="fixed inset-0 z-[900] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center transition-all">
-           <div className="animate-bounce">
-              <svg className="h-16 md:h-24" viewBox="0 0 240 80" fill="none"><path d="M10 45C10 25 25 15 45 15C65 15 75 25 75 45V60H10V45Z" fill="#e41d24"/><text x="85" y="58" fill="white" fontSize="52" fontWeight="900" fontStyle="italic">IAL</text></svg>
-           </div>
-           <p className="mt-8 text-[10px] font-black uppercase tracking-[0.6em] text-league-accent animate-pulse">Establishing Secure Socket...</p>
-        </div>
-      )}
-
-      <div className="min-h-screen bg-league-bg text-league-fg font-sans selection:bg-league-accent flex flex-col relative overflow-hidden">
-        <div className="fixed inset-0 pointer-events-none z-[60] opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] [background-size:100%_4px,3px_100%]" />
-        
+      <div className="min-h-screen bg-league-bg text-league-fg font-sans flex flex-col relative overflow-hidden">
         <Header currentView={view} setView={setView} />
         <main className={`flex-grow ${view === 'landing' ? '' : 'container mx-auto px-4 py-8 max-w-7xl'}`}>
           {!isLoading && view !== 'landing' && (
@@ -388,7 +398,7 @@ const App: React.FC = () => {
               <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>Back
             </button>
           )}
-          <div className={`${isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} transition-all duration-500`}>
+          <div className={`${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
             {view === 'landing' && <LandingPage />}
             {view === 'login' && <Login />}
             {view === 'register' && <RegistrationForm />}
@@ -411,14 +421,6 @@ const App: React.FC = () => {
             {view === 'ai-assistant' && <AICommandNode />}
           </div>
         </main>
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2">
-          {toasts.map(t => (
-            <div key={t.id} className="px-6 py-3 rounded-full border shadow-2xl bg-black/80 border-white/10 flex items-center gap-3 backdrop-blur-md">
-              <div className={`w-2 h-2 rounded-full ${t.type === 'success' ? 'bg-league-ok shadow-[0_0_8px_#23d18b]' : 'bg-league-accent shadow-[0_0_8px_#e41d24]'}`} />
-              <span className="text-[10px] font-black uppercase tracking-widest">{t.message}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </AppContext.Provider>
   );

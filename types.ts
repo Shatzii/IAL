@@ -38,6 +38,17 @@ export interface ContractOffer {
   franchise: Franchise;
   timestamp: string;
   notes?: string;
+  signedAt?: string;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'ALERT' | 'SUCCESS' | 'FINANCE';
+  timestamp: string;
+  read: boolean;
+  actionView?: string;
 }
 
 export interface ExecutiveDirective {
@@ -245,6 +256,7 @@ export interface Profile {
   personalBio?: string;
   scoutGrade?: number; 
   metrics: ScoutingMetrics;
+  ironmanCoefficient?: number; // 0.0 - 1.0
   isIronmanPotential: boolean; 
   benchPressReps?: number;
   fortyYardDash?: string;
@@ -270,12 +282,19 @@ export interface ActivityLog {
   subjectId: string;
 }
 
+export interface PlayAssignment {
+  position: string;
+  objective: string;
+  vector: string;
+}
+
 export interface Play {
   id: string;
   name: string;
   formation: string;
   category: string;
   description: string;
+  assignments?: PlayAssignment[];
 }
 
 export interface Playbook {
@@ -303,4 +322,10 @@ export interface LeagueEvent {
   franchise: Franchise | 'League Wide';
   type: string;
   status: string;
+}
+
+export interface RosterHealth {
+  integrityScore: number; // 0 - 100
+  gaps: string[];
+  recommendations: string[];
 }
