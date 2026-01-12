@@ -11,7 +11,6 @@ export const WarRoom: React.FC = () => {
   const [isLiveActive, setIsLiveActive] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState('Uplink Standby...');
   
-  // Audio state for Gemini Live
   const audioContextRef = useRef<AudioContext | null>(null);
   const outputNodeRef = useRef<GainNode | null>(null);
   const nextStartTimeRef = useRef<number>(0);
@@ -22,21 +21,32 @@ export const WarRoom: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // PCM Decoding Utils
-  const decodePCM = (base64: string) => {
+  // Manual implementation of encode/decode for PCM as per instructions
+  const decode = (base64: string) => {
     const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
     return bytes;
   };
 
+  const encode = (bytes: Uint8Array) => {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  };
+
   const decodeAudioData = async (data: Uint8Array, ctx: AudioContext): Promise<AudioBuffer> => {
     const dataInt16 = new Int16Array(data.buffer);
-    const buffer = ctx.createBuffer(1, dataInt16.length, 24000);
+    const frameCount = dataInt16.length;
+    const buffer = ctx.createBuffer(1, frameCount, 24000);
     const channelData = buffer.getChannelData(0);
-    for (let i = 0; i < dataInt16.length; i++) {
+    for (let i = 0; i < frameCount; i++) {
       channelData[i] = dataInt16[i] / 32768.0;
     }
     return buffer;
@@ -78,7 +88,7 @@ export const WarRoom: React.FC = () => {
               for (let i = 0; i < inputData.length; i++) {
                 int16[i] = inputData[i] * 32768;
               }
-              const base64 = btoa(String.fromCharCode(...new Uint8Array(int16.buffer)));
+              const base64 = encode(new Uint8Array(int16.buffer));
               sessionPromise.then(s => s.sendRealtimeInput({
                 media: { data: base64, mimeType: 'audio/pcm;rate=16000' }
               }));
@@ -88,8 +98,9 @@ export const WarRoom: React.FC = () => {
             scriptProcessor.connect(inputAudioContext.destination);
           },
           onmessage: async (msg: LiveServerMessage) => {
-            if (msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data) {
-              const pcmData = decodePCM(msg.serverContent.modelTurn.parts[0].inlineData.data);
+            const base64Audio = msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+            if (base64Audio) {
+              const pcmData = decode(base64Audio);
               const audioBuffer = await decodeAudioData(pcmData, outputAudioContext);
               
               const source = outputAudioContext.createBufferSource();
@@ -106,7 +117,10 @@ export const WarRoom: React.FC = () => {
             }
           },
           onclose: () => setIsLiveActive(false),
-          onerror: (e) => console.error("Live Error", e)
+          onerror: (e) => {
+            console.error("Live Error", e);
+            setIsLiveActive(false);
+          }
         },
         config: {
           responseModalities: [Modality.AUDIO],
@@ -157,7 +171,7 @@ export const WarRoom: React.FC = () => {
                  <svg className="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
               </div>
               <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Neural Ops Transcript</h4>
-              <div className="text-3xl font-black italic text-white tracking-tighter leading-tight max-w-2xl min-h-[100px]">
+              <div className="text-2xl md:text-3xl font-black italic text-white tracking-tighter leading-tight max-w-2xl min-h-[100px]">
                 {liveTranscript}
               </div>
            </div>
@@ -165,7 +179,7 @@ export const WarRoom: React.FC = () => {
            <div className="flex-1 bg-league-panel border border-league-border rounded-[3rem] p-10 flex flex-col shadow-2xl overflow-hidden relative">
               <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white mb-8 border-b border-league-border pb-4 italic">Operational Activity Stream</h4>
               <div className="flex-1 overflow-y-auto space-y-6 pr-4 custom-scrollbar">
-                 {activityLogs.map((log, idx) => (
+                 {activityLogs.map((log) => (
                    <div key={log.id} className="flex gap-6 animate-in slide-in-from-right-4 duration-500">
                      <div className="flex flex-col items-center"><div className="w-1.5 h-1.5 rounded-full bg-league-accent mb-2" /><div className="w-[1px] flex-1 bg-league-border" /></div>
                      <div className="flex-1 pb-6 border-b border-league-border/30">
@@ -174,6 +188,9 @@ export const WarRoom: React.FC = () => {
                      </div>
                    </div>
                  ))}
+                 {activityLogs.length === 0 && (
+                   <div className="h-full flex items-center justify-center opacity-10 font-black uppercase tracking-[0.4em] italic">Stream Inactive</div>
+                 )}
               </div>
            </div>
         </div>

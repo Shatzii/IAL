@@ -73,6 +73,7 @@ export const CoachDashboard: React.FC = () => {
 
   const handleAddPlayer = (e: React.FormEvent) => {
     e.preventDefault();
+    // Fix: Added missing required property 'needsHousing' to the Profile object.
     const p: Profile = {
       id: 'p' + Math.random().toString(36).substr(2, 5),
       fullName: newPlayerData.fullName,
@@ -92,7 +93,8 @@ export const CoachDashboard: React.FC = () => {
       isIronmanPotential: false,
       documents: [],
       onboardingChecklist: [],
-      avatar_url: `https://i.pravatar.cc/150?u=${newPlayerData.email}`
+      avatar_url: `https://i.pravatar.cc/150?u=${newPlayerData.email}`,
+      needsHousing: false
     };
     addProfile(p);
     logActivity('RECRUITMENT', `Manual Personnel Injection: ${p.fullName} linked to ${selectedTeam}`, p.id);

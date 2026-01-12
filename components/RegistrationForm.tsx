@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Role, Franchise, Preferences, RecruitingStatus, Profile, TalentTier } from '../types';
 import { useApp } from '../App';
@@ -7,7 +8,7 @@ export const RegistrationForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', dob: '', nationality: '', positions: '',
-    height_cm: '', weight_kg: '', consent: false,
+    height_cm: '', weight_kg: '', consent: false, needsHousing: false
   });
   const [preferences, setPreferences] = useState<Franchise[]>([
     Franchise.NOTTINGHAM, Franchise.GLASGOW, Franchise.DUSSELDORF, Franchise.STUTTGART, Franchise.ZURICH
@@ -54,7 +55,7 @@ export const RegistrationForm: React.FC = () => {
         dateOfBirth: formData.dob,
         nationality: formData.nationality,
         role: Role.PLAYER, 
-        tier: TalentTier.TIER3, // Default to Backup/Practice Squad for new leads
+        tier: TalentTier.TIER3, 
         status: RecruitingStatus.NEW_LEAD,
         preferences: {
           rank1: preferences[0], rank2: preferences[1], rank3: preferences[2],
@@ -70,7 +71,8 @@ export const RegistrationForm: React.FC = () => {
         onboardingChecklist: [],
         draftReadiness: 45,
         assignedFranchise: undefined,
-        avatar_url: `https://i.pravatar.cc/150?u=${formData.email}`
+        avatar_url: `https://i.pravatar.cc/150?u=${formData.email}`,
+        needsHousing: formData.needsHousing
       };
       
       addProfile(p);
@@ -102,14 +104,14 @@ export const RegistrationForm: React.FC = () => {
            <span className="text-[8px] font-black uppercase text-league-muted bg-white/5 px-3 py-1 rounded-full border border-white/10 italic">Tiered Paid Contracts Active</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Input label="First Name" value={formData.firstName} onChange={v => setFormData({...formData, firstName: v})} />
-          <Input label="Last Name" value={formData.lastName} onChange={v => setFormData({...formData, lastName: v})} />
-          <Input label="Operational Email" type="email" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
-          <Input label="Date of Birth" type="date" value={formData.dob} onChange={v => setFormData({...formData, dob: v})} />
-          <Input label="Nationality / Passport Origin" value={formData.nationality} onChange={v => setFormData({...formData, nationality: v})} />
-          <Input label="Tactical Positions" value={formData.positions} onChange={v => setFormData({...formData, positions: v})} placeholder="e.g. QB, WR, LB (Multi-select)" />
-          <Input label="Height (cm)" type="number" value={formData.height_cm} onChange={v => setFormData({...formData, height_cm: v})} />
-          <Input label="Weight (kg)" type="number" value={formData.weight_kg} onChange={v => setFormData({...formData, weight_kg: v})} />
+          <Input label="First Name" value={formData.firstName} onChange={(v: string) => setFormData({...formData, firstName: v})} />
+          <Input label="Last Name" value={formData.lastName} onChange={(v: string) => setFormData({...formData, lastName: v})} />
+          <Input label="Operational Email" type="email" value={formData.email} onChange={(v: string) => setFormData({...formData, email: v})} />
+          <Input label="Date of Birth" type="date" value={formData.dob} onChange={(v: string) => setFormData({...formData, dob: v})} />
+          <Input label="Nationality / Passport Origin" value={formData.nationality} onChange={(v: string) => setFormData({...formData, nationality: v})} />
+          <Input label="Tactical Positions" value={formData.positions} onChange={(v: string) => setFormData({...formData, positions: v})} placeholder="e.g. QB, WR, LB (Multi-select)" />
+          <Input label="Height (cm)" type="number" value={formData.height_cm} onChange={(v: string) => setFormData({...formData, height_cm: v})} />
+          <Input label="Weight (kg)" type="number" value={formData.weight_kg} onChange={(v: string) => setFormData({...formData, weight_kg: v})} />
         </div>
       </div>
 
@@ -129,6 +131,17 @@ export const RegistrationForm: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-6">
+         <h4 className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em] mb-4 italic">Logistical Requirements</h4>
+         <div className="flex items-start gap-4 bg-black/40 p-8 rounded-3xl border border-league-border shadow-inner group hover:border-league-blue transition-all">
+            <input type="checkbox" className="mt-1.5 w-6 h-6 accent-league-blue cursor-pointer" checked={formData.needsHousing} onChange={e => setFormData({...formData, needsHousing: e.target.checked})} />
+            <div className="space-y-2">
+               <label className="text-[10px] font-black text-white uppercase tracking-widest block cursor-pointer">Require Franchise Housing Support (Villa/Beds)</label>
+               <p className="text-[8px] text-league-muted font-bold uppercase tracking-widest italic leading-relaxed">Checking this indicates you require local housing at your assigned franchise node. This impacts contract structure (Option B vs A).</p>
+            </div>
+         </div>
       </div>
 
       <div className="flex items-start gap-4 bg-black/40 p-8 rounded-3xl border border-league-border shadow-inner">

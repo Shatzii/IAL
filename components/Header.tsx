@@ -74,8 +74,9 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
       ]
     },
     {
-      title: "Talent Hub",
+      title: "Intelligence Hub",
       items: [
+        { view: 'ai-assistant', label: 'Neural Command (AI)' },
         { view: 'profiles', label: 'Personnel Pool' },
         { view: 'compare', label: 'Scouting Lab', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'pipeline', label: 'Recruitment Funnel', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },

@@ -259,6 +259,7 @@ export interface Profile {
   aiIntelSources?: { uri: string; title: string }[];
   combineResults?: CombineResult[];
   hypeAssetUrl?: string;
+  needsHousing: boolean;
 }
 
 export interface ActivityLog {

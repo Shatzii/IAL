@@ -1,8 +1,10 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useApp } from '../App';
 import { RegistrationForm } from './RegistrationForm';
 import { Franchise, FRANCHISE_COLORS } from '../types';
 import { DeploymentMap } from './DeploymentMap';
+import { AIChatWidget } from './AIChatWidget';
 
 const IALHeroLogo = () => (
   <svg className="w-64 md:w-[600px] h-auto" viewBox="0 0 300 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -25,11 +27,14 @@ const FRANCHISE_META: Record<Franchise, { country: string, flag: string }> = {
 
 export const LandingPage: React.FC = () => {
   const { setView } = useApp();
+  const [isAiWidgetOpen, setIsAiWidgetOpen] = useState(false);
 
   const VIDEO_ID = "tkcuP16oo54"; 
 
   return (
-    <div className="animate-in fade-in duration-1000 bg-league-bg min-h-screen">
+    <div className="animate-in fade-in duration-1000 bg-league-bg min-h-screen relative">
+      <AIChatWidget isOpen={isAiWidgetOpen} setIsOpen={setIsAiWidgetOpen} />
+
       {/* Hero Section */}
       <section className="bg-black pt-12 pb-8 md:pb-20 border-b border-league-border/30 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full opacity-10 pointer-events-none">
@@ -64,7 +69,7 @@ export const LandingPage: React.FC = () => {
             
             <div className="mt-8 flex flex-col md:flex-row justify-center gap-6">
                <button onClick={() => document.getElementById('draft-form')?.scrollIntoView({ behavior: 'smooth' })} className="bg-league-accent text-white px-12 py-5 rounded-2xl font-black italic uppercase tracking-widest text-lg shadow-[0_0_40px_rgba(228,29,36,0.4)] hover:scale-105 transition-transform">Apply for the Draft</button>
-               <button className="bg-league-panel border-2 border-league-border text-white px-12 py-5 rounded-2xl font-black italic uppercase tracking-widest text-lg hover:border-league-accent transition-all">See Requirements</button>
+               <button onClick={() => setIsAiWidgetOpen(true)} className="bg-league-panel border-2 border-league-border text-white px-12 py-5 rounded-2xl font-black italic uppercase tracking-widest text-lg hover:border-league-accent transition-all">Command Assistant</button>
             </div>
           </div>
         </div>
@@ -189,7 +194,12 @@ export const LandingPage: React.FC = () => {
           <div className="mt-16 text-center">
              <div className="p-6 bg-league-panel border border-league-border rounded-2xl inline-block max-w-sm mx-auto">
                 <p className="text-[10px] font-black uppercase tracking-widest text-league-muted mb-3">Prefer to apply by chat?</p>
-                <button className="bg-league-blue text-white px-6 py-2.5 rounded-lg font-black uppercase italic text-[9px] tracking-widest hover:brightness-110 shadow-xl">Launch AI Intake Assistant</button>
+                <button 
+                  onClick={() => setIsAiWidgetOpen(true)}
+                  className="bg-league-blue text-white px-6 py-2.5 rounded-lg font-black uppercase italic text-[9px] tracking-widest hover:brightness-110 shadow-xl"
+                >
+                  Launch AI Intake Assistant
+                </button>
              </div>
           </div>
         </div>

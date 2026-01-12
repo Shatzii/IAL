@@ -20,17 +20,16 @@ import { WarRoom } from './components/WarRoom';
 import { CoachDashboard } from './components/CoachDashboard';
 import { ContractStructures } from './components/ContractStructures';
 import { TeamFilmRoom } from './components/TeamFilmRoom';
+import { AICommandNode } from './components/AICommandNode';
 import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, Team, Video, VideoTag, VideoStatus, VideoSourceType, ExecutiveDirective, DirectiveStatus, DirectivePriority, ContractStatus } from './types';
 import { GoogleGenAI, Type } from "@google/genai";
 
-export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard' | 'contract-structure' | 'film-room';
+export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard' | 'contract-structure' | 'film-room' | 'ai-assistant';
 
-const INITIAL_PROFILES: Profile[] = [
-  { id: 'str-4', fullName: 'Reilly Hennessey', email: 'r.hennessey@stuttgart-surge.de', phone: '0', dateOfBirth: '1995-12-07', nationality: 'USA', role: Role.PLAYER, tier: TalentTier.TIER1, status: RecruitingStatus.PLACED, preferences: { rank1: Franchise.STUTTGART, rank2: Franchise.ZURICH, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW }, createdAt: '2024-01-01', scoutGrade: 9.8, positions: ['QB'], personalBio: "All-Star Quarterback. Lead Stuttgart to the championship game.", metrics: { speed: 7, strength: 7, agility: 8, iq: 10, versatility: 6 }, isIronmanPotential: false, documents: [], onboardingChecklist: [], assignedFranchise: Franchise.NOTTINGHAM, assignedTeam: 'Hoods', avatar_url: 'https://i.pravatar.cc/150?u=str-4' },
-];
+const INITIAL_PROFILES: Profile[] = [];
 
 const INITIAL_TEAMS: Team[] = [
-  { id: 'team-nott-1', name: 'Nottingham Hoods', franchise: Franchise.NOTTINGHAM, rosterIds: ['str-4'], coachIds: ['nottingham@gm.ial.com', 'jeff.hunt@nottingham.ial.com'] },
+  { id: 'team-nott-1', name: 'Nottingham Hoods', franchise: Franchise.NOTTINGHAM, rosterIds: [], coachIds: ['nottingham@gm.ial.com', 'jeff.hunt@nottingham.ial.com'] },
   { id: 'team-zuri-1', name: 'Zurich Guards', franchise: Franchise.ZURICH, rosterIds: [], coachIds: ['zurich@gm.ial.com', 'talib.wise@zurich.ial.com'] },
   { id: 'team-glas-1', name: 'Glasgow Tigers', franchise: Franchise.GLASGOW, rosterIds: [], coachIds: ['glasgow@gm.ial.com', 'phil.garcia@glasgow.ial.com'] },
   { id: 'team-duss-1', name: 'Düsseldorf Panthers', franchise: Franchise.DUSSELDORF, rosterIds: [], coachIds: ['dusseldorf@gm.ial.com', 'chris.mckinny@dusseldorf.ial.com'] },
@@ -137,17 +136,17 @@ const App: React.FC = () => {
   };
   
   const [profiles, setProfiles] = useState<Profile[]>(() => {
-    const saved = localStorage.getItem('IAL_PERSONNEL_REGISTRY_v4');
+    const saved = localStorage.getItem('IAL_PERSONNEL_REGISTRY_v5');
     return saved ? JSON.parse(saved) : INITIAL_PROFILES;
   });
 
   const [directives, setDirectives] = useState<ExecutiveDirective[]>(() => {
-    const saved = localStorage.getItem('IAL_EXEC_DIRECTIVES_v4');
+    const saved = localStorage.getItem('IAL_EXEC_DIRECTIVES_v5');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
-    const saved = localStorage.getItem('IAL_AUDIT_LOG_v4');
+    const saved = localStorage.getItem('IAL_AUDIT_LOG_v5');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -158,9 +157,9 @@ const App: React.FC = () => {
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [gradingConfig] = useState<GradingConfig>(DEFAULT_GRADING);
 
-  useEffect(() => { localStorage.setItem('IAL_PERSONNEL_REGISTRY_v4', JSON.stringify(profiles)); }, [profiles]);
-  useEffect(() => { localStorage.setItem('IAL_EXEC_DIRECTIVES_v4', JSON.stringify(directives)); }, [directives]);
-  useEffect(() => { localStorage.setItem('IAL_AUDIT_LOG_v4', JSON.stringify(activityLogs)); }, [activityLogs]);
+  useEffect(() => { localStorage.setItem('IAL_PERSONNEL_REGISTRY_v5', JSON.stringify(profiles)); }, [profiles]);
+  useEffect(() => { localStorage.setItem('IAL_EXEC_DIRECTIVES_v5', JSON.stringify(directives)); }, [directives]);
+  useEffect(() => { localStorage.setItem('IAL_AUDIT_LOG_v5', JSON.stringify(activityLogs)); }, [activityLogs]);
 
   const [currentSystemRole, setCurrentSystemRole] = useState<SystemRole>(SystemRole.PLAYER);
   const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
@@ -389,6 +388,7 @@ const App: React.FC = () => {
             {view === 'coach-dashboard' && <CoachDashboard />}
             {view === 'contract-structure' && <ContractStructures />}
             {view === 'film-room' && <TeamFilmRoom />}
+            {view === 'ai-assistant' && <AICommandNode />}
           </div>
         </main>
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2">

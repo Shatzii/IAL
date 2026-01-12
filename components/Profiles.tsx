@@ -108,9 +108,12 @@ export const Profiles: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredProfiles.map((p) => (
-          <div key={p.id} onClick={() => setSelectedProfile(p)} className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 group hover:border-league-accent transition-all flex flex-col shadow-2xl relative overflow-hidden h-[460px] cursor-pointer">
+          <div key={p.id} onClick={() => setSelectedProfile(p)} className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 group hover:border-league-accent transition-all flex flex-col shadow-2xl relative overflow-hidden h-[480px] cursor-pointer">
             <CardOverlay />
-            <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity"><TierBadge tier={p.tier} /></div>
+            <div className="absolute top-6 right-6 flex gap-2">
+               {p.needsHousing && <div className="bg-league-blue/20 text-league-blue border border-league-blue/50 p-1.5 rounded-lg shadow-lg animate-pulse" title="Requires Housing"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L4 9V21H20V9L12 3M12 11.5A2.5 2.5 0 1 1 9.5 14A2.5 2.5 0 0 1 12 11.5Z"/></svg></div>}
+               <div className="opacity-0 group-hover:opacity-100 transition-opacity"><TierBadge tier={p.tier} /></div>
+            </div>
             <div className="flex items-center gap-6 mb-6">
               <div className="w-16 h-16 rounded-2xl bg-league-bg border border-league-border flex items-center justify-center font-black italic text-2xl text-white shadow-inner overflow-hidden relative z-10">
                 {p.avatar_url ? <img src={p.avatar_url} className="w-full h-full object-cover" /> : p.fullName.charAt(0)}
@@ -124,6 +127,9 @@ export const Profiles: React.FC = () => {
                <div className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5 shadow-inner">
                   <div className="text-[8px] font-black text-league-muted uppercase tracking-widest">Active Node</div>
                   <div className="text-[10px] font-black italic uppercase text-white">{p.assignedFranchise || 'UNLINKED'}</div>
+               </div>
+               <div className={`text-[8px] font-black uppercase px-2 py-1 rounded w-fit ${p.needsHousing ? 'bg-league-accent/10 text-league-accent border border-league-accent/20' : 'bg-league-ok/10 text-league-ok border border-league-ok/20'}`}>
+                  {p.needsHousing ? 'VILLA REQ: ACTIVE' : 'SELF-SUSTAINED NODE'}
                </div>
                <p className="text-[11px] text-league-muted font-bold italic line-clamp-3 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">{p.personalBio || `Personnel asset currently operational within the recruitment ecosystem.`}</p>
             </div>
@@ -140,6 +146,12 @@ export const Profiles: React.FC = () => {
             </div>
           </div>
         ))}
+        {profiles.length === 0 && (
+          <div className="col-span-full py-40 border-4 border-dashed border-league-border rounded-[4rem] text-center opacity-40">
+             <h3 className="text-3xl font-black italic uppercase text-white tracking-[0.2em] mb-4">Registry Node Empty</h3>
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-league-muted italic">Uplink Active • Waiting for induction signals...</p>
+          </div>
+        )}
       </div>
 
       {selectedProfile && (
@@ -159,9 +171,9 @@ export const Profiles: React.FC = () => {
                         <h3 className="text-5xl md:text-7xl font-black italic uppercase text-white tracking-tighter leading-none mb-2">{selectedProfile.fullName}</h3>
                         <div className="flex items-center gap-4">
                            <span className="text-[10px] font-black uppercase tracking-widest text-league-muted italic opacity-50">Origin Node: {selectedProfile.nationality}</span>
-                           <button onClick={() => handleEnrich(selectedProfile.id)} disabled={isEnriching} className="bg-league-accent text-white text-[9px] font-black uppercase px-4 py-1 rounded-full shadow-lg hover:brightness-110 disabled:opacity-50">
-                             {isEnriching ? 'Syncing...' : 'Deep Intel Scan'}
-                           </button>
+                           <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase italic ${selectedProfile.needsHousing ? 'bg-league-accent text-white' : 'bg-league-ok text-black'}`}>
+                              {selectedProfile.needsHousing ? 'Requires Housing (Option B)' : 'Housing Handled (Option A)'}
+                           </span>
                         </div>
                      </div>
                      <TierBadge tier={selectedProfile.tier} size="lg" />
