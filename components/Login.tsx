@@ -7,18 +7,18 @@ export const Login: React.FC = () => {
   const { login, setView, profiles, addToast } = useApp();
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Updated Credential Database with new secure admin password and standardized personnel keys
   const SYSTEM_CREDENTIALS = [
     { email: 'admin@ial-football.com', pass: 'TakeOver2026$$$', role: SystemRole.LEAGUE_ADMIN },
-    // Franchise GMs - Standardized to coach2026$$$
+    // Franchise GMs
     { email: 'nottingham@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.NOTTINGHAM },
     { email: 'glasgow@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.GLASGOW },
     { email: 'dusseldorf@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.DUSSELDORF },
     { email: 'stuttgart@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.STUTTGART },
     { email: 'zurich@gm.ial.com', pass: 'coach2026$$$', role: SystemRole.FRANCHISE_GM, franchise: Franchise.ZURICH },
-    // Coaches - Updated for requested transfer assignments
+    // Coaches
     { email: 'phil.garcia@glasgow.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.GLASGOW },
     { email: 'jeff.hunt@nottingham.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.NOTTINGHAM },
     { email: 'chris.mckinny@dusseldorf.ial.com', pass: 'coach2026$$$', role: SystemRole.COACH_STAFF, franchise: Franchise.DUSSELDORF },
@@ -30,28 +30,39 @@ export const Login: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulation of secure handshake
+    // Sanitize inputs to prevent trailing space errors or case mismatches
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = pass.trim();
+
     setTimeout(() => {
       // 1. Check System Credentials
-      const cred = SYSTEM_CREDENTIALS.find(c => c.email.toLowerCase() === email.toLowerCase() && c.pass === pass);
+      const cred = SYSTEM_CREDENTIALS.find(c => 
+        c.email.toLowerCase() === cleanEmail && 
+        c.pass === cleanPass
+      );
       
       if (cred) {
         login(cred.email, cred.role, cred.franchise);
+        addToast(`Handshake successful. Welcome, ${cred.role}.`, "success");
         setLoading(false);
         return;
       }
 
       // 2. Check Player Registry (Auto-provisioned accounts)
-      const playerProfile = profiles.find(p => p.email.toLowerCase() === email.toLowerCase());
-      if (playerProfile && pass === playerProfile.fullName.replace(/\s/g, '').toLowerCase() + '_IAL26') {
-        login(playerProfile.email, SystemRole.PLAYER, playerProfile.assignedFranchise, playerProfile.id);
-        setLoading(false);
-        return;
+      const playerProfile = profiles.find(p => p.email.toLowerCase() === cleanEmail);
+      if (playerProfile) {
+        const playerKey = playerProfile.fullName.replace(/\s/g, '').toLowerCase() + '_IAL26';
+        if (cleanPass === playerKey) {
+           login(playerProfile.email, SystemRole.PLAYER, playerProfile.assignedFranchise, playerProfile.id);
+           addToast("Athlete Profile Synchronized.", "success");
+           setLoading(false);
+           return;
+        }
       }
 
-      addToast("Invalid personnel credentials. Access Denied.", "error");
+      addToast("Uplink Refused: Invalid Personnel Credentials.", "error");
       setLoading(false);
-    }, 1200);
+    }, 800);
   };
 
   return (
@@ -64,7 +75,7 @@ export const Login: React.FC = () => {
 
           <div className="text-center mb-10 space-y-2">
             <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">SECURE UPLINK</h2>
-            <p className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em]">Personnel Credentials Required</p>
+            <p className="text-[10px] font-black uppercase text-league-accent tracking-[0.4em]">Personnel Authorization Required</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -73,6 +84,7 @@ export const Login: React.FC = () => {
               <input 
                 required
                 type="email" 
+                autoComplete="email"
                 className="w-full bg-league-bg border border-league-border p-4 rounded-2xl text-white outline-none focus:border-league-accent transition-all font-bold placeholder:opacity-20"
                 placeholder="id@ial-node.net"
                 value={email}
@@ -82,14 +94,28 @@ export const Login: React.FC = () => {
 
             <div className="space-y-2">
               <label className="text-[9px] font-black uppercase text-league-muted tracking-[0.3em] px-2">Access Key</label>
-              <input 
-                required
-                type="password" 
-                className="w-full bg-league-bg border border-league-border p-4 rounded-2xl text-white outline-none focus:border-league-accent transition-all font-bold placeholder:opacity-20"
-                placeholder="••••••••••••"
-                value={pass}
-                onChange={e => setPass(e.target.value)}
-              />
+              <div className="relative">
+                <input 
+                  required
+                  type={showPass ? "text" : "password"} 
+                  autoComplete="current-password"
+                  className="w-full bg-league-bg border border-league-border p-4 pr-12 rounded-2xl text-white outline-none focus:border-league-accent transition-all font-bold placeholder:opacity-20"
+                  placeholder="••••••••••••"
+                  value={pass}
+                  onChange={e => setPass(e.target.value)}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-league-muted hover:text-white transition-colors"
+                >
+                  {showPass ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88L4.243 4.243m1.414 1.414L13.875 13.875M21 21l-4.243-4.243m-2.828-2.828L3 3"></path></svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <button 
@@ -117,8 +143,8 @@ export const Login: React.FC = () => {
         </div>
 
         <div className="mt-12 text-center opacity-30">
-           <p className="text-[8px] font-black uppercase tracking-[0.5em] text-league-muted">System Node 2.5.0-OS • London Command Center</p>
-           <p className="text-[7px] font-black uppercase tracking-[0.2em] text-league-muted mt-2">Authenticated personnel only. Unauthorized access is recorded.</p>
+           <p className="text-[8px] font-black uppercase tracking-[0.5em] text-league-muted">System Node 2.5.1-OS • Handshake Protection Active</p>
+           <p className="text-[7px] font-black uppercase tracking-[0.2em] text-league-muted mt-2">Authenticated personnel only. Unauthorized access attempts are logged.</p>
         </div>
       </div>
     </div>

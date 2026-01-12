@@ -11,6 +11,50 @@ export enum SystemRole {
   PLAYER = 'Player'
 }
 
+export enum DirectivePriority {
+  CRITICAL = 'CRITICAL',
+  STANDARD = 'STANDARD',
+  STRATEGIC = 'STRATEGIC'
+}
+
+export enum DirectiveStatus {
+  PENDING = 'PENDING',
+  AUTHORIZED = 'AUTHORIZED',
+  DENIED = 'DENIED',
+  INFO_REQUIRED = 'INFO REQUIRED'
+}
+
+export enum ContractStatus {
+  PROPOSED = 'PROPOSED',
+  PENDING_EXECUTIVE = 'PENDING EXECUTIVE APPROVAL',
+  APPROVED = 'APPROVED',
+  DECLINED = 'DECLINED',
+  SIGNED = 'SIGNED'
+}
+
+export interface ContractOffer {
+  amount: number;
+  status: ContractStatus;
+  franchise: Franchise;
+  timestamp: string;
+  notes?: string;
+}
+
+export interface ExecutiveDirective {
+  id: string;
+  title: string;
+  description: string;
+  requester: string;
+  franchise?: Franchise;
+  priority: DirectivePriority;
+  status: DirectiveStatus;
+  commishThoughts?: string;
+  createdAt: string;
+  resolvedAt?: string;
+  type?: 'OPERATIONAL' | 'CONTRACT';
+  relatedProfileId?: string;
+}
+
 export enum TalentTier {
   TIER1 = 'Franchise (Negotiated Contract)',
   TIER2 = 'Starter (1k / Game)',
@@ -100,29 +144,8 @@ export interface VideoTag {
   isSelfScout?: boolean;
   opponentId?: string; 
   createdAt: string;
-  // Spatial coordinates for on-video pings (0-100 scale)
   x_coord?: number;
   y_coord?: number;
-}
-
-export interface VideoClip {
-  id: string;
-  videoId: string;
-  title: string;
-  tStartMs: number;
-  tEndMs: number;
-  createdByUserId: string;
-  createdAt: string;
-}
-
-export interface Playlist {
-  id: string;
-  teamId: string;
-  title: string;
-  description: string;
-  clipIds: string[];
-  createdByUserId: string;
-  createdAt: string;
 }
 
 export const FRANCHISE_COLORS: Record<Franchise, string> = {
@@ -141,14 +164,6 @@ export const FRANCHISE_TEAMS: Record<Franchise, string[]> = {
   [Franchise.ZURICH]: ['Guards', 'Renegades']
 };
 
-export interface Preferences {
-  rank1: Franchise;
-  rank2: Franchise;
-  rank3: Franchise;
-  rank4: Franchise;
-  rank5: Franchise;
-}
-
 export interface ScoutingMetrics {
   speed: number;
   strength: number;
@@ -157,28 +172,42 @@ export interface ScoutingMetrics {
   versatility: number;
 }
 
+export interface Preferences {
+  rank1: Franchise;
+  rank2: Franchise;
+  rank3: Franchise;
+  rank4: Franchise;
+  rank5: Franchise;
+}
+
 export interface Document {
   id: string;
   name: string;
-  type: 'CV' | 'Passport' | 'Medical' | 'Contract';
+  type: string;
   url: string;
-  scanStatus: 'CLEAN' | 'SCANNING' | 'INFECTED';
+  scanStatus: 'CLEAN' | 'INFECTED' | 'SCANNING' | 'VERIFIED';
   uploadedAt: string;
 }
 
-export interface OnboardingTask {
+export interface ChatMessage {
   id: string;
-  title: string;
-  isCompleted: boolean;
-  category: 'Legal' | 'Travel' | 'Medical' | 'Logistics';
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'BLOCKED';
+  channelId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: SystemRole;
+  text: string;
+  timestamp: string;
 }
 
-export interface VideoTagLegacy {
-  timestamp: string;
-  note: string;
-  scoutId: string;
-  scoutName: string;
+export interface ChatChannel {
+  id: string;
+  name: string;
+  description: string;
+  isPrivate: boolean;
+  allowedRoles?: SystemRole[];
+  franchiseScope?: Franchise;
+  isDirect?: boolean;
+  participants?: string[];
 }
 
 export interface GradingConfig {
@@ -198,16 +227,9 @@ export interface CombineResult {
   recordedBy: string;
 }
 
-export interface SearchGroundingSource {
-  title: string;
-  uri: string;
-}
-
 export interface Profile {
   id: string;
   fullName: string;
-  firstName?: string;
-  lastName?: string;
   email: string;
   phone: string;
   dateOfBirth: string;
@@ -221,7 +243,6 @@ export interface Profile {
   weight_kg?: number;
   positions: string[];
   personalBio?: string;
-  highlightUrls?: string[];
   scoutGrade?: number; 
   metrics: ScoutingMetrics;
   isIronmanPotential: boolean; 
@@ -230,14 +251,13 @@ export interface Profile {
   assignedFranchise?: Franchise;
   assignedTeam?: string;
   documents: Document[];
-  onboardingChecklist: OnboardingTask[];
-  draftReadiness?: number; 
-  videoAnalysisTags?: VideoTagLegacy[];
+  onboardingChecklist: any[];
   avatar_url?: string;
-  capHit?: number;
-  combineResults?: CombineResult[];
+  contractOffer?: ContractOffer;
+  draftReadiness?: number;
   aiIntel?: string;
-  aiIntelSources?: SearchGroundingSource[];
+  aiIntelSources?: { uri: string; title: string }[];
+  combineResults?: CombineResult[];
   hypeAssetUrl?: string;
 }
 
@@ -249,42 +269,12 @@ export interface ActivityLog {
   subjectId: string;
 }
 
-export interface BroadcastDirective {
-  id: string;
-  message: string;
-  priority: 'CRITICAL' | 'STANDARD';
-  active: boolean;
-  timestamp: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderRole: string;
-  text: string;
-  timestamp: string;
-  channelId: string;
-}
-
-export interface ChatChannel {
-  id: string;
-  name: string;
-  description: string;
-  isPrivate: boolean;
-  allowedRoles?: SystemRole[];
-  franchiseScope?: Franchise;
-  isDirect?: boolean;
-  participants?: string[];
-}
-
 export interface Play {
   id: string;
   name: string;
   formation: string;
   category: string;
   description: string;
-  simVideoUrl?: string;
 }
 
 export interface Playbook {
