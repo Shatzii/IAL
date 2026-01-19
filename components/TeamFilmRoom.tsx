@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../App';
 import { SystemRole, Video, VideoStatus, VideoSourceType, Team, Franchise, Play } from '../types';
 import { VideoPlayer } from './VideoPlayer';
+import { VideoUploader } from './VideoUploader';
 
 export const TeamFilmRoom: React.FC = () => {
   const { 
@@ -11,7 +12,6 @@ export const TeamFilmRoom: React.FC = () => {
     currentUserProfileId,
     teams, 
     videos, 
-    addVideo, 
     addToast, 
     selectedFranchise,
     videoTags,
@@ -54,32 +54,6 @@ export const TeamFilmRoom: React.FC = () => {
   }, [selectedVideo, videoTags]);
 
   const canUpload = currentSystemRole !== SystemRole.PLAYER;
-
-  const handleSimulatedUpload = (e: React.FormEvent) => {
-    e.preventDefault();
-    const target = e.target as any;
-    const title = target.title.value;
-    const type = target.type.value;
-
-    const newVid: Video = {
-      id: 'vid-' + Math.random().toString(36).substr(2, 5),
-      teamId: myTeam?.id || 'unknown',
-      uploadedByUserId: currentUserProfileId || 'admin',
-      title,
-      description: 'Newly uploaded tactical asset.',
-      sourceType: type,
-      status: VideoStatus.READY,
-      url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      durationSeconds: 300,
-      createdAt: new Date().toISOString().split('T')[0],
-      thumbnailUrl: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?q=80&w=300&h=200&fit=crop',
-      tacticalContext: { down: 1, distance: 10, zone: 'OPEN_FIELD' }
-    };
-
-    addVideo(newVid);
-    setIsUploadModalOpen(false);
-    addToast("Tactical Payload Transmitted.", "success");
-  };
 
   const handleLinkPlay = (play: Play) => {
     addToast(`Video linked to Playbook: ${play.name}`, "success");
@@ -149,7 +123,7 @@ export const TeamFilmRoom: React.FC = () => {
                  </div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[7px] font-black uppercase text-league-accent tracking-widest mb-1">{vid.sourceType} • {vid.createdAt}</div>
+                <div className="text-[7px] font-black uppercase text-league-accent tracking-widest mb-1">{vid.sourceType} • {vid.createdAt.split('T')[0]}</div>
                 <h4 className="text-[11px] font-black italic uppercase text-white truncate leading-tight mb-1">{vid.title}</h4>
                 {vid.tacticalContext && <div className="text-[7px] font-bold text-league-muted uppercase tracking-widest opacity-40">{vid.tacticalContext.playType} • {vid.tacticalContext.zone}</div>}
               </div>
@@ -194,7 +168,7 @@ export const TeamFilmRoom: React.FC = () => {
                       </div>
                       <div className="flex gap-4 pt-4 border-t border-white/5">
                          <TacticalPill label="Zone" val={selectedVideo.tacticalContext?.zone || 'OPEN'} />
-                         <TacticalPill label="D&D" val={`${selectedVideo.tacticalContext?.down}&${selectedVideo.tacticalContext?.distance}`} />
+                         <TacticalPill label="D&D" val={`${selectedVideo.tacticalContext?.down || 1}&${selectedVideo.tacticalContext?.distance || 10}`} />
                          <TacticalPill label="Personnel" val="MAC/JACK Ready" />
                       </div>
 
@@ -231,45 +205,10 @@ export const TeamFilmRoom: React.FC = () => {
       </div>
 
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-           <div className="bg-league-panel border border-league-border max-w-lg w-full rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-             <form onSubmit={handleSimulatedUpload} className="p-10 space-y-8">
-                <div className="flex justify-between items-center border-b border-league-border pb-6">
-                   <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Film Uploader</h3>
-                   <button type="button" onClick={() => setIsUploadModalOpen(false)} className="text-league-muted hover:text-white transition-all">×</button>
-                </div>
-                <div className="space-y-6">
-                   <div>
-                      <label className="text-[10px] font-black uppercase text-league-muted tracking-widest mb-3 block">Asset Title</label>
-                      <input name="title" required className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent transition-all font-bold" placeholder="e.g. Zurich Goal Line Offense vs Nottingham" />
-                   </div>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-[10px] font-black uppercase text-league-muted tracking-widest mb-3 block">Source Type</label>
-                        <select name="type" className="w-full bg-league-bg border border-league-border p-4 rounded-xl text-white outline-none focus:border-league-accent appearance-none">
-                           <option value={VideoSourceType.GAME}>Game Film</option>
-                           <option value={VideoSourceType.PRACTICE}>Practice / Drill</option>
-                           <option value={VideoSourceType.SCOUTING}>Opponent Scouting</option>
-                           <option value={VideoSourceType.HIGHLIGHT}>Recruitment Hub</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-black uppercase text-league-muted tracking-widest mb-3 block">Field Zone</label>
-                        <div className="bg-league-bg border border-league-border p-4 rounded-xl text-league-ok font-black text-xs italic tracking-widest">RED_ZONE</div>
-                      </div>
-                   </div>
-                   <div className="py-12 border-2 border-dashed border-league-border rounded-xl flex flex-col items-center justify-center gap-4 bg-black/20 hover:border-league-accent transition-all cursor-pointer">
-                      <svg className="w-8 h-8 text-league-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeWidth="2"></path></svg>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-league-muted">Commit Raw mp4 Stream</span>
-                   </div>
-                </div>
-                <div className="flex gap-4 pt-4">
-                   <button type="button" onClick={() => setIsUploadModalOpen(false)} className="flex-1 bg-league-bg border border-league-border text-league-muted py-4 rounded-xl font-black uppercase tracking-widest hover:text-white transition-all">Cancel</button>
-                   <button type="submit" className="flex-1 bg-league-accent text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-transform">Begin Transcode</button>
-                </div>
-             </form>
-           </div>
-        </div>
+        <VideoUploader 
+          onClose={() => setIsUploadModalOpen(false)} 
+          teamId={myTeam?.id || 'unknown'} 
+        />
       )}
     </div>
   );

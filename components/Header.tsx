@@ -102,6 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
         { view: 'contract-structure', label: 'Contract Structures', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'franchise-admin', label: 'Franchise Desk', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
         { view: 'admin', label: 'Central Command', roles: [SystemRole.LEAGUE_ADMIN] },
+        { view: 'security-hub', label: 'Security Hub', roles: [SystemRole.LEAGUE_ADMIN, SystemRole.FRANCHISE_GM] },
       ]
     }
   ];
@@ -163,45 +164,12 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
 
           <div className="flex items-center gap-3 md:gap-8">
             <div className="hidden lg:flex items-center gap-6">
-               {isLoggedIn && (
-                 <div className="relative" ref={notifRef}>
-                    <button 
-                      onClick={() => setIsNotifOpen(!isNotifOpen)}
-                      className={`relative p-2 rounded-xl transition-all ${unreadCount > 0 ? 'text-league-accent animate-pulse' : 'text-league-muted'}`}
-                    >
-                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path></svg>
-                       {unreadCount > 0 && <span className="absolute top-0 right-0 w-4 h-4 bg-white text-black text-[8px] font-black rounded-full flex items-center justify-center border border-league-accent">{unreadCount}</span>}
-                    </button>
-                    {isNotifOpen && (
-                      <div className="absolute top-full right-0 mt-3 w-80 bg-league-panel border border-league-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-4">
-                         <div className="p-4 border-b border-league-border bg-black/40 flex justify-between items-center">
-                            <span className="text-[10px] font-black uppercase text-white tracking-widest">Command Alerts</span>
-                            <span className="text-[8px] font-black text-league-accent uppercase italic">Uplink: Live</span>
-                         </div>
-                         <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                            {notifications.length > 0 ? notifications.map(n => (
-                              <div key={n.id} onClick={() => { markNotificationRead(n.id); if (n.actionView) setView(n.actionView as any); setIsNotifOpen(false); }} className={`p-4 border-b border-league-border hover:bg-white/5 cursor-pointer transition-colors ${!n.read ? 'bg-league-accent/5' : ''}`}>
-                                 <div className="flex justify-between items-start mb-1">
-                                    <h5 className="text-[11px] font-black uppercase text-white">{n.title}</h5>
-                                    {!n.read && <div className="w-1.5 h-1.5 bg-league-accent rounded-full" />}
-                                 </div>
-                                 <p className="text-[10px] text-league-muted italic leading-relaxed mb-2">{n.message}</p>
-                                 <span className="text-[7px] font-black uppercase opacity-30">{new Date(n.timestamp).toLocaleTimeString()}</span>
-                              </div>
-                            )) : (
-                              <div className="p-12 text-center opacity-20 text-[9px] font-black uppercase italic tracking-widest">No New Signals</div>
-                            )}
-                         </div>
-                      </div>
-                    )}
-                 </div>
-               )}
                <div className="flex flex-col items-end mr-6 opacity-30 hover:opacity-100 transition-opacity">
-                  <div className="text-[7px] font-black uppercase text-league-muted tracking-[0.2em] mb-1 italic">Network Health</div>
+                  <div className="text-[7px] font-black uppercase text-league-muted tracking-[0.2em] mb-1 italic">Network Security</div>
                   <div className="flex gap-1">
                      <div className="w-1.5 h-1.5 bg-league-ok rounded-full shadow-[0_0_5px_#23d18b]" />
                      <div className="w-1.5 h-1.5 bg-league-ok rounded-full shadow-[0_0_5px_#23d18b]" />
-                     <div className={`w-1.5 h-1.5 rounded-full ${unreadCount > 0 ? 'bg-league-accent animate-pulse' : 'bg-league-ok shadow-[0_0_5px_#23d18b]'}`} />
+                     <div className="w-1.5 h-1.5 bg-league-blue rounded-full shadow-[0_0_5px_#40a9ff] animate-pulse" />
                   </div>
                </div>
             </div>
@@ -213,18 +181,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
             <div className="flex items-center gap-2 md:gap-4">
               {!isLoggedIn ? (
                 <>
-                  <button 
-                    onClick={() => setView('register')}
-                    className="hidden sm:block bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] hover:bg-league-accent hover:text-white transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-                  >
-                    APPLY FOR DRAFT
-                  </button>
-                  <button 
-                    onClick={() => setView('login')}
-                    className="bg-league-accent text-white px-4 md:px-8 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em] hover:brightness-125 transition-all shadow-[0_0_20px_#e41d2444]"
-                  >
-                    LOGIN
-                  </button>
+                  <button onClick={() => setView('register')} className="hidden sm:block bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] hover:bg-league-accent hover:text-white transition-all">APPLY</button>
+                  <button onClick={() => setView('login')} className="bg-league-accent text-white px-4 md:px-8 py-2 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em] hover:brightness-125 transition-all">LOGIN</button>
                 </>
               ) : (
                 <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4 border-l border-league-border">

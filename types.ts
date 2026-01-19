@@ -11,6 +11,22 @@ export enum SystemRole {
   PLAYER = 'Player'
 }
 
+export enum AuditActionType {
+  AUTHENTICATION = 'AUTH',
+  DATA_ACCESS = 'READ',
+  DATA_MODIFY = 'WRITE',
+  DATA_DELETE = 'DELETE',
+  SECURITY_CHANGE = 'SEC'
+}
+
+export interface SessionMetadata {
+  token: string;
+  expiresAt: string;
+  ipAddress: string;
+  mfaVerified: boolean;
+  deviceId: string;
+}
+
 export enum DirectivePriority {
   CRITICAL = 'CRITICAL',
   STANDARD = 'STANDARD',
@@ -277,9 +293,11 @@ export interface Profile {
 export interface ActivityLog {
   id: string;
   timestamp: string;
-  type: string;
+  type: AuditActionType | string;
   message: string;
   subjectId: string;
+  actorId: string;
+  hash?: string;
 }
 
 export interface PlayAssignment {

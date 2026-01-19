@@ -4,7 +4,7 @@ import { Role, Profile, TalentTier, SystemRole, RecruitingStatus } from '../type
 import { useApp } from '../App';
 
 export const Profiles: React.FC = () => {
-  const { profiles, currentSystemRole, toggleComparison, comparisonIds, enrichDossier } = useApp();
+  const { profiles, currentSystemRole, toggleComparison, comparisonIds, enrichDossier, maskPII } = useApp();
   const [activeTab, setActiveTab] = useState<Role>(Role.PLAYER);
   const [search, setSearch] = useState('');
 
@@ -58,10 +58,15 @@ export const Profiles: React.FC = () => {
               </div>
               <div className="flex-1">
                 <h4 className="text-xl font-black italic uppercase text-white tracking-tighter group-hover:text-league-accent transition-colors">{p.fullName}</h4>
-                <div className="flex items-center gap-2 mt-1">
-                   <span className="text-[8px] font-black text-league-accent uppercase tracking-widest">{p.positions.join('/')}</span>
-                   <span className="text-white/20">•</span>
-                   <span className="text-[8px] font-bold text-league-muted uppercase">{p.nationality}</span>
+                <div className="flex flex-col gap-1 mt-2">
+                   <div className="flex items-center gap-2">
+                      <span className="text-[8px] font-black text-league-accent uppercase tracking-widest">{p.positions.join('/')}</span>
+                      <span className="text-white/20">•</span>
+                      <span className="text-[8px] font-bold text-league-muted uppercase">{p.nationality}</span>
+                   </div>
+                   <div className="text-[7px] font-black text-white/30 uppercase tracking-widest italic group-hover:text-white/60 transition-colors">
+                      {maskPII(p.email)}
+                   </div>
                 </div>
               </div>
             </div>
@@ -104,12 +109,6 @@ export const Profiles: React.FC = () => {
             </div>
           </div>
         ))}
-        {filteredProfiles.length === 0 && (
-          <div className="col-span-full py-40 border-2 border-dashed border-league-border rounded-[4rem] text-center opacity-30">
-             <h3 className="text-2xl font-black italic uppercase text-white tracking-[0.2em]">Registry Node Empty</h3>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-league-muted mt-2">Awaiting new personnel induction signals...</p>
-          </div>
-        )}
       </div>
     </div>
   );
