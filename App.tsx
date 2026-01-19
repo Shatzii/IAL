@@ -23,7 +23,7 @@ import { TeamFilmRoom } from './components/TeamFilmRoom';
 import { AICommandNode } from './components/AICommandNode';
 import { SecurityHub } from './components/SecurityHub';
 import { Profile, Role, RecruitingStatus, Franchise, ActivityLog, TalentTier, SystemRole, ChatMessage, FRANCHISE_COLORS, LeagueEvent, GradingConfig, Playbook, LearningModule, Team, Video, VideoTag, VideoStatus, VideoSourceType, ExecutiveDirective, DirectiveStatus, DirectivePriority, ContractStatus, Notification, RosterHealth, SessionMetadata, AuditActionType } from './types';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard' | 'contract-structure' | 'film-room' | 'ai-assistant' | 'security-hub';
 
@@ -179,11 +179,6 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const saved = localStorage.getItem('IAL_NOTIFICATIONS_v8');
-    return saved ? JSON.parse(saved) : [];
-  });
-
   const [depthCharts, setDepthCharts] = useState<Record<string, Record<string, string>>>(() => {
     const saved = localStorage.getItem('IAL_DEPTH_CHARTS_v8');
     return saved ? JSON.parse(saved) : {};
@@ -207,26 +202,47 @@ const App: React.FC = () => {
 
   useEffect(() => { localStorage.setItem('IAL_CORE_VAULT_v8', JSON.stringify(profiles)); }, [profiles]);
   useEffect(() => { localStorage.setItem('IAL_AUDIT_LOG_IMMUTABLE', JSON.stringify(activityLogs)); }, [activityLogs]);
-  useEffect(() => {
-    if (isLoggedIn) {
-      localStorage.setItem('IAL_ROLE', currentSystemRole);
-      localStorage.setItem('IAL_USER_EMAIL', currentUserEmail || '');
-      localStorage.setItem('IAL_USER_PID', currentUserProfileId || '');
-    } else {
-      localStorage.removeItem('IAL_ROLE');
-      localStorage.removeItem('IAL_USER_EMAIL');
-      localStorage.removeItem('IAL_USER_PID');
-    }
-  }, [isLoggedIn, currentSystemRole, currentUserEmail, currentUserProfileId]);
 
   const logActivity = (type: AuditActionType | string, message: string, subjectId: string) => {
     const actorId = currentUserProfileId || 'SYSTEM_DAEMON';
     const timestamp = new Date().toISOString();
-    // Simulate SHA-256 hash for SOC2 audit trail integrity
     const hash = btoa(`${timestamp}|${type}|${message}|${actorId}`).substr(0, 16).toUpperCase();
-    
     const newLog: ActivityLog = { id: Math.random().toString(36).substr(2, 9), timestamp, type, message, subjectId, actorId, hash };
     setActivityLogs(prev => [newLog, ...prev].slice(0, 500));
+  };
+
+  const generateHypeAsset = async (profileId: string) => {
+    const profile = profiles.find(p => p.id === profileId);
+    if (!profile) return;
+    
+    addToast("Neural Hype Engine Initializing...", "info");
+    
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const prompt = `A cinematic, ultra-realistic sports marketing poster for an arena football player named ${profile.fullName}. 
+      The player is a ${profile.positions.join('/')} and looks powerful and elite. 
+      The setting is a high-tech, futuristic indoor arena with neon red lights and intense atmosphere. 
+      Professional photography style, high contrast, 8k resolution.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: [{ text: prompt }],
+        config: { imageConfig: { aspectRatio: "3:4" } }
+      });
+
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          const base64Data = part.inlineData.data;
+          const imageUrl = `data:image/png;base64,${base64Data}`;
+          setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, hypeAssetUrl: imageUrl } : p));
+          addToast("Hype Asset Synthesized successfully.", "success");
+          logActivity(AuditActionType.DATA_MODIFY, `Hype Card Generated for ${profile.fullName}`, profileId);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("Hype Synthesis Failed. Re-routing...", "error");
+    }
   };
 
   const maskPII = (text: string, force: boolean = false) => {
@@ -259,7 +275,7 @@ const App: React.FC = () => {
     if (franchise) setSelectedFranchise(franchise);
     if (profileId) setCurrentUserProfileId(profileId);
     
-    logActivity(AuditActionType.AUTHENTICATION, `Handshake successful for role: ${role}`, actorIdForEmail(email));
+    logActivity(AuditActionType.AUTHENTICATION, `Handshake successful for role: ${role}`, email);
     
     if (role === SystemRole.PLAYER) setView('athlete-portal');
     else if (role === SystemRole.COACH_STAFF) setView('coach-dashboard');
@@ -274,8 +290,6 @@ const App: React.FC = () => {
     setViewHistory(['landing']); 
   };
 
-  const actorIdForEmail = (email: string) => profiles.find(p => p.email === email)?.id || 'ADMIN_GENERIC';
-
   const addToast = (message: string, type: any = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
     setToasts(prev => [...prev, { id, message, type }]);
@@ -284,22 +298,20 @@ const App: React.FC = () => {
 
   return (
     <AppContext.Provider value={{ 
-      profiles, teams: [], directives, activityLogs, notifications, depthCharts, currentSystemRole, currentUserProfileId, currentUserEmail, currentSession, isLoggedIn, selectedFranchise,
+      profiles, teams: [], directives, activityLogs, notifications: [], depthCharts, currentSystemRole, currentUserProfileId, currentUserEmail, currentSession, isLoggedIn, selectedFranchise,
       login, logout, setView, goBack, updateProfile: (id, u) => setProfiles(p => p.map(x => x.id === id ? {...x, ...u} : x)),
       addProfile: async (p) => { setProfiles(prev => [p, ...prev]); return true; },
-      updateDirective: (id, u) => setDirectives(d => d.map(x => x.id === id ? {...x, ...u} : x)),
-      addDirective: (d) => setDirectives(prev => [d, ...prev]),
+      updateDirective: (id, u) => {}, addDirective: (d) => {},
       proposeContract: () => {}, resolveContract: () => {}, signContract: () => {},
-      logActivity, addToast, addNotification: (n) => setNotifications(prev => [{...n, id: 'n'+Date.now(), timestamp: new Date().toISOString(), read: false}, ...prev]),
-      markNotificationRead: (id) => setNotifications(prev => prev.map(n => n.id === id ? {...n, read: true} : n)),
+      logActivity, addToast, addNotification: (n) => {}, markNotificationRead: (id) => {},
       sendMessage: () => {}, setSelectedFranchise, setDepthChartAssignment: () => {}, activeChannelId, setActiveChannelId,
       isBooting, isLoading, isSyncing, gradingConfig, activeEvaluationEvent, startEvaluation: (e) => setActiveEvaluationEvent(e), closeEvaluation: () => setActiveEvaluationEvent(null),
       videos, addVideo: (v) => setVideos(p => [...p, v]), videoTags, updateVideoTag: () => {}, analyzeVideoAi: async () => {},
-      messages, issueBroadcast: () => {}, generateHypeAsset: async () => {}, playbooks: [], learningModules: [],
+      messages, issueBroadcast: () => {}, generateHypeAsset, playbooks: [], learningModules: [],
       runTacticalSim: async () => {}, translateIntel: async (t) => t, summarizeVoucher: async () => '',
       enrichDossier: async () => {}, aiScoutSearch: async () => [], toggleComparison: (id) => setComparisonIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]),
       comparisonIds, runAiRosterStrategy: async () => '', runMockDraft: async () => '', syncWithVault: async () => {}, syncFromGlobal: async () => {},
-      calculateRosterHealth: () => ({ integrityScore: 100, gaps: [], recommendations: [] }), globalNetworkTotal: profiles.length + 50,
+      calculateRosterHealth: () => ({ integrityScore: 100, gaps: [], recommendations: [] }), globalNetworkTotal: profiles.length + 124,
       maskPII
     }}>
       {isBooting ? (

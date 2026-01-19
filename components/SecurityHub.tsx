@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../App';
-import { AuditActionType, SystemRole } from '../types';
+import { AuditActionType, SystemRole, Franchise, FRANCHISE_COLORS } from '../types';
 
 export const SecurityHub: React.FC = () => {
   const { activityLogs, currentSession, currentSystemRole, maskPII } = useApp();
@@ -11,7 +11,7 @@ export const SecurityHub: React.FC = () => {
     return activityLogs.filter(log => filterAction === 'ALL' || log.type === filterAction);
   }, [activityLogs, filterAction]);
 
-  const complianceScore = 98.4; // Simulated SOC2 readiness score
+  const complianceScore = 98.4; 
 
   if (currentSystemRole !== SystemRole.LEAGUE_ADMIN && currentSystemRole !== SystemRole.FRANCHISE_GM) {
     return (
@@ -56,20 +56,17 @@ export const SecurityHub: React.FC = () => {
            </div>
 
            <div className="bg-league-panel border border-league-border p-8 rounded-[2.5rem] shadow-2xl">
-              <h3 className="text-[10px] font-black uppercase text-white tracking-[0.4em] mb-8 italic border-b border-white/5 pb-4">Privacy Directives</h3>
+              <h3 className="text-[10px] font-black uppercase text-white tracking-[0.4em] mb-8 italic border-b border-white/5 pb-4">Regional Node Integrity</h3>
               <div className="space-y-4">
-                 <div className="flex justify-between items-center p-4 bg-black/40 rounded-xl border border-white/5">
-                    <span className="text-[10px] font-bold text-white uppercase">Data Masking</span>
-                    <span className="text-[10px] font-black text-league-ok uppercase">ACTIVE</span>
-                 </div>
-                 <div className="flex justify-between items-center p-4 bg-black/40 rounded-xl border border-white/5 opacity-50">
-                    <span className="text-[10px] font-bold text-white uppercase">DDoS Protection</span>
-                    <span className="text-[10px] font-black text-white uppercase">GLOBAL EDGE</span>
-                 </div>
-                 <div className="flex justify-between items-center p-4 bg-black/40 rounded-xl border border-white/5">
-                    <span className="text-[10px] font-bold text-white uppercase">Log Retention</span>
-                    <span className="text-[10px] font-black text-league-blue uppercase">90 DAYS</span>
-                 </div>
+                 {Object.values(Franchise).map(f => (
+                   <div key={f} className="flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5">
+                      <div className="flex items-center gap-3">
+                         <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ color: FRANCHISE_COLORS[f], backgroundColor: FRANCHISE_COLORS[f] }} />
+                         <span className="text-[10px] font-bold text-white uppercase">{f} Node</span>
+                      </div>
+                      <span className="text-[10px] font-black text-league-ok uppercase">SECURE</span>
+                   </div>
+                 ))}
               </div>
            </div>
         </div>
@@ -106,7 +103,6 @@ export const SecurityHub: React.FC = () => {
                        </div>
                     </div>
                  ))}
-                 {filteredLogs.length === 0 && <div className="h-full flex items-center justify-center opacity-20 font-black italic uppercase text-lg">Vault logs clear.</div>}
               </div>
            </div>
         </div>

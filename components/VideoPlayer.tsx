@@ -10,9 +10,12 @@ interface VideoPlayerProps {
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
   const { videoTags, analyzeVideoAi, currentSystemRole, updateVideoTag, addToast } = useApp();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [showTelestrator, setShowTelestrator] = useState(false);
   const [showPlaybookOverlay, setShowPlaybookOverlay] = useState(false);
 
   const tags = useMemo(() => videoTags.filter(t => t.videoId === video.id), [videoTags, video.id]);
@@ -23,7 +26,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
 
     const onTimeUpdate = () => setCurrentTime(v.currentTime);
     v.addEventListener('timeupdate', onTimeUpdate);
-    v.addEventListener('play', () => setIsPlaying(true));
+    v.addEventListener('play', () => { setIsPlaying(true); clearCanvas(); });
     v.addEventListener('pause', () => setIsPlaying(false));
 
     return () => {
@@ -31,16 +34,54 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
     };
   }, [video]);
 
+  const clearCanvas = () => {
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx && canvasRef.current) {
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+  };
+
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    if (!showTelestrator) return;
+    setIsDrawing(true);
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.strokeStyle = '#e41d24';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#e41d24';
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (!isDrawing || !showTelestrator) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const handleCanvasMouseUp = () => setIsDrawing(false);
+
   const seekTo = (ms: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = ms / 1000;
       videoRef.current.play();
     }
-  };
-
-  const handleApprove = (tagId: string) => {
-    updateVideoTag(tagId, { approved: true });
-    addToast("Tactical Intelligence Verified.", "success");
   };
 
   const activeTags = tags.filter(t => {
@@ -57,6 +98,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
           src={video.url}
           playsInline
           poster={video.thumbnailUrl}
+        />
+
+        {/* Telestrator Canvas */}
+        <canvas 
+          ref={canvasRef}
+          width={1280}
+          height={720}
+          onMouseDown={handleCanvasMouseDown}
+          onMouseMove={handleCanvasMouseMove}
+          onMouseUp={handleCanvasMouseUp}
+          className={`absolute inset-0 w-full h-full z-30 transition-opacity ${showTelestrator ? 'opacity-100 cursor-crosshair' : 'opacity-0 pointer-events-none'}`}
         />
 
         {/* Spatial Tactical Pings */}
@@ -80,36 +132,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
           )
         ))}
 
-        {/* Playbook Overlay */}
-        {showPlaybookOverlay && (
-            <div className="absolute inset-0 pointer-events-none z-10 animate-in fade-in">
-                <svg className="w-full h-full opacity-60" viewBox="0 0 100 100">
-                    <path d="M50 85 L20 60 L80 60" stroke="#e41d24" strokeWidth="0.8" fill="none" strokeDasharray="3 3" />
-                    <circle cx="50" cy="85" r="2.5" fill="#e41d24" />
-                    <text x="22" y="58" fill="#e41d24" fontSize="4" fontWeight="900" fontStyle="italic" filter="drop-shadow(0 0 2px black)">SCHEMATIC_MESH_01</text>
-                </svg>
-                <div className="absolute top-8 right-8 bg-black/60 border border-league-accent/40 px-4 py-1.5 rounded-full text-[7px] font-black uppercase text-league-accent italic tracking-widest backdrop-blur-md">
-                    LIVE_VARIANCE: 4.2%
-                </div>
-            </div>
-        )}
-
-        {/* HUD UI Elements */}
-        <div className="absolute top-8 left-8 flex flex-col gap-3 pointer-events-none z-20">
-           {activeTags.filter(t => t.x_coord === undefined).map(tag => (
-             <div key={tag.id} className="bg-league-panel/80 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-2xl animate-in slide-in-from-left-4">
-                <div className="flex items-center justify-between gap-3 mb-2">
-                   <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${tag.source === 'ai' ? 'bg-league-blue' : 'bg-league-accent'} shadow-[0_0_8px_currentColor]`} />
-                      <div className="text-[8px] font-black uppercase text-white/50 tracking-widest">Intel: {tag.label}</div>
-                   </div>
-                   {tag.confidence && <div className="text-[7px] font-black text-league-ok uppercase">{Math.round(tag.confidence * 100)}% Match</div>}
-                </div>
-                <div className="text-sm font-black italic text-white leading-tight uppercase tracking-tighter">{tag.note}</div>
-             </div>
-           ))}
-        </div>
-
         {/* Video Controls */}
         <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
           <div className="relative h-2 bg-white/10 rounded-full mb-6 cursor-pointer" 
@@ -131,14 +153,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-               <button onClick={() => setShowPlaybookOverlay(!showPlaybookOverlay)} className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all ${showPlaybookOverlay ? 'bg-league-accent text-white shadow-lg' : 'bg-league-bg text-league-muted hover:text-white'}`}>
+               <button 
+                 onClick={() => { setShowTelestrator(!showTelestrator); if (!showTelestrator) videoRef.current?.pause(); }} 
+                 className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all ${showTelestrator ? 'bg-league-accent text-white shadow-lg' : 'bg-league-bg text-league-muted hover:text-white'}`}
+               >
+                 {showTelestrator ? 'Telestrator Active' : 'Enable Drawing'}
+               </button>
+               <button onClick={() => setShowPlaybookOverlay(!showPlaybookOverlay)} className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all ${showPlaybookOverlay ? 'bg-league-blue text-white shadow-lg' : 'bg-league-bg text-league-muted hover:text-white'}`}>
                  {showPlaybookOverlay ? 'Hide Schematic' : 'Show Schematic'}
                </button>
-               {currentSystemRole !== SystemRole.PLAYER && video.status !== VideoStatus.ANALYZING && (
-                 <button onClick={() => analyzeVideoAi(video.id)} className="bg-league-blue text-white px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg flex items-center gap-2">
-                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeWidth="3"></path></svg> AI Deep Scan
-                 </button>
-               )}
             </div>
           </div>
         </div>
@@ -162,7 +185,3 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
     </div>
   );
 };
-
-const LegendPill = ({ label, color }: any) => (
-  <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${color}`} /><span className="text-[8px] font-black uppercase text-league-muted">{label}</span></div>
-);
