@@ -41,7 +41,7 @@ export const FranchiseAdmin: React.FC = () => {
     updateProfile, calculateRosterHealth 
   } = useApp();
 
-  const [activeView, setActiveView] = useState<'Personnel' | 'Depth Chart' | 'Health'>('Personnel');
+  const [activeView, setActiveView] = useState<'Personnel' | 'Depth Chart' | 'Staff' | 'Health'>('Personnel');
   const [depthGroup, setDepthGroup] = useState<'Offense' | 'Defense'>('Offense');
   const [draggedOverSlot, setDraggedOverSlot] = useState<string | null>(null);
 
@@ -50,8 +50,11 @@ export const FranchiseAdmin: React.FC = () => {
     return teams.find(t => t.name === teamName) || teams[0];
   }, [teams, selectedFranchise]);
 
-  const teamChart = useMemo(() => depthCharts[currentTeam.id] || {}, [depthCharts, currentTeam]);
+  const teamChart = useMemo(() => depthCharts[currentTeam?.id || ''] || {}, [depthCharts, currentTeam]);
   const roster = useMemo(() => profiles.filter(p => p.assignedFranchise === selectedFranchise && p.role === Role.PLAYER), [profiles, selectedFranchise]);
+  const coachingStaff = useMemo(() => profiles.filter(p => p.assignedFranchise === selectedFranchise && p.role === Role.COACH), [profiles, selectedFranchise]);
+  const coachPool = useMemo(() => profiles.filter(p => !p.assignedFranchise && p.role === Role.COACH), [profiles]);
+  
   const health = useMemo(() => calculateRosterHealth(selectedFranchise), [roster, selectedFranchise]);
 
   const payrollStats = useMemo(() => {
@@ -70,7 +73,7 @@ export const FranchiseAdmin: React.FC = () => {
     setDraggedOverSlot(null);
     const profileId = e.dataTransfer.getData('profileId');
     const profile = profiles.find(p => p.id === profileId);
-    if (profile) {
+    if (profile && currentTeam) {
       setDepthChartAssignment(currentTeam.id, slotId, profile.id);
       addToast(`${profile.fullName} assigned to ${slotId.replace('off_','').replace('def_','').toUpperCase()}`, 'success');
     }
@@ -91,7 +94,7 @@ export const FranchiseAdmin: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-2 bg-league-panel p-1.5 rounded-2xl border border-league-border shadow-2xl">
           {Object.values(Franchise).map(f => (
-            <button key={f} onClick={() => setSelectedFranchise(f)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedFranchise === f ? 'bg-white text-black shadow-xl' : 'text-league-muted hover:text-white'}`}>{f}</button>
+            <button key={f} onClick={() => setSelectedFranchise(f)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedFranchise === f ? 'bg-white text-black shadow-lg' : 'text-league-muted hover:text-white'}`}>{f}</button>
           ))}
         </div>
       </div>
@@ -124,24 +127,24 @@ export const FranchiseAdmin: React.FC = () => {
            </div>
 
            <div className="bg-league-panel border border-league-border p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-              <h3 className="text-[10px] font-black uppercase text-league-muted tracking-[0.4em] mb-8 italic border-b border-white/5 pb-4">Integrity Diagnostics</h3>
+              <h3 className="text-[10px] font-black uppercase text-league-muted tracking-[0.4em] mb-8 italic border-b border-white/5 pb-4">Staff Integrity</h3>
               <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Unit Health</span>
-                <span className={`text-2xl font-black italic ${health.integrityScore < 70 ? 'text-league-accent' : 'text-league-ok'}`}>
-                    {health.integrityScore}%
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Coaching Staff</span>
+                <span className={`text-2xl font-black italic text-white`}>
+                    {coachingStaff.length} / 5
                 </span>
               </div>
               <div className="space-y-4">
-                 {health.gaps.map((gap, i) => (
-                    <div key={i} className="flex gap-3 items-center p-3 bg-league-accent/5 border border-league-accent/20 rounded-xl">
-                       <div className="w-1.5 h-1.5 rounded-full bg-league-accent animate-pulse" />
-                       <span className="text-[9px] font-bold text-league-accent uppercase tracking-widest">{gap}</span>
+                 {coachingStaff.map((coach, i) => (
+                    <div key={i} className="flex gap-3 items-center p-3 bg-league-blue/5 border border-league-blue/20 rounded-xl">
+                       <div className="w-1.5 h-1.5 rounded-full bg-league-blue animate-pulse" />
+                       <span className="text-[9px] font-bold text-white uppercase tracking-widest">{coach.fullName} • {coach.positions[0]}</span>
                     </div>
                  ))}
-                 {health.gaps.length === 0 && (
-                    <div className="p-4 bg-league-ok/5 border border-league-ok/20 rounded-xl flex items-center gap-3">
-                       <div className="w-1.5 h-1.5 rounded-full bg-league-ok" />
-                       <span className="text-[9px] font-bold text-league-ok uppercase tracking-widest">Roster Cohesion: Optimal</span>
+                 {coachingStaff.length === 0 && (
+                    <div className="p-4 bg-league-accent/5 border border-league-accent/20 rounded-xl flex items-center gap-3">
+                       <div className="w-1.5 h-1.5 rounded-full bg-league-accent" />
+                       <span className="text-[9px] font-bold text-league-accent uppercase tracking-widest">Critical Staff Vacancies Detected</span>
                     </div>
                  )}
               </div>
@@ -151,7 +154,7 @@ export const FranchiseAdmin: React.FC = () => {
         {/* Right: Interactive Main Desk */}
         <div className="lg:col-span-8 flex flex-col space-y-6">
            <div className="bg-league-panel p-1 rounded-2xl border border-league-border flex shadow-xl">
-              {(['Personnel', 'Depth Chart', 'Health'] as const).map(v => (
+              {(['Personnel', 'Depth Chart', 'Staff', 'Health'] as const).map(v => (
                 <button key={v} onClick={() => setActiveView(v)} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeView === v ? 'bg-league-accent text-white shadow-lg' : 'text-league-muted hover:text-white'}`}>{v}</button>
               ))}
            </div>
@@ -219,6 +222,68 @@ export const FranchiseAdmin: React.FC = () => {
                 </div>
               )}
 
+              {activeView === 'Staff' && (
+                <div className="animate-in fade-in h-full flex flex-col">
+                  <div className="p-8 border-b border-league-border bg-league-tableHeader flex justify-between items-center">
+                    <h3 className="text-xl font-black italic uppercase text-white tracking-tighter">Strategic Staff Operations</h3>
+                    <div className="text-[8px] font-black text-league-muted uppercase tracking-widest italic">Coaches Assigned: {coachingStaff.length}</div>
+                  </div>
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 p-8 overflow-y-auto custom-scrollbar">
+                    <div className="space-y-4">
+                       <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-league-accent italic border-b border-white/5 pb-2">Franchise Staff</h4>
+                       <div className="space-y-3">
+                          {coachingStaff.map(coach => (
+                            <div key={coach.id} className="bg-league-bg border border-league-accent/20 p-5 rounded-2xl flex items-center justify-between group shadow-lg">
+                               <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-xl bg-league-panel flex items-center justify-center font-black italic text-white border border-league-accent/50 shadow-inner overflow-hidden">
+                                     {coach.avatar_url ? <img src={coach.avatar_url} className="w-full h-full object-cover" /> : coach.fullName.charAt(0)}
+                                  </div>
+                                  <div>
+                                     <div className="text-[13px] font-black italic uppercase text-white leading-none mb-1">{coach.fullName}</div>
+                                     <div className="text-[8px] font-bold text-league-accent uppercase tracking-widest">{coach.positions[0]}</div>
+                                  </div>
+                               </div>
+                               <button 
+                                 onClick={() => updateProfile(coach.id, { assignedFranchise: undefined, status: RecruitingStatus.NEW_LEAD })}
+                                 className="text-[8px] font-black uppercase text-league-accent/30 hover:text-league-accent transition-colors"
+                               >
+                                 Terminate
+                               </button>
+                            </div>
+                          ))}
+                          {coachingStaff.length === 0 && <div className="py-12 text-center opacity-20 italic font-black uppercase text-[8px] tracking-widest border-2 border-dashed border-league-border rounded-[2rem]">No Coaches Linked</div>}
+                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-league-blue italic border-b border-white/5 pb-2">Registry Coach Pool</h4>
+                       <div className="space-y-3">
+                          {coachPool.map(coach => (
+                            <div key={coach.id} className="bg-league-panel border border-league-border p-5 rounded-2xl flex items-center justify-between group hover:border-league-blue transition-all shadow-inner">
+                               <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 rounded-xl bg-league-bg flex items-center justify-center font-black italic text-white/50 text-xs border border-white/5">
+                                     {coach.fullName.charAt(0)}
+                                  </div>
+                                  <div>
+                                     <div className="text-[12px] font-black italic uppercase text-white/80 leading-none mb-1">{coach.fullName}</div>
+                                     <div className="text-[7px] font-bold text-league-muted uppercase tracking-widest">{coach.positions[0]} • {coach.nationality}</div>
+                                  </div>
+                               </div>
+                               <button 
+                                 onClick={() => updateProfile(coach.id, { assignedFranchise: selectedFranchise, status: RecruitingStatus.SIGNED })}
+                                 className="bg-league-blue text-white px-4 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-xl hover:brightness-110 transition-all"
+                               >
+                                 Recruit
+                               </button>
+                            </div>
+                          ))}
+                          {coachPool.length === 0 && <div className="py-12 text-center opacity-10 italic font-black uppercase text-[8px] tracking-widest">Registry Empty</div>}
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeView === 'Depth Chart' && (
                 <div className="animate-in fade-in h-full flex flex-col p-8">
                   <div className="flex justify-between items-center mb-8">
@@ -267,7 +332,7 @@ export const FranchiseAdmin: React.FC = () => {
                                      {assignedP ? (
                                        <div className="text-center">
                                           <button 
-                                            onClick={() => setDepthChartAssignment(currentTeam.id, slot.id, null)}
+                                            onClick={() => setDepthChartAssignment(currentTeam?.id || '', slot.id, null)}
                                             className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-league-accent"
                                           >
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="3"></path></svg>
