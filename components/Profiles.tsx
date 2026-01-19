@@ -18,7 +18,7 @@ export const Profiles: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-league-border pb-8">
         <div>
           <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Personnel Pool</h2>
-          <p className="text-league-muted uppercase tracking-[0.4em] text-[9px] font-black mt-2 italic opacity-60">Global IAL Talent Registry • Live Nodes</p>
+          <p className="text-league-muted uppercase tracking-[0.4em] text-[9px] font-black mt-2 italic opacity-60">Global IAL Talent Registry • {profiles.length} Active Nodes</p>
         </div>
         <div className="flex gap-4">
           <input 
@@ -39,6 +39,16 @@ export const Profiles: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredProfiles.map((p) => (
           <div key={p.id} className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 group hover:border-league-accent transition-all flex flex-col shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 flex flex-col items-end gap-2 pointer-events-none opacity-20 group-hover:opacity-100 transition-opacity">
+               <div className="flex items-center gap-1.5">
+                  <span className="text-[7px] font-black uppercase text-league-ok">Vault Synchronized</span>
+                  <div className="w-1 h-1 rounded-full bg-league-ok shadow-[0_0_5px_#23d18b]" />
+               </div>
+               {p.scoutGrade && p.scoutGrade > 9.0 && (
+                 <div className="bg-league-accent text-white px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-widest italic animate-pulse">Elite Prospect</div>
+               )}
+            </div>
+
             <div className="flex items-center gap-6 mb-6">
               <div className="w-16 h-16 rounded-2xl bg-league-bg border border-league-border flex items-center justify-center font-black italic text-2xl text-white shadow-inner overflow-hidden relative">
                 {p.avatar_url ? <img src={p.avatar_url} className="w-full h-full object-cover" /> : p.fullName.charAt(0)}
@@ -94,6 +104,12 @@ export const Profiles: React.FC = () => {
             </div>
           </div>
         ))}
+        {filteredProfiles.length === 0 && (
+          <div className="col-span-full py-40 border-2 border-dashed border-league-border rounded-[4rem] text-center opacity-30">
+             <h3 className="text-2xl font-black italic uppercase text-white tracking-[0.2em]">Registry Node Empty</h3>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-league-muted mt-2">Awaiting new personnel induction signals...</p>
+          </div>
+        )}
       </div>
     </div>
   );

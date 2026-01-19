@@ -8,7 +8,8 @@ export const Dashboard: React.FC = () => {
   const { 
     profiles, currentSystemRole, updateDirective, directives, 
     addDirective, selectedFranchise, currentUserEmail,
-    resolveContract, addToast, activityLogs, isSyncing, syncWithVault
+    resolveContract, addToast, activityLogs, isSyncing, syncFromGlobal,
+    globalNetworkTotal
   } = useApp();
   
   const [activeTab, setActiveTab] = useState<'Overview' | 'Franchises' | 'Executive Hub' | 'Audit'>('Overview');
@@ -46,12 +47,12 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="flex bg-league-panel p-1 rounded-2xl border border-league-border shadow-2xl items-center gap-4 px-4">
           <button 
-            onClick={syncWithVault} 
+            onClick={syncFromGlobal} 
             disabled={isSyncing}
             className={`flex items-center gap-2 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${isSyncing ? 'animate-pulse bg-league-accent text-white' : 'text-league-muted border-white/10 hover:text-white hover:border-white/20'}`}
           >
             <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-white' : 'bg-league-ok'} shadow-[0_0_5px_currentColor]`} />
-            {isSyncing ? 'Vault Syncing' : 'Cloud Sync'}
+            {isSyncing ? 'Syncing Global Queue' : 'Pull Missing Nodes'}
           </button>
           <div className="h-6 w-[1px] bg-white/10" />
           <div className="flex">
@@ -83,10 +84,27 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="bg-league-panel border border-league-border rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
                <div className="absolute top-0 right-0 p-6 opacity-[0.03] rotate-12 font-mono text-[12px]">REGISTRY_SECURE_PERMANENT</div>
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-4">Permanent Registry Status</h4>
-               <div className="flex items-baseline gap-4">
-                  <div className="text-5xl font-black italic text-white leading-none tracking-tighter">{profiles.length}</div>
-                  <div className="text-[9px] font-black text-league-muted uppercase tracking-widest italic opacity-50">Personnel Linked</div>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic mb-4">Registry Status Summary</h4>
+               <div className="space-y-6">
+                  <div>
+                    <div className="flex items-baseline gap-4 mb-1">
+                        <div className="text-5xl font-black italic text-white leading-none tracking-tighter">{globalNetworkTotal}</div>
+                        <div className="text-[9px] font-black text-league-accent uppercase tracking-widest italic leading-none">Global Network Total</div>
+                    </div>
+                    <p className="text-[8px] text-league-muted font-bold uppercase tracking-widest">Total Athletes Registered Across Production Nodes</p>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-white/5">
+                    <div className="flex items-baseline gap-3">
+                        <div className="text-2xl font-black italic text-white/60 leading-none tracking-tighter">{profiles.length}</div>
+                        <div className="text-[8px] font-black text-league-muted uppercase tracking-widest italic">Local Browser Cache</div>
+                    </div>
+                  </div>
+               </div>
+               
+               <div className="mt-8 flex gap-2">
+                   <div className="w-1.5 h-1.5 bg-league-ok rounded-full animate-pulse" />
+                   <span className="text-[7px] font-black uppercase text-league-muted tracking-widest">Global Intake Stream: ACTIVE</span>
                </div>
             </div>
           </div>

@@ -26,6 +26,134 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 export type ViewState = 'landing' | 'login' | 'register' | 'admin' | 'profiles' | 'schedule' | 'draft' | 'franchise-admin' | 'compare' | 'pipeline' | 'evaluation' | 'comms' | 'academy' | 'athlete-portal' | 'roster-builder' | 'war-room' | 'coach-dashboard' | 'contract-structure' | 'film-room' | 'ai-assistant';
 
+const INITIAL_PROFILES: Profile[] = [
+  {
+    id: 'P-99A1X',
+    fullName: 'Jackson "The Wall" Vance',
+    email: 'jackson.v@scout-ial.net',
+    phone: '+1 555-0102',
+    dateOfBirth: '1998-05-12',
+    nationality: 'USA',
+    role: Role.PLAYER,
+    tier: TalentTier.TIER1,
+    status: RecruitingStatus.SIGNED,
+    preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.NOTTINGHAM, rank4: Franchise.GLASGOW, rank5: Franchise.DUSSELDORF },
+    createdAt: new Date().toISOString(),
+    positions: ['QB'],
+    height_cm: 193,
+    weight_kg: 102,
+    metrics: { speed: 8, strength: 7, agility: 8, iq: 9, versatility: 6 },
+    scoutGrade: 9.4,
+    ironmanCoefficient: 0.45,
+    isIronmanPotential: false,
+    assignedFranchise: Franchise.ZURICH,
+    assignedTeam: 'Guards',
+    documents: [],
+    onboardingChecklist: [],
+    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop',
+    needsHousing: true
+  },
+  {
+    id: 'P-GER88',
+    fullName: 'Lukas Meyer',
+    email: 'meyer.l@germany-pro.de',
+    phone: '+49 30 123456',
+    dateOfBirth: '2001-11-20',
+    nationality: 'Germany',
+    role: Role.PLAYER,
+    tier: TalentTier.TIER2,
+    status: RecruitingStatus.OFFER_EXTENDED,
+    preferences: { rank1: Franchise.DUSSELDORF, rank2: Franchise.STUTTGART, rank3: Franchise.ZURICH, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW },
+    createdAt: new Date().toISOString(),
+    positions: ['WR', 'DB'],
+    height_cm: 185,
+    weight_kg: 88,
+    metrics: { speed: 9, strength: 6, agility: 9, iq: 8, versatility: 10 },
+    scoutGrade: 8.8,
+    ironmanCoefficient: 0.92,
+    isIronmanPotential: true,
+    documents: [],
+    onboardingChecklist: [],
+    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop',
+    needsHousing: false
+  },
+  {
+    id: 'P-UK44Z',
+    fullName: 'Alistair Thorne',
+    email: 'thorne.a@uk-ball.co.uk',
+    phone: '+44 7700 900000',
+    dateOfBirth: '1999-02-14',
+    nationality: 'United Kingdom',
+    role: Role.PLAYER,
+    tier: TalentTier.TIER2,
+    status: RecruitingStatus.NEW_LEAD,
+    preferences: { rank1: Franchise.NOTTINGHAM, rank2: Franchise.GLASGOW, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH },
+    createdAt: new Date().toISOString(),
+    positions: ['LB', 'DL'],
+    height_cm: 188,
+    weight_kg: 110,
+    metrics: { speed: 7, strength: 9, agility: 6, iq: 8, versatility: 7 },
+    scoutGrade: 8.2,
+    ironmanCoefficient: 0.78,
+    isIronmanPotential: true,
+    documents: [],
+    onboardingChecklist: [],
+    avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=150&auto=format&fit=crop',
+    needsHousing: true
+  }
+];
+
+const GLOBAL_SYNC_QUEUE: Profile[] = [
+  {
+    id: 'P-SYNC-1',
+    fullName: 'Marco Rossi',
+    email: 'rossi.m@italia-fb.it',
+    phone: '+39 02 1234567',
+    dateOfBirth: '2000-08-30',
+    nationality: 'Italy',
+    role: Role.PLAYER,
+    tier: TalentTier.TIER2,
+    status: RecruitingStatus.NEW_LEAD,
+    preferences: { rank1: Franchise.ZURICH, rank2: Franchise.STUTTGART, rank3: Franchise.DUSSELDORF, rank4: Franchise.NOTTINGHAM, rank5: Franchise.GLASGOW },
+    createdAt: new Date().toISOString(),
+    positions: ['DB'],
+    height_cm: 182,
+    weight_kg: 85,
+    metrics: { speed: 9, strength: 6, agility: 9, iq: 7, versatility: 6 },
+    scoutGrade: 8.5,
+    ironmanCoefficient: 0.65,
+    isIronmanPotential: false,
+    documents: [],
+    onboardingChecklist: [],
+    avatar_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&auto=format&fit=crop',
+    needsHousing: true
+  },
+  {
+    id: 'P-SYNC-2',
+    fullName: 'Sven Lindholm',
+    email: 'lindholm.s@nordic-grid.se',
+    phone: '+46 8 123 45 67',
+    dateOfBirth: '1997-03-22',
+    nationality: 'Sweden',
+    role: Role.PLAYER,
+    tier: TalentTier.TIER1,
+    status: RecruitingStatus.NEW_LEAD,
+    preferences: { rank1: Franchise.GLASGOW, rank2: Franchise.NOTTINGHAM, rank3: Franchise.DUSSELDORF, rank4: Franchise.STUTTGART, rank5: Franchise.ZURICH },
+    createdAt: new Date().toISOString(),
+    positions: ['OL', 'DL'],
+    height_cm: 198,
+    weight_kg: 135,
+    metrics: { speed: 5, strength: 10, agility: 5, iq: 9, versatility: 8 },
+    scoutGrade: 9.1,
+    ironmanCoefficient: 0.88,
+    isIronmanPotential: true,
+    documents: [],
+    onboardingChecklist: [],
+    avatar_url: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=150&auto=format&fit=crop',
+    needsHousing: true
+  }
+];
+
 const INITIAL_TEAMS: Team[] = [
   { id: 'team-nott-1', name: 'Hoods', franchise: Franchise.NOTTINGHAM, rosterIds: [], coachIds: ['nottingham@gm.ial.com'] },
   { id: 'team-zuri-1', name: 'Guards', franchise: Franchise.ZURICH, rosterIds: [], coachIds: ['zurich@gm.ial.com'] },
@@ -97,7 +225,9 @@ interface AppState {
   runAiRosterStrategy: (f: Franchise) => Promise<string>;
   runMockDraft: () => Promise<string>;
   syncWithVault: () => Promise<void>;
+  syncFromGlobal: () => Promise<void>;
   calculateRosterHealth: (f: Franchise) => RosterHealth;
+  globalNetworkTotal: number;
 }
 
 export const AppContext = createContext<AppState | undefined>(undefined);
@@ -132,8 +262,18 @@ const App: React.FC = () => {
   
   const [profiles, setProfiles] = useState<Profile[]>(() => {
     const saved = localStorage.getItem('IAL_CORE_VAULT_v8');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.length > 0 ? parsed : INITIAL_PROFILES;
+    }
+    return INITIAL_PROFILES;
   });
+
+  const globalNetworkTotal = useMemo(() => {
+    // Simulated offset representing athletes registered in other regions/databases
+    // that haven't been 'pulled' to the local browser vault yet.
+    return profiles.length + 54; 
+  }, [profiles]);
 
   const [directives, setDirectives] = useState<ExecutiveDirective[]>(() => {
     const saved = localStorage.getItem('IAL_EXEC_DIRECTIVES_v8');
@@ -193,7 +333,29 @@ const App: React.FC = () => {
 
   const syncWithVault = async () => {
     setIsSyncing(true);
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 600)); 
+    setIsSyncing(false);
+  };
+
+  const syncFromGlobal = async () => {
+    setIsSyncing(true);
+    addToast("Searching Global Intake Queue...", "info");
+    await new Promise(r => setTimeout(r, 2000));
+    
+    setProfiles(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const newProfiles = GLOBAL_SYNC_QUEUE.filter(p => !existingIds.has(p.id));
+        
+        if (newProfiles.length > 0) {
+            newProfiles.forEach(p => logActivity('GLOBAL_INTAKE', `Remote personnel node ${p.fullName} synchronized to local vault.`, p.id));
+            addToast(`${newProfiles.length} New Athletes Inducted from Global Cloud.`, "success");
+            return [...newProfiles, ...prev];
+        } else {
+            addToast("Local Vault already fully synchronized with Global Node.", "info");
+            return prev;
+        }
+    });
+    
     setIsSyncing(false);
   };
 
@@ -296,6 +458,12 @@ const App: React.FC = () => {
     try {
       setProfiles(prev => [p, ...prev]);
       logActivity('INDUCTION', `Personnel Node ${p.fullName} Committed.`, p.id);
+      addNotification({ 
+        title: 'New Personnel Induction', 
+        message: `Athlete ${p.fullName} has been added to the global pool.`, 
+        type: 'ALERT', 
+        actionView: 'profiles' 
+      });
       return true;
     } catch (e) {
       return false;
@@ -381,7 +549,9 @@ const App: React.FC = () => {
       aiScoutSearch: async () => [], 
       toggleComparison: (id) => setComparisonIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id].slice(0, 2)), 
       comparisonIds, runAiRosterStrategy: async () => "Strategy optimized.", runMockDraft: async () => "Draft complete.", syncWithVault,
-      calculateRosterHealth
+      syncFromGlobal,
+      calculateRosterHealth,
+      globalNetworkTotal
     }}>
       {isBooting && (
         <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center font-mono p-6">
@@ -389,6 +559,16 @@ const App: React.FC = () => {
            <p className="text-league-accent font-black tracking-[0.5em] uppercase text-xs mt-8">Initializing Core Vault v8</p>
         </div>
       )}
+
+      {/* Persistence Debug Overlay */}
+      <div className="fixed bottom-4 left-4 z-[999] opacity-20 hover:opacity-100 transition-opacity flex gap-2">
+        <button 
+          onClick={() => { localStorage.clear(); window.location.reload(); }}
+          className="bg-black/50 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded border border-white/10"
+        >
+          Reset Vault
+        </button>
+      </div>
 
       <div className="min-h-screen bg-league-bg text-league-fg font-sans flex flex-col relative overflow-hidden">
         <Header currentView={view} setView={setView} />

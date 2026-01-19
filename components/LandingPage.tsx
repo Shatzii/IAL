@@ -26,7 +26,7 @@ const FRANCHISE_META: Record<Franchise, { country: string, flag: string }> = {
 };
 
 export const LandingPage: React.FC = () => {
-  const { setView } = useApp();
+  const { setView, globalNetworkTotal } = useApp();
   const [isAiWidgetOpen, setIsAiWidgetOpen] = useState(false);
 
   const VIDEO_ID = "tkcuP16oo54"; 
@@ -52,6 +52,21 @@ export const LandingPage: React.FC = () => {
              <p className="mt-6 text-[12px] md:text-[14px] font-black uppercase tracking-[0.6em] text-white italic text-center max-w-lg">
                ELITE ARENA FOOTBALL. GLOBAL TALENT. NO IMPORT RULES.
              </p>
+             
+             {/* Global Network Counter */}
+             <div className="mt-10 flex flex-col items-center">
+                <div className="bg-league-panel border border-league-accent/30 px-6 py-3 rounded-full flex items-center gap-4 shadow-[0_0_20px_rgba(228,29,36,0.2)]">
+                   <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-league-ok animate-pulse shadow-[0_0_8px_#23d18b]" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">Live Registry</span>
+                   </div>
+                   <div className="h-4 w-[1px] bg-white/10" />
+                   <div className="text-xl font-black italic text-league-accent tracking-tighter">
+                      {globalNetworkTotal} <span className="text-[9px] font-black uppercase text-league-muted tracking-widest ml-1">Elite Athletes Registered</span>
+                   </div>
+                </div>
+                <p className="text-[8px] font-bold text-league-muted uppercase tracking-[0.4em] mt-3 opacity-40">Across Zurich, Dusseldorf, Nottingham, Stuttgart, Glasgow Nodes</p>
+             </div>
           </div>
 
           <div className="max-w-5xl mx-auto">
